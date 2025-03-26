@@ -1,0 +1,103 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 5.10 (swiftlang-5.10.0.13 clang-1500.3.9.4)
+// swift-module-flags: -target x86_64-apple-ios13.0-simulator -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-bare-slash-regex -module-name MixpanelSessionReplay
+import CoreGraphics
+import Foundation
+@_exported import MixpanelSessionReplay
+import Network
+import ObjectiveC
+import Swift
+import SwiftUI
+import UIKit
+import WebKit
+import _Concurrency
+import _StringProcessing
+import _SwiftConcurrencyShims
+import zlib
+public enum MPAutoMaskedViews : Swift.String, Swift.Codable {
+  case Image, Text, Web
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public enum MPAutoCaptureOptions : Swift.String, Swift.Codable {
+  case enabled, viewControllerLifecycle, touch, disabled
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public struct MPSessionReplayConfig : Swift.Codable {
+  public var wifiOnly: Swift.Bool
+  public var recordSessionsPercent: Swift.Double
+  public var autoMaskedViews: Swift.Set<MixpanelSessionReplay.MPAutoMaskedViews>
+  public var autoCapture: MixpanelSessionReplay.MPAutoCaptureOptions
+  public init(wifiOnly: Swift.Bool = true, recordSessionsPercent: Swift.Double = 0, autoMaskedViews: Swift.Set<MixpanelSessionReplay.MPAutoMaskedViews> = [.Image, .Text, .Web], autoCapture: MixpanelSessionReplay.MPAutoCaptureOptions = .enabled)
+  public func encode(to encoder: any Swift.Encoder) throws
+  public init(from decoder: any Swift.Decoder) throws
+}
+public enum GzipError : Swift.Error {
+  case stream
+  case data
+  case memory
+  case buffer
+  case version
+  case unknown(code: Swift.Int)
+}
+extension Foundation.Data {
+  public func gzipCompressed(level: Swift.Int32 = Z_DEFAULT_COMPRESSION) throws -> Foundation.Data
+}
+@_hasMissingDesignatedInitializers open class MPSessionReplay {
+  open class func initialize(token: Swift.String, distinctId: Swift.String, config: MixpanelSessionReplay.MPSessionReplayConfig = MPSessionReplayConfig()) -> MixpanelSessionReplay.MPSessionReplayInstance?
+  open class func getInstance() -> MixpanelSessionReplay.MPSessionReplayInstance?
+  open class func getReplayId() -> Swift.String?
+  @objc deinit
+}
+public struct ServerProxyResource {
+  public init(queryItems: [Foundation.URLQueryItem]? = nil, headers: [Swift.String : Swift.String])
+  public let queryItems: [Foundation.URLQueryItem]?
+  public let headers: [Swift.String : Swift.String]
+}
+@_hasMissingDesignatedInitializers open class MPSessionReplayInstance {
+  open var recordSessionsPercent: Swift.Double
+  open var wifiOnly: Swift.Bool {
+    get
+    set
+  }
+  open var loggingEnabled: Swift.Bool {
+    get
+    set
+  }
+  public func startRecording()
+  public func captureScreenshot()
+  public func captureScreenshot(withTouchEvent event: UIKit.UIEvent)
+  public func stopRecording()
+  public func flush()
+  public func addSensitiveClass(_ aClass: Swift.AnyClass)
+  public func removeSensitiveClass(_ aClass: Swift.AnyClass)
+  @objc deinit
+}
+extension UIKit.UIView {
+  @_Concurrency.MainActor(unsafe) public var frameRelativeToWindow: CoreFoundation.CGRect? {
+    get
+  }
+}
+extension SwiftUI.View {
+  public func mpReplaySensitive(_ isSensitive: Swift.Bool) -> some SwiftUI.View
+  
+}
+extension UIKit.UIView {
+  @_Concurrency.MainActor(unsafe) public var mpReplaySensitive: Swift.Bool? {
+    get
+    set
+  }
+}
+extension MixpanelSessionReplay.MPAutoMaskedViews : Swift.Equatable {}
+extension MixpanelSessionReplay.MPAutoMaskedViews : Swift.Hashable {}
+extension MixpanelSessionReplay.MPAutoMaskedViews : Swift.RawRepresentable {}
+extension MixpanelSessionReplay.MPAutoCaptureOptions : Swift.Equatable {}
+extension MixpanelSessionReplay.MPAutoCaptureOptions : Swift.Hashable {}
+extension MixpanelSessionReplay.MPAutoCaptureOptions : Swift.RawRepresentable {}

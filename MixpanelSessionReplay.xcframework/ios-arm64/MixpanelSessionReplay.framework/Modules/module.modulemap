@@ -1,0 +1,6 @@
+framework module MixpanelSessionReplay {
+  umbrella header "MixpanelSessionReplay.h"
+  export *
+
+  module * { export * }
+}
