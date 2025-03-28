@@ -21,8 +21,11 @@ Mixpanel Session Replay enables you to quickly understand **why** users behave a
 
 ## Installation
 
-1. **Download** the [MixpanelSessionReplay.xcframework.zip](https://www.notion.so/Mixpanel-iOS-Session-Replay-SDK-Beta-10ae0ba9256280cdb6e0f39d594cb344?pvs=21) and unzip it.
-2. **In Xcode**, add the `.xcframework` to your target's **Frameworks, Libraries, and Embedded Content**. Set Embed to **Embed & Sign**.
+Add the Session Replay SDK using Swift Package Manager directly in Xcode:
+
+1. In Xcode, go to **File → Add Package Dependencies...**
+2. Paste the GitHub URL: `https://github.com/mixpanel/mixpanel-ios-session-replay-package`
+3. Follow the prompts to select the latest version and add the package to your project.
 
 ---
 
@@ -122,6 +125,16 @@ Image("photo").mpReplaySensitive(true)
 // UIKit
 yourUIView.mpReplaySensitive = true
 ```
+
+---
+
+## Performance Impact
+
+Minimal overhead:
+
+- CPU: ~1–3% increase
+- Memory: ~1MB additional usage
+- No disk I/O impact
 
 ---
 
