@@ -128,16 +128,6 @@ yourUIView.mpReplaySensitive = true
 
 ---
 
-## Performance Impact
-
-Minimal overhead:
-
-- CPU: ~1–3% increase
-- Memory: ~1MB additional usage
-- No disk I/O impact
-
----
-
 ## Resources
 
 - [Full Documentation](https://mixpanel.com/docs/session-replay/session-replay-web)
