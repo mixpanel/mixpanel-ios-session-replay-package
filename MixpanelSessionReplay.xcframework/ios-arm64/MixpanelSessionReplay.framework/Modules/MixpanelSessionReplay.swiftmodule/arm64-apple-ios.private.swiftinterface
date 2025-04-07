@@ -13,6 +13,7 @@ import WebKit
 import _Concurrency
 import _StringProcessing
 import _SwiftConcurrencyShims
+import ObjectiveC.runtime
 import zlib
 public enum MPAutoMaskedViews : Swift.String, Swift.Codable {
   case Image, Text, Web
