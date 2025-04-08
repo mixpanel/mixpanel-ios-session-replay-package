@@ -20,13 +20,26 @@ Mixpanel Session Replay enables you to quickly understand **why** users behave a
 ---
 
 ## Installation
-
+### Using Swift Package Manager
 Add the Session Replay SDK using Swift Package Manager directly in Xcode:
 
 1. In Xcode, go to **File → Add Package Dependencies...**
 2. Paste the GitHub URL: `https://github.com/mixpanel/mixpanel-ios-session-replay-package`
 3. Follow the prompts to select the latest version and add the package to your project.
 
+### Using Cocoapods
+Open **podfile** and add Mixpanel Session Replay library to your dependencies: 
+
+```
+target 'MyApp' do
+     pod 'MixpanelSessionReplay', :git => 'https://github.com/mixpanel/mixpanel-ios-session-replay-package.git', :tag => 'v0.3.3'
+end
+```
+
+Install the Mixpanel Session Replay by running the following in the Xcode project directory:
+```
+pod install
+```
 ---
 
 ## Quick Start
