@@ -3978,7 +3978,7 @@
       "kind": "StringLiteral",
       "offset": 435,
       "length": 7,
-      "value": "\"0.3.2\""
+      "value": "\"0.3.3\""
     },
     {
       "filePath": "\/Users\/ketan\/Documents\/Mixpanel\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
