@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "MixpanelSessionReplay",
     platforms: [
-        .iOS(.v11)
+        .iOS(.v13)
     ],
     products: [
         .library(
