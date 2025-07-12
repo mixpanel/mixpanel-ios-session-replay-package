@@ -49,6 +49,7 @@ extension Foundation.Data {
   public func gzipCompressed(level: Swift.Int32 = Z_DEFAULT_COMPRESSION) throws -> Foundation.Data
 }
 @_hasMissingDesignatedInitializers open class MPSessionReplay {
+  @discardableResult
   open class func initialize(token: Swift.String, distinctId: Swift.String, config: MixpanelSessionReplay.MPSessionReplayConfig = MPSessionReplayConfig()) -> MixpanelSessionReplay.MPSessionReplayInstance?
   open class func getInstance() -> MixpanelSessionReplay.MPSessionReplayInstance?
   open class func getReplayId() -> Swift.String?
