@@ -8,8 +8,6 @@
 
 Mixpanel Session Replay enables you to quickly understand **why** users behave a certain way in your app, complementing analytics insights on **where** they drop off.
 
-⚠️ **Beta Notice:** This SDK is currently available via invite-only Beta for Mixpanel Enterprise customers. Please thoroughly test before using in production.
-
 ---
 
 ## Requirements
@@ -32,7 +30,7 @@ Open **podfile** and add Mixpanel Session Replay library to your dependencies:
 
 ```
 target 'MyApp' do
-     pod 'MixpanelSessionReplay', :git => 'https://github.com/mixpanel/mixpanel-ios-session-replay-package.git', :tag => 'v0.3.3'
+     pod 'MixpanelSessionReplay', :git => 'https://github.com/mixpanel/mixpanel-ios-session-replay-package.git', :tag => 'v1.0.0'
 end
 ```
 
@@ -59,10 +57,8 @@ struct YourApp: App {
         }
         .onChange(of: scenePhase) {
             if scenePhase == .active {
-                let config = MPSessionReplayConfig(wifiOnly: false, recordSessionsPercent: 100.0)
-                MPSessionReplay.initialize(token: Mixpanel.mainInstance().apiToken,
-                                            distinctId: Mixpanel.mainInstance().distinctId,
-                                            config: config)?.startRecording()
+                let config = MPSessionReplayConfig(wifiOnly: false, enableLogging: true)
+                MPSessionReplay.initialize(token: Mixpanel.mainInstance().apiToken, distinctId: Mixpanel.mainInstance().distinctId, config: config)
             }
         }
     }
@@ -81,13 +77,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         Mixpanel.initialize(token: "YOUR_MIXPANEL_TOKEN")
 
-        let config = MPSessionReplayConfig(wifiOnly: false, recordSessionsPercent: 100.0)
-        MPSessionReplay.initialize(token: Mixpanel.mainInstance().apiToken,
-                                   distinctId: Mixpanel.mainInstance().distinctId,
-                                   config: config)
-        #if DEBUG
-        MPSessionReplay.getInstance()?.loggingEnabled = true
-        #endif
+        let config = MPSessionReplayConfig(wifiOnly: false, enableLogging: true)
+        MPSessionReplay.initialize(token: Mixpanel.mainInstance().apiToken, distinctId: Mixpanel.mainInstance().distinctId, config: config)
 
         return true
     }
@@ -105,20 +96,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 Customize your session replay by modifying `MPSessionReplayConfig`:
 
 - `wifiOnly`: Restricts uploads to WiFi connections (default: `true`).
-- `recordSessionsPercent`: Controls session sampling from `0.0` (none) to `100.0` (all).
-- `autoMaskedViews`: Automatically masks sensitive views (`Image`, `Text`, `Web` by default).
-- `autoCapture`: Controls automatic screenshot capture:
-  - `.enabled` (default), `.viewControllerLifecycle`, `.touch`, or `.disabled`.
-
----
-
-## Manual Screenshot Capture
-
-If auto capture is disabled, trigger screenshots manually:
-
-```swift
-MPSessionReplay.getInstance()?.captureScreenshot()
-```
+- `autoMaskedViews`: Automatically masks sensitive views (`.image`, `.text`, `.web`, `.map` by default).
+- `autoStartRecording`: Whether or not to automatically start recording upon initialization (default: `true`)
+- `autoStartRecordingSessionsPercent`: Controls session sampling from `0.0` (none) to `100.0` (all, default) when `autoStartRecording` is `true` .
+- `enableLogging`: Turn on debug logs (default: false)
+- `flushInterval`: How frequently to flush replay events (default: 10 seconds)
 
 ---
 
@@ -126,8 +108,8 @@ MPSessionReplay.getInstance()?.captureScreenshot()
 
 By default, Mixpanel automatically masks sensitive views:
 
-- All text fields (cannot be unmasked)
-- Images, labels, WebViews (can be manually adjusted)
+- All text field inputs (cannot be unmasked)
+- Images, Labels, WebViews, MapViews (can be manually adjusted)
 
 To manually control sensitivity:
 
