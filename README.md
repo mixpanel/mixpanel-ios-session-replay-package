@@ -59,10 +59,10 @@ struct YourApp: App {
             if scenePhase == .active {
                 let config = MPSessionReplayConfig(wifiOnly: false, enableLogging: true)
                 MPSessionReplay.initialize(
-                   token: Mixpanel.mainInstance().apiToken,
-                   distinctId: Mixpanel.mainInstance().distinctId,
-                   config: config
-               )
+                    token: Mixpanel.mainInstance().apiToken,
+                    distinctId: Mixpanel.mainInstance().distinctId,
+                    config: config
+                )
             }
         }
     }
