@@ -58,7 +58,11 @@ struct YourApp: App {
         .onChange(of: scenePhase) {
             if scenePhase == .active {
                 let config = MPSessionReplayConfig(wifiOnly: false, enableLogging: true)
-                MPSessionReplay.initialize(token: Mixpanel.mainInstance().apiToken, distinctId: Mixpanel.mainInstance().distinctId, config: config)
+                MPSessionReplay.initialize(
+                   token: Mixpanel.mainInstance().apiToken,
+                   distinctId: Mixpanel.mainInstance().distinctId,
+                   config: config
+               )
             }
         }
     }
@@ -78,8 +82,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         Mixpanel.initialize(token: "YOUR_MIXPANEL_TOKEN")
 
         let config = MPSessionReplayConfig(wifiOnly: false, enableLogging: true)
-        MPSessionReplay.initialize(token: Mixpanel.mainInstance().apiToken, distinctId: Mixpanel.mainInstance().distinctId, config: config)
-
+        MPSessionReplay.initialize(
+            token: Mixpanel.mainInstance().apiToken,
+            distinctId: Mixpanel.mainInstance().distinctId,
+            config: config
+        )
         return true
     }
 
