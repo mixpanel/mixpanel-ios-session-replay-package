@@ -504,8 +504,8 @@
           },
           {
             "kind": "Var",
-            "name": "autoStartRecordingSessionsPercent",
-            "printedName": "autoStartRecordingSessionsPercent",
+            "name": "recordingSessionsPercent",
+            "printedName": "recordingSessionsPercent",
             "children": [
               {
                 "kind": "TypeNominal",
@@ -515,8 +515,8 @@
               }
             ],
             "declKind": "Var",
-            "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV33autoStartRecordingSessionsPercentSdvp",
-            "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV33autoStartRecordingSessionsPercentSdvp",
+            "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV24recordingSessionsPercentSdvp",
+            "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV24recordingSessionsPercentSdvp",
             "moduleName": "MixpanelSessionReplay",
             "declAttributes": [
               "HasInitialValue",
@@ -539,8 +539,8 @@
                   }
                 ],
                 "declKind": "Accessor",
-                "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV33autoStartRecordingSessionsPercentSdvg",
-                "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV33autoStartRecordingSessionsPercentSdvg",
+                "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV24recordingSessionsPercentSdvg",
+                "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV24recordingSessionsPercentSdvg",
                 "moduleName": "MixpanelSessionReplay",
                 "implicit": true,
                 "accessorKind": "get"
@@ -563,8 +563,8 @@
                   }
                 ],
                 "declKind": "Accessor",
-                "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV33autoStartRecordingSessionsPercentSdvs",
-                "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV33autoStartRecordingSessionsPercentSdvs",
+                "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV24recordingSessionsPercentSdvs",
+                "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV24recordingSessionsPercentSdvs",
                 "moduleName": "MixpanelSessionReplay",
                 "implicit": true,
                 "accessorKind": "set"
@@ -581,8 +581,8 @@
                   }
                 ],
                 "declKind": "Accessor",
-                "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV33autoStartRecordingSessionsPercentSdvM",
-                "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV33autoStartRecordingSessionsPercentSdvM",
+                "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV24recordingSessionsPercentSdvM",
+                "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV24recordingSessionsPercentSdvM",
                 "moduleName": "MixpanelSessionReplay",
                 "implicit": true,
                 "accessorKind": "_modify"
@@ -964,7 +964,7 @@
           {
             "kind": "Constructor",
             "name": "init",
-            "printedName": "init(wifiOnly:autoMaskedViews:autoStartRecording:autoStartRecordingSessionsPercent:enableLogging:flushInterval:)",
+            "printedName": "init(wifiOnly:autoMaskedViews:autoStartRecording:recordingSessionsPercent:enableLogging:flushInterval:)",
             "children": [
               {
                 "kind": "TypeNominal",
@@ -1024,8 +1024,8 @@
               }
             ],
             "declKind": "Constructor",
-            "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV8wifiOnly15autoMaskedViews0H14StartRecording0hkL15SessionsPercent13enableLogging13flushIntervalACSb_ShyAA06MPAutoiJ0OGSbSdSbSdtcfc",
-            "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV8wifiOnly15autoMaskedViews0H14StartRecording0hkL15SessionsPercent13enableLogging13flushIntervalACSb_ShyAA06MPAutoiJ0OGSbSdSbSdtcfc",
+            "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV8wifiOnly15autoMaskedViews0H14StartRecording24recordingSessionsPercent13enableLogging13flushIntervalACSb_ShyAA06MPAutoiJ0OGSbSdSbSdtcfc",
+            "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV8wifiOnly15autoMaskedViews0H14StartRecording24recordingSessionsPercent13enableLogging13flushIntervalACSb_ShyAA06MPAutoiJ0OGSbSdSbSdtcfc",
             "moduleName": "MixpanelSessionReplay",
             "declAttributes": [
               "AccessControl",
@@ -1475,27 +1475,156 @@
       },
       {
         "kind": "TypeDecl",
+        "name": "MPSessionReplayError",
+        "printedName": "MPSessionReplayError",
+        "children": [
+          {
+            "kind": "Var",
+            "name": "failedToInitialize",
+            "printedName": "failedToInitialize",
+            "children": [
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(MixpanelSessionReplay.MPSessionReplayError.Type) -> MixpanelSessionReplay.MPSessionReplayError",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "MPSessionReplayError",
+                    "printedName": "MixpanelSessionReplay.MPSessionReplayError",
+                    "usr": "s:21MixpanelSessionReplay09MPSessionC5ErrorO"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Metatype",
+                    "printedName": "MixpanelSessionReplay.MPSessionReplayError.Type",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "MPSessionReplayError",
+                        "printedName": "MixpanelSessionReplay.MPSessionReplayError",
+                        "usr": "s:21MixpanelSessionReplay09MPSessionC5ErrorO"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "declKind": "EnumElement",
+            "usr": "s:21MixpanelSessionReplay09MPSessionC5ErrorO18failedToInitializeyA2CmF",
+            "mangledName": "$s21MixpanelSessionReplay09MPSessionC5ErrorO18failedToInitializeyA2CmF",
+            "moduleName": "MixpanelSessionReplay"
+          },
+          {
+            "kind": "Var",
+            "name": "disabledByRemoteSetting",
+            "printedName": "disabledByRemoteSetting",
+            "children": [
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(MixpanelSessionReplay.MPSessionReplayError.Type) -> (Swift.String) -> MixpanelSessionReplay.MPSessionReplayError",
+                "children": [
+                  {
+                    "kind": "TypeFunc",
+                    "name": "Function",
+                    "printedName": "(Swift.String) -> MixpanelSessionReplay.MPSessionReplayError",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "MPSessionReplayError",
+                        "printedName": "MixpanelSessionReplay.MPSessionReplayError",
+                        "usr": "s:21MixpanelSessionReplay09MPSessionC5ErrorO"
+                      },
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Tuple",
+                        "printedName": "(message: Swift.String)",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "String",
+                            "printedName": "Swift.String",
+                            "usr": "s:SS"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Metatype",
+                    "printedName": "MixpanelSessionReplay.MPSessionReplayError.Type",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "MPSessionReplayError",
+                        "printedName": "MixpanelSessionReplay.MPSessionReplayError",
+                        "usr": "s:21MixpanelSessionReplay09MPSessionC5ErrorO"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "declKind": "EnumElement",
+            "usr": "s:21MixpanelSessionReplay09MPSessionC5ErrorO23disabledByRemoteSettingyACSS_tcACmF",
+            "mangledName": "$s21MixpanelSessionReplay09MPSessionC5ErrorO23disabledByRemoteSettingyACSS_tcACmF",
+            "moduleName": "MixpanelSessionReplay"
+          }
+        ],
+        "declKind": "Enum",
+        "usr": "s:21MixpanelSessionReplay09MPSessionC5ErrorO",
+        "mangledName": "$s21MixpanelSessionReplay09MPSessionC5ErrorO",
+        "moduleName": "MixpanelSessionReplay",
+        "declAttributes": [
+          "AccessControl"
+        ],
+        "conformances": [
+          {
+            "kind": "Conformance",
+            "name": "Copyable",
+            "printedName": "Copyable",
+            "usr": "s:s8CopyableP",
+            "mangledName": "$ss8CopyableP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Escapable",
+            "printedName": "Escapable",
+            "usr": "s:s9EscapableP",
+            "mangledName": "$ss9EscapableP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Error",
+            "printedName": "Error",
+            "usr": "s:s5ErrorP",
+            "mangledName": "$ss5ErrorP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Sendable",
+            "printedName": "Sendable",
+            "usr": "s:s8SendableP",
+            "mangledName": "$ss8SendableP"
+          }
+        ]
+      },
+      {
+        "kind": "TypeDecl",
         "name": "MPSessionReplay",
         "printedName": "MPSessionReplay",
         "children": [
           {
             "kind": "Function",
             "name": "initialize",
-            "printedName": "initialize(token:distinctId:config:)",
+            "printedName": "initialize(token:distinctId:config:completion:)",
             "children": [
               {
                 "kind": "TypeNominal",
-                "name": "Optional",
-                "printedName": "MixpanelSessionReplay.MPSessionReplayInstance?",
-                "children": [
-                  {
-                    "kind": "TypeNominal",
-                    "name": "MPSessionReplayInstance",
-                    "printedName": "MixpanelSessionReplay.MPSessionReplayInstance",
-                    "usr": "s:21MixpanelSessionReplay09MPSessionC8InstanceC"
-                  }
-                ],
-                "usr": "s:Sq"
+                "name": "Void",
+                "printedName": "()"
               },
               {
                 "kind": "TypeNominal",
@@ -1515,17 +1644,57 @@
                 "printedName": "MixpanelSessionReplay.MPSessionReplayConfig",
                 "hasDefaultArg": true,
                 "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV"
+              },
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(Swift.Result<MixpanelSessionReplay.MPSessionReplayInstance?, any Swift.Error>) -> ()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Result",
+                    "printedName": "Swift.Result<MixpanelSessionReplay.MPSessionReplayInstance?, any Swift.Error>",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Optional",
+                        "printedName": "MixpanelSessionReplay.MPSessionReplayInstance?",
+                        "children": [
+                          {
+                            "kind": "TypeNominal",
+                            "name": "MPSessionReplayInstance",
+                            "printedName": "MixpanelSessionReplay.MPSessionReplayInstance",
+                            "usr": "s:21MixpanelSessionReplay09MPSessionC8InstanceC"
+                          }
+                        ],
+                        "usr": "s:Sq"
+                      },
+                      {
+                        "kind": "TypeNominal",
+                        "name": "Error",
+                        "printedName": "any Swift.Error",
+                        "usr": "s:s5ErrorP"
+                      }
+                    ],
+                    "usr": "s:s6ResultO"
+                  }
+                ],
+                "hasDefaultArg": true
               }
             ],
             "declKind": "Func",
-            "usr": "s:21MixpanelSessionReplay09MPSessionC0C10initialize5token10distinctId6configAA0dC8InstanceCSgSS_SSAA0dC6ConfigVtFZ",
-            "mangledName": "$s21MixpanelSessionReplay09MPSessionC0C10initialize5token10distinctId6configAA0dC8InstanceCSgSS_SSAA0dC6ConfigVtFZ",
+            "usr": "s:21MixpanelSessionReplay09MPSessionC0C10initialize5token10distinctId6config10completionySS_SSAA0dC6ConfigVys6ResultOyAA0dC8InstanceCSgs5Error_pGctFZ",
+            "mangledName": "$s21MixpanelSessionReplay09MPSessionC0C10initialize5token10distinctId6config10completionySS_SSAA0dC6ConfigVys6ResultOyAA0dC8InstanceCSgs5Error_pGctFZ",
             "moduleName": "MixpanelSessionReplay",
             "static": true,
             "isOpen": true,
             "declAttributes": [
               "AccessControl",
-              "DiscardableResult",
               "RawDocComment"
             ],
             "funcSelfKind": "NonMutating"
@@ -1939,6 +2108,16 @@
       },
       {
         "kind": "Import",
+        "name": "Foundation",
+        "printedName": "Foundation",
+        "declKind": "Import",
+        "moduleName": "MixpanelSessionReplay",
+        "declAttributes": [
+          "RawDocComment"
+        ]
+      },
+      {
+        "kind": "Import",
         "name": "SwiftUI",
         "printedName": "SwiftUI",
         "declKind": "Import",
@@ -2320,7 +2499,7 @@
           {
             "kind": "Function",
             "name": "startRecording",
-            "printedName": "startRecording(recordSessionsPercent:)",
+            "printedName": "startRecording(sessionsPercent:)",
             "children": [
               {
                 "kind": "TypeNominal",
@@ -2336,8 +2515,8 @@
               }
             ],
             "declKind": "Func",
-            "usr": "s:21MixpanelSessionReplay09MPSessionC8InstanceC14startRecording21recordSessionsPercentySd_tF",
-            "mangledName": "$s21MixpanelSessionReplay09MPSessionC8InstanceC14startRecording21recordSessionsPercentySd_tF",
+            "usr": "s:21MixpanelSessionReplay09MPSessionC8InstanceC14startRecording15sessionsPercentySd_tF",
+            "mangledName": "$s21MixpanelSessionReplay09MPSessionC8InstanceC14startRecording15sessionsPercentySd_tF",
             "moduleName": "MixpanelSessionReplay",
             "declAttributes": [
               "AccessControl",
@@ -2690,6 +2869,16 @@
         "printedName": "UIKit",
         "declKind": "Import",
         "moduleName": "MixpanelSessionReplay"
+      },
+      {
+        "kind": "Import",
+        "name": "Foundation",
+        "printedName": "Foundation",
+        "declKind": "Import",
+        "moduleName": "MixpanelSessionReplay",
+        "declAttributes": [
+          "RawDocComment"
+        ]
       },
       {
         "kind": "Import",
@@ -3676,6 +3865,13 @@
   },
   "ConstValues": [
     {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Tracking\/EventPublisher.swift",
+      "kind": "StringLiteral",
+      "offset": 235,
+      "length": 35,
+      "value": "\"com.mixpanel.eventpublisher.queue\""
+    },
+    {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Models\/MPSessionReplayModels.swift",
       "kind": "StringLiteral",
       "offset": 411,
@@ -3769,56 +3965,56 @@
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Models\/MPSessionReplayConfig.swift",
       "kind": "IntegerLiteral",
-      "offset": 1475,
+      "offset": 1466,
       "length": 3,
       "value": "100"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Models\/MPSessionReplayConfig.swift",
       "kind": "BooleanLiteral",
-      "offset": 2178,
+      "offset": 2160,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Models\/MPSessionReplayConfig.swift",
       "kind": "BooleanLiteral",
-      "offset": 3340,
+      "offset": 3322,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Models\/MPSessionReplayConfig.swift",
       "kind": "BooleanLiteral",
-      "offset": 4207,
+      "offset": 4180,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Models\/MPSessionReplayConfig.swift",
       "kind": "BooleanLiteral",
-      "offset": 4319,
+      "offset": 4292,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Models\/MPSessionReplayConfig.swift",
       "kind": "IntegerLiteral",
-      "offset": 4373,
+      "offset": 4337,
       "length": 3,
       "value": "100"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Models\/MPSessionReplayConfig.swift",
       "kind": "BooleanLiteral",
-      "offset": 4404,
+      "offset": 4368,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Models\/MPSessionReplayConfig.swift",
       "kind": "IntegerLiteral",
-      "offset": 4445,
+      "offset": 4409,
       "length": 2,
       "value": "10"
     },
@@ -3832,21 +4028,21 @@
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Services\/EventService.swift",
       "kind": "IntegerLiteral",
-      "offset": 1141,
+      "offset": 1133,
       "length": 1,
       "value": "1"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/MPSessionReplay.swift",
       "kind": "StringLiteral",
-      "offset": 3417,
+      "offset": 6663,
       "length": 34,
       "value": "\"com.mixpanel.properties.register\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/MPSessionReplay.swift",
       "kind": "StringLiteral",
-      "offset": 3513,
+      "offset": 6759,
       "length": 36,
       "value": "\"com.mixpanel.properties.unregister\""
     },
@@ -3870,6 +4066,20 @@
       "offset": 449,
       "length": 3,
       "value": "[]"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Services\/SettingsService.swift",
+      "kind": "FloatLiteral",
+      "offset": 521,
+      "length": 3,
+      "value": "5.0"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Services\/SettingsService.swift",
+      "kind": "StringLiteral",
+      "offset": 559,
+      "length": 35,
+      "value": "\"https:\/\/api.mixpanel.com\/settings\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/MPSessionReplayInstance.swift",
@@ -3930,7 +4140,7 @@
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/MPSessionReplayInstance.swift",
       "kind": "FloatLiteral",
-      "offset": 5713,
+      "offset": 5677,
       "length": 5,
       "value": "100.0"
     },
@@ -4188,43 +4398,71 @@
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
+      "kind": "StringLiteral",
+      "offset": 1517,
+      "length": 25,
+      "value": "\"mp_session_replay_prefs\""
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1548,
+      "offset": 1606,
       "length": 2,
       "value": "16"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "FloatLiteral",
-      "offset": 1613,
+      "offset": 1671,
       "length": 3,
       "value": "0.4"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "StringLiteral",
-      "offset": 1664,
+      "offset": 1722,
       "length": 28,
       "value": "\"com.mixpanel.sessionreplay\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1727,
+      "offset": 1785,
       "length": 4,
       "value": "1001"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1767,
+      "offset": 1825,
       "length": 4,
       "value": "1002"
     },
     {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
+      "kind": "IntegerLiteral",
+      "offset": 1863,
+      "length": 4,
+      "value": "1003"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
+      "kind": "IntegerLiteral",
+      "offset": 1900,
+      "length": 4,
+      "value": "1004"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Models\/SettingsResponse.swift",
+      "kind": "StringLiteral",
+      "offset": 316,
+      "length": 12,
+      "value": "\"is_enabled\""
+    },
+    {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Extensions\/View+SensitiveView.swift",
       "kind": "IntegerLiteral",
-      "offset": 2014,
+      "offset": 2086,
       "length": 1,
       "value": "0"
     },

@@ -28,12 +28,12 @@ public enum MPAutoMaskedViews : Swift.String, Swift.Codable {
 }
 public struct MPSessionReplayConfig : Swift.Codable {
   public var wifiOnly: Swift.Bool
-  public var autoStartRecordingSessionsPercent: Swift.Double
+  public var recordingSessionsPercent: Swift.Double
   public var autoStartRecording: Swift.Bool
   public var autoMaskedViews: Swift.Set<MixpanelSessionReplay.MPAutoMaskedViews>
   public var flushInterval: Foundation.TimeInterval
   public var enableLogging: Swift.Bool
-  public init(wifiOnly: Swift.Bool = true, autoMaskedViews: Swift.Set<MixpanelSessionReplay.MPAutoMaskedViews> = [.image, .text, .web, .map], autoStartRecording: Swift.Bool = true, autoStartRecordingSessionsPercent: Swift.Double = 100, enableLogging: Swift.Bool = false, flushInterval: Foundation.TimeInterval = 10)
+  public init(wifiOnly: Swift.Bool = true, autoMaskedViews: Swift.Set<MixpanelSessionReplay.MPAutoMaskedViews> = [.image, .text, .web, .map], autoStartRecording: Swift.Bool = true, recordingSessionsPercent: Swift.Double = 100, enableLogging: Swift.Bool = false, flushInterval: Foundation.TimeInterval = 10)
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -48,9 +48,12 @@ public enum GzipError : Swift.Error {
 extension Foundation.Data {
   public func gzipCompressed(level: Swift.Int32 = Z_DEFAULT_COMPRESSION) throws -> Foundation.Data
 }
+public enum MPSessionReplayError : Swift.Error {
+  case failedToInitialize
+  case disabledByRemoteSetting(message: Swift.String)
+}
 @_hasMissingDesignatedInitializers open class MPSessionReplay {
-  @discardableResult
-  open class func initialize(token: Swift.String, distinctId: Swift.String, config: MixpanelSessionReplay.MPSessionReplayConfig = MPSessionReplayConfig()) -> MixpanelSessionReplay.MPSessionReplayInstance?
+  open class func initialize(token: Swift.String, distinctId: Swift.String, config: MixpanelSessionReplay.MPSessionReplayConfig = MPSessionReplayConfig(), completion: @escaping (Swift.Result<MixpanelSessionReplay.MPSessionReplayInstance?, any Swift.Error>) -> Swift.Void = {_ in })
   open class func getInstance() -> MixpanelSessionReplay.MPSessionReplayInstance?
   open class func getReplayId() -> Swift.String?
   @objc deinit
@@ -76,7 +79,7 @@ public struct ServerProxyResource {
     get
     set
   }
-  public func startRecording(recordSessionsPercent: Swift.Double = 100.0)
+  public func startRecording(sessionsPercent: Swift.Double = 100.0)
   public func captureScreenshot()
   public func captureScreenshot(withTouchEvent event: UIKit.UIEvent)
   public func identify(distinctId: Swift.String, completion: @escaping () -> Swift.Void = {})
