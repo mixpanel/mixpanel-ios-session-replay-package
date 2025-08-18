@@ -1,22 +1,39 @@
 // swift-interface-format-version: 1.0
-// swift-compiler-version: Apple Swift version 6.0 effective-5.10 (swiftlang-6.0.0.9.10 clang-1600.0.26.2)
-// swift-module-flags: -target arm64-apple-ios13.0 -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-bare-slash-regex -module-name MixpanelSessionReplay
+// swift-compiler-version: Apple Swift version 6.1.2 effective-5.10 (swiftlang-6.1.2.1.2 clang-1700.0.13.5)
+// swift-module-flags: -target arm64-apple-ios13.0 -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -module-name MixpanelSessionReplay
+// swift-module-flags-ignorable:  -interface-compiler-version 6.1.2
+import CoreGraphics
 import Foundation
+import MapKit
 @_exported import MixpanelSessionReplay
 import Network
+import ObjectiveC
 import Swift
 import SwiftUI
 import UIKit
+import WebKit
 import _Concurrency
+import _MapKit_SwiftUI
 import _StringProcessing
 import _SwiftConcurrencyShims
+import ObjectiveC.runtime
 import zlib
-public struct SessionReplayConfig : Swift.Codable {
+public enum MPAutoMaskedViews : Swift.String, Swift.Codable {
+  case image, text, web, map
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+public struct MPSessionReplayConfig : Swift.Codable {
   public var wifiOnly: Swift.Bool
-  public var recordSessionsPercent: Swift.Double
-  public var maskAllText: Swift.Bool
-  public var maskAllImages: Swift.Bool
-  public init(wifiOnly: Swift.Bool = true, recordSessionsPercent: Swift.Double = 0, maskAllText: Swift.Bool = true, maskAllImages: Swift.Bool = true)
+  public var recordingSessionsPercent: Swift.Double
+  public var autoStartRecording: Swift.Bool
+  public var autoMaskedViews: Swift.Set<MixpanelSessionReplay.MPAutoMaskedViews>
+  public var flushInterval: Foundation.TimeInterval
+  public var enableLogging: Swift.Bool
+  public init(wifiOnly: Swift.Bool = true, autoMaskedViews: Swift.Set<MixpanelSessionReplay.MPAutoMaskedViews> = [.image, .text, .web, .map], autoStartRecording: Swift.Bool = true, recordingSessionsPercent: Swift.Double = 100, enableLogging: Swift.Bool = false, flushInterval: Foundation.TimeInterval = 10)
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -31,17 +48,30 @@ public enum GzipError : Swift.Error {
 extension Foundation.Data {
   public func gzipCompressed(level: Swift.Int32 = Z_DEFAULT_COMPRESSION) throws -> Foundation.Data
 }
-@objc @_inheritsConvenienceInitializers @_Concurrency.MainActor @preconcurrency open class TouchEventRecorderWindow : UIKit.UIWindow {
-  @_Concurrency.MainActor @preconcurrency @objc override dynamic open func sendEvent(_ event: UIKit.UIEvent)
-  @available(iOS 13.0, *)
-  @_Concurrency.MainActor @preconcurrency @objc override dynamic public init(windowScene: UIKit.UIWindowScene)
-  @_Concurrency.MainActor @preconcurrency @objc override dynamic public init(frame: CoreFoundation.CGRect)
-  @_Concurrency.MainActor @preconcurrency @objc required dynamic public init?(coder: Foundation.NSCoder)
+public enum MPSessionReplayError : Swift.Error {
+  case failedToInitialize
+  case disabledByRemoteSetting(message: Swift.String)
+}
+@_hasMissingDesignatedInitializers open class MPSessionReplay {
+  open class func initialize(token: Swift.String, distinctId: Swift.String, config: MixpanelSessionReplay.MPSessionReplayConfig = MPSessionReplayConfig(), completion: @escaping (Swift.Result<MixpanelSessionReplay.MPSessionReplayInstance?, any Swift.Error>) -> Swift.Void = {_ in })
+  open class func getInstance() -> MixpanelSessionReplay.MPSessionReplayInstance?
+  open class func getReplayId() -> Swift.String?
   @objc deinit
 }
-@_hasMissingDesignatedInitializers open class SessionReplayInstance {
-  open var recordSessionsPercent: Swift.Double
+public struct ServerProxyResource {
+  public init(queryItems: [Foundation.URLQueryItem]? = nil, headers: [Swift.String : Swift.String])
+  public let queryItems: [Foundation.URLQueryItem]?
+  public let headers: [Swift.String : Swift.String]
+}
+@_hasMissingDesignatedInitializers open class MPSessionReplayInstance {
+  public var isRecording: Swift.Bool {
+    get
+  }
   open var wifiOnly: Swift.Bool {
+    get
+    set
+  }
+  open var autoMaskedViews: Swift.Set<MixpanelSessionReplay.MPAutoMaskedViews> {
     get
     set
   }
@@ -49,20 +79,14 @@ extension Foundation.Data {
     get
     set
   }
-  public func startRecording()
-  @objc public func record()
+  public func startRecording(sessionsPercent: Swift.Double = 100.0)
+  public func captureScreenshot()
+  public func captureScreenshot(withTouchEvent event: UIKit.UIEvent)
+  public func identify(distinctId: Swift.String, completion: @escaping () -> Swift.Void = {})
   public func stopRecording()
-  public func flush()
-  public func addSensitiveView(_ view: UIKit.UIView)
-  public func removeSensitiveView(_ view: UIKit.UIView)
+  public func flush(completionHandler: @escaping () -> Swift.Void = {})
   public func addSensitiveClass(_ aClass: Swift.AnyClass)
   public func removeSensitiveClass(_ aClass: Swift.AnyClass)
-  @objc deinit
-}
-@_hasMissingDesignatedInitializers open class SessionReplay {
-  open class func initialize(token: Swift.String, distinctId: Swift.String, config: MixpanelSessionReplay.SessionReplayConfig = SessionReplayConfig()) -> MixpanelSessionReplay.SessionReplayInstance
-  open class func getInstance() -> MixpanelSessionReplay.SessionReplayInstance?
-  open class func getReplayId() -> Swift.String?
   @objc deinit
 }
 extension UIKit.UIView {
@@ -71,6 +95,15 @@ extension UIKit.UIView {
   }
 }
 extension SwiftUICore.View {
-  @_Concurrency.MainActor @preconcurrency public func replaySensitive() -> some SwiftUICore.View
+  @_Concurrency.MainActor @preconcurrency public func mpReplaySensitive(_ isSensitive: Swift.Bool) -> some SwiftUICore.View
   
 }
+extension UIKit.UIView {
+  @_Concurrency.MainActor @preconcurrency public var mpReplaySensitive: Swift.Bool? {
+    get
+    set
+  }
+}
+extension MixpanelSessionReplay.MPAutoMaskedViews : Swift.Equatable {}
+extension MixpanelSessionReplay.MPAutoMaskedViews : Swift.Hashable {}
+extension MixpanelSessionReplay.MPAutoMaskedViews : Swift.RawRepresentable {}
