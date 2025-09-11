@@ -34,6 +34,7 @@ public struct MPSessionReplayConfig : Swift.Codable {
   public var flushInterval: Foundation.TimeInterval
   public var enableLogging: Swift.Bool
   public init(wifiOnly: Swift.Bool = true, autoMaskedViews: Swift.Set<MixpanelSessionReplay.MPAutoMaskedViews> = [.image, .text, .web, .map], autoStartRecording: Swift.Bool = true, recordingSessionsPercent: Swift.Double = 100, enableLogging: Swift.Bool = false, flushInterval: Foundation.TimeInterval = 10)
+  public static func from(json: Foundation.Data) throws -> MixpanelSessionReplay.MPSessionReplayConfig
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
