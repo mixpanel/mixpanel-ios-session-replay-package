@@ -1034,6 +1034,36 @@
             "init_kind": "Designated"
           },
           {
+            "kind": "Function",
+            "name": "from",
+            "printedName": "from(json:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "MPSessionReplayConfig",
+                "printedName": "MixpanelSessionReplay.MPSessionReplayConfig",
+                "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Data",
+                "printedName": "Foundation.Data",
+                "usr": "s:10Foundation4DataV"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV4from4jsonAC10Foundation4DataV_tKFZ",
+            "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV4from4jsonAC10Foundation4DataV_tKFZ",
+            "moduleName": "MixpanelSessionReplay",
+            "static": true,
+            "declAttributes": [
+              "AccessControl",
+              "RawDocComment"
+            ],
+            "throwing": true,
+            "funcSelfKind": "NonMutating"
+          },
+          {
             "kind": "Constructor",
             "name": "init",
             "printedName": "init(from:)",
@@ -4261,7 +4291,7 @@
       "kind": "StringLiteral",
       "offset": 424,
       "length": 7,
-      "value": "\"1.1.0\""
+      "value": "\"1.1.1\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",

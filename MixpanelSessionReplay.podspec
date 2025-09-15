@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name         = "MixpanelSessionReplay"
-    s.version      = "1.1.0"
+    s.version      = "1.1.1"
     s.summary      = "Mixpanel Session Replay library for iOS (Swift)"
     s.homepage     = "https://mixpanel.com"
     s.license = 'Apache License, Version 2.0'
