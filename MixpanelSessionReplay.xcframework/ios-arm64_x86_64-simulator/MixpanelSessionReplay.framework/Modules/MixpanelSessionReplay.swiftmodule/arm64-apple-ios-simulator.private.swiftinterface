@@ -90,6 +90,18 @@ public struct ServerProxyResource {
   public func removeSensitiveClass(_ aClass: Swift.AnyClass)
   @objc deinit
 }
+public struct APIConstants {
+}
+extension MixpanelSessionReplay.APIConstants {
+  public static var currentLibVersion: Swift.String {
+    get
+  }
+  public static func setLibVersion(_ version: Swift.String)
+  public static var currentMpLib: Swift.String {
+    get
+  }
+  public static func setMpLib(_ lib: Swift.String)
+}
 extension UIKit.UIView {
   @_Concurrency.MainActor @preconcurrency public var frameRelativeToWindow: CoreFoundation.CGRect? {
     get
