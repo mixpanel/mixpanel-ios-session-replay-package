@@ -1,7 +1,7 @@
 // swift-interface-format-version: 1.0
-// swift-compiler-version: Apple Swift version 6.1.2 effective-5.10 (swiftlang-6.1.2.1.2 clang-1700.0.13.5)
+// swift-compiler-version: Apple Swift version 6.2 effective-5.10 (swiftlang-6.2.0.19.9 clang-1700.3.19.1)
 // swift-module-flags: -target arm64-apple-ios13.0 -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -module-name MixpanelSessionReplay
-// swift-module-flags-ignorable:  -interface-compiler-version 6.1.2
+// swift-module-flags-ignorable:  -formal-cxx-interoperability-mode=off -interface-compiler-version 6.2
 import CoreGraphics
 import Foundation
 import MapKit
@@ -16,11 +16,14 @@ import _Concurrency
 import _MapKit_SwiftUI
 import _StringProcessing
 import _SwiftConcurrencyShims
+import _WebKit_SwiftUI
 import ObjectiveC.runtime
 import zlib
 public enum MPAutoMaskedViews : Swift.String, Swift.Codable {
   case image, text, web, map
+  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
+  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -54,13 +57,21 @@ public enum MPSessionReplayError : Swift.Error {
   case disabledByRemoteSetting(message: Swift.String)
 }
 @_hasMissingDesignatedInitializers open class MPSessionReplay {
+  #if compiler(>=5.3) && $NonescapableTypes
   open class func initialize(token: Swift.String, distinctId: Swift.String, config: MixpanelSessionReplay.MPSessionReplayConfig = MPSessionReplayConfig(), completion: @escaping (Swift.Result<MixpanelSessionReplay.MPSessionReplayInstance?, any Swift.Error>) -> Swift.Void = {_ in })
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
   open class func getInstance() -> MixpanelSessionReplay.MPSessionReplayInstance?
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
   open class func getReplayId() -> Swift.String?
+  #endif
   @objc deinit
 }
 public struct ServerProxyResource {
+  #if compiler(>=5.3) && $NonescapableTypes
   public init(queryItems: [Foundation.URLQueryItem]? = nil, headers: [Swift.String : Swift.String])
+  #endif
   public let queryItems: [Foundation.URLQueryItem]?
   public let headers: [Swift.String : Swift.String]
 }
@@ -103,19 +114,23 @@ extension MixpanelSessionReplay.APIConstants {
   public static func setMpLib(_ lib: Swift.String)
 }
 extension UIKit.UIView {
+  #if compiler(>=5.3) && $NonescapableTypes
   @_Concurrency.MainActor @preconcurrency public var frameRelativeToWindow: CoreFoundation.CGRect? {
     get
   }
+  #endif
 }
 extension SwiftUICore.View {
   @_Concurrency.MainActor @preconcurrency public func mpReplaySensitive(_ isSensitive: Swift.Bool) -> some SwiftUICore.View
   
 }
 extension UIKit.UIView {
+  #if compiler(>=5.3) && $NonescapableTypes
   @_Concurrency.MainActor @preconcurrency public var mpReplaySensitive: Swift.Bool? {
     get
     set
   }
+  #endif
 }
 extension MixpanelSessionReplay.MPAutoMaskedViews : Swift.Equatable {}
 extension MixpanelSessionReplay.MPAutoMaskedViews : Swift.Hashable {}
