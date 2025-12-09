@@ -4466,7 +4466,7 @@
       "kind": "StringLiteral",
       "offset": 439,
       "length": 7,
-      "value": "\"1.1.5\""
+      "value": "\"1.1.6\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
@@ -4674,7 +4674,7 @@
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Extensions\/View+SensitiveView.swift",
       "kind": "IntegerLiteral",
-      "offset": 2086,
+      "offset": 1975,
       "length": 1,
       "value": "0"
     },

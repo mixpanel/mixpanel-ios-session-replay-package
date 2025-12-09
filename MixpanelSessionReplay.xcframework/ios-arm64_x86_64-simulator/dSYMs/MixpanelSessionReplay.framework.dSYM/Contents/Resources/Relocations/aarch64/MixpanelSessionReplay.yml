@@ -2,8 +2,8 @@
 triple:          'arm64-apple-darwin'
 binary-path:     '/Users/runner/Library/Developer/Xcode/DerivedData/MixpanelSessionReplay-dhzcdwtsfyugmxbkrlsjxeumqcgw/Build/Intermediates.noindex/ArchiveIntermediates/MixpanelSessionReplay/InstallationBuildProductsLocation/Library/Frameworks/MixpanelSessionReplay.framework/MixpanelSessionReplay'
 relocations:
-  - { offset: 0x6378E, size: 0x8, addend: 0x0, symName: _MixpanelSessionReplayVersionString, symObjAddr: 0x0, symBinAddr: 0x3DE10, symSize: 0x0 }
-  - { offset: 0x637C3, size: 0x8, addend: 0x0, symName: _MixpanelSessionReplayVersionNumber, symObjAddr: 0x48, symBinAddr: 0x3DE58, symSize: 0x0 }
+  - { offset: 0x6378E, size: 0x8, addend: 0x0, symName: _MixpanelSessionReplayVersionString, symObjAddr: 0x0, symBinAddr: 0x3DB50, symSize: 0x0 }
+  - { offset: 0x637C3, size: 0x8, addend: 0x0, symName: _MixpanelSessionReplayVersionNumber, symObjAddr: 0x48, symBinAddr: 0x3DB98, symSize: 0x0 }
   - { offset: 0x63818, size: 0x8, addend: 0x0, symName: ___swift_memcpy16_8, symObjAddr: 0x14, symBinAddr: 0x16E4, symSize: 0xC }
   - { offset: 0x6382C, size: 0x8, addend: 0x0, symName: ___swift_noop_void_return, symObjAddr: 0x20, symBinAddr: 0x16F0, symSize: 0x4 }
   - { offset: 0x63840, size: 0x8, addend: 0x0, symName: '_$sSo6CGSizeVwet', symObjAddr: 0x24, symBinAddr: 0x16F4, symSize: 0x20 }
@@ -991,65 +991,60 @@ relocations:
   - { offset: 0x92CE9, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17RecordingSettingsVSEAASE6encode2toys7Encoder_p_tKFTW', symObjAddr: 0x7C8, symBinAddr: 0x3903C, symSize: 0x1C }
   - { offset: 0x92CFD, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay16SettingsResponseV4fromACs7Decoder_p_tKcfCTf4nd_n', symObjAddr: 0x7E4, symBinAddr: 0x39058, symSize: 0x11C }
   - { offset: 0x92D20, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17RecordingSettingsV4fromACs7Decoder_p_tKcfCTf4nd_n', symObjAddr: 0xD7C, symBinAddr: 0x39484, symSize: 0x144 }
-  - { offset: 0x92ECF, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay02mpC12SensitiveKey33_167EB66CBD6F5BBBE2B52720BF915CB5LLs5UInt8Vvp', symObjAddr: 0x10D8, symBinAddr: 0x588A8, symSize: 0x0 }
+  - { offset: 0x92ECF, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay02mpC12SensitiveKey33_167EB66CBD6F5BBBE2B52720BF915CB5LLs5UInt8Vvp', symObjAddr: 0xD98, symBinAddr: 0x588A8, symSize: 0x0 }
   - { offset: 0x92EDD, size: 0x8, addend: 0x0, symName: '_$sSo6UIViewC21MixpanelSessionReplayE02mpD9SensitiveSbSgvg', symObjAddr: 0x0, symBinAddr: 0x396FC, symSize: 0xD4 }
   - { offset: 0x92F0C, size: 0x8, addend: 0x0, symName: '_$sypSgWOh', symObjAddr: 0xD4, symBinAddr: 0x397D0, symSize: 0x40 }
   - { offset: 0x92F20, size: 0x8, addend: 0x0, symName: '_$sSo6UIViewC21MixpanelSessionReplayE21frameRelativeToWindowSo6CGRectVSgvg', symObjAddr: 0x158, symBinAddr: 0x39810, symSize: 0xB4 }
-  - { offset: 0x930D2, size: 0x8, addend: 0x0, symName: '_$sSo6UIViewC21MixpanelSessionReplayE02mpD9SensitiveSbSgvs', symObjAddr: 0x658, symBinAddr: 0x39D0C, symSize: 0x88 }
-  - { offset: 0x93106, size: 0x8, addend: 0x0, symName: '_$s7SwiftUI4ViewP21MixpanelSessionReplayE02mpF9SensitiveyQrSbF', symObjAddr: 0x7A4, symBinAddr: 0x39E58, symSize: 0x30 }
-  - { offset: 0x93152, size: 0x8, addend: 0x0, symName: '_$sSo6UIViewC21MixpanelSessionReplayE02mpD9SensitiveSbSgvpABTk', symObjAddr: 0x8F0, symBinAddr: 0x39FA4, symSize: 0x8C }
-  - { offset: 0x93188, size: 0x8, addend: 0x0, symName: '_$sSo6UIViewC21MixpanelSessionReplayE02mpD9SensitiveSbSgvM', symObjAddr: 0x97C, symBinAddr: 0x3A030, symSize: 0x4C }
-  - { offset: 0x931B7, size: 0x8, addend: 0x0, symName: '_$sSo6UIViewC21MixpanelSessionReplayE02mpD9SensitiveSbSgvM.resume.0', symObjAddr: 0x9C8, symBinAddr: 0x3A07C, symSize: 0x90 }
-  - { offset: 0x931F6, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay20SensitiveViewWrapperCMa', symObjAddr: 0xA8C, symBinAddr: 0x3A138, symSize: 0x20 }
-  - { offset: 0x9320A, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierVAC7SwiftUI04ViewE0AAWl', symObjAddr: 0xB00, symBinAddr: 0x3A1AC, symSize: 0x40 }
-  - { offset: 0x9321E, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierVwet', symObjAddr: 0xB50, symBinAddr: 0x3A1EC, symSize: 0xA0 }
-  - { offset: 0x93232, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierVMa', symObjAddr: 0xCA0, symBinAddr: 0x3A28C, symSize: 0x10 }
-  - { offset: 0x93246, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierV7SwiftUI04ViewE0AA4BodyAdEP_AD0H0PWT', symObjAddr: 0xCB0, symBinAddr: 0x3A29C, symSize: 0x10 }
-  - { offset: 0x9325A, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierV4body7contentQr7SwiftUI05_ViewE8_ContentVyACG_tFyAA0dJ7WrapperCcfU_TA', symObjAddr: 0xCD0, symBinAddr: 0x3A2BC, symSize: 0x8 }
-  - { offset: 0x9326E, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVwCP', symObjAddr: 0xCD8, symBinAddr: 0x3A2C4, symSize: 0x2C }
-  - { offset: 0x93282, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVwxx', symObjAddr: 0xD04, symBinAddr: 0x3A2F0, symSize: 0x8 }
-  - { offset: 0x93296, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVwca', symObjAddr: 0xD0C, symBinAddr: 0x3A2F8, symSize: 0x38 }
-  - { offset: 0x932AA, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVwta', symObjAddr: 0xD50, symBinAddr: 0x3A330, symSize: 0x30 }
-  - { offset: 0x932BE, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVwet', symObjAddr: 0xD80, symBinAddr: 0x3A360, symSize: 0x48 }
-  - { offset: 0x932D2, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVwst', symObjAddr: 0xDC8, symBinAddr: 0x3A3A8, symSize: 0x3C }
-  - { offset: 0x932E6, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVMa', symObjAddr: 0xE04, symBinAddr: 0x3A3E4, symSize: 0x10 }
-  - { offset: 0x932FA, size: 0x8, addend: 0x0, symName: '_$s7SwiftUI15ModifiedContentVyAA014_ViewModifier_D0Vy21MixpanelSessionReplay09SensitiveF0VGAA011_BackgroundF0VyAF0jE20WrapperRepresentableVGGACyxq_GAA0E0A2aQRzAA0eF0R_rlWl', symObjAddr: 0xE18, symBinAddr: 0x3A3F8, symSize: 0xA0 }
-  - { offset: 0x9330E, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI0E0AA4BodyAdEP_AGWT', symObjAddr: 0xF00, symBinAddr: 0x3A498, symSize: 0xC }
-  - { offset: 0x93322, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AaD0E0PWb', symObjAddr: 0xF0C, symBinAddr: 0x3A4A4, symSize: 0x4 }
-  - { offset: 0x93336, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVAC7SwiftUI0E0AAWl', symObjAddr: 0xF10, symBinAddr: 0x3A4A8, symSize: 0x40 }
-  - { offset: 0x9334A, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV10makeUIView7contextAA0deF0C7SwiftUI0iG7ContextVyACG_tFyyScMYccfU_TA', symObjAddr: 0xFE4, symBinAddr: 0x3A538, symSize: 0xC }
-  - { offset: 0x9335E, size: 0x8, addend: 0x0, symName: _block_copy_helper, symObjAddr: 0xFF0, symBinAddr: 0x3A544, symSize: 0x10 }
-  - { offset: 0x93372, size: 0x8, addend: 0x0, symName: _block_destroy_helper, symObjAddr: 0x1000, symBinAddr: 0x3A554, symSize: 0x8 }
-  - { offset: 0x93386, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVAC7SwiftUI06UIViewG0AAWl', symObjAddr: 0x108C, symBinAddr: 0x3A59C, symSize: 0x40 }
-  - { offset: 0x934C0, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP09dismantleJ0_11coordinatory0J4TypeQz_11CoordinatorQztFZTW', symObjAddr: 0x498, symBinAddr: 0x39B4C, symSize: 0x4 }
-  - { offset: 0x934DC, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP15makeCoordinator0L0QzyFTW', symObjAddr: 0x49C, symBinAddr: 0x39B50, symSize: 0x4 }
-  - { offset: 0x934F8, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP011_identifiedE4Tree2inAD011_IdentifiedeL0O0J4TypeQz_tFTW', symObjAddr: 0x4A0, symBinAddr: 0x39B54, symSize: 0x4 }
-  - { offset: 0x93514, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP12sizeThatFits_02uiE07contextSo6CGSizeVSgAD08ProposedE4SizeV_0J4TypeQzAD0jG7ContextVyxGtFTW', symObjAddr: 0x4A4, symBinAddr: 0x39B58, symSize: 0x30 }
-  - { offset: 0x93530, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP21_overrideSizeThatFits_2in02uiE0ySo6CGSizeVz_AD09_ProposedL0V0J4TypeQztFTW', symObjAddr: 0x4D4, symBinAddr: 0x39B88, symSize: 0x4 }
-  - { offset: 0x9354C, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP21_overrideLayoutTraits_3foryAD01_lM0Vz_0J4TypeQztFTW', symObjAddr: 0x4D8, symBinAddr: 0x39B8C, symSize: 0x4 }
-  - { offset: 0x93568, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP014_modifyBridgedE6InputsyyAD01_eM0VzFZTW', symObjAddr: 0x4DC, symBinAddr: 0x39B90, symSize: 0x14 }
-  - { offset: 0x93584, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP14_layoutOptionsyAD09_Platformeg6LayoutL0V0J4TypeQzFZTW', symObjAddr: 0x4F0, symBinAddr: 0x39BA4, symSize: 0x14 }
-  - { offset: 0x935A0, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI0E0AadEP05_makeE04view6inputsAD01_E7OutputsVAD11_GraphValueVyxG_AD01_E6InputsVtFZTW', symObjAddr: 0x504, symBinAddr: 0x39BB8, symSize: 0x50 }
-  - { offset: 0x935BC, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI0E0AadEP05_makeE4List4view6inputsAD01_eK7OutputsVAD11_GraphValueVyxG_AD01_eK6InputsVtFZTW', symObjAddr: 0x554, symBinAddr: 0x39C08, symSize: 0x50 }
-  - { offset: 0x935D8, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI0E0AadEP4body4BodyQzvgTW', symObjAddr: 0x5BC, symBinAddr: 0x39C70, symSize: 0x24 }
-  - { offset: 0x93612, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV10makeUIView7contextAA0deF0C7SwiftUI0iG7ContextVyACG_tF', symObjAddr: 0x20C, symBinAddr: 0x398C4, symSize: 0x21C }
-  - { offset: 0x936AE, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV10makeUIView7contextAA0deF0C7SwiftUI0iG7ContextVyACG_tFyyScMYccfU_', symObjAddr: 0x428, symBinAddr: 0x39AE0, symSize: 0x64 }
-  - { offset: 0x936FD, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP04makeJ07context0J4TypeQzAD0jG7ContextVyxG_tFTW', symObjAddr: 0x48C, symBinAddr: 0x39B44, symSize: 0x8 }
-  - { offset: 0x93721, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI0E0AadEP14_viewListCount6inputsSiSgAD01_ekL6InputsV_tFZTW', symObjAddr: 0x5A4, symBinAddr: 0x39C58, symSize: 0x18 }
-  - { offset: 0x9373D, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierV7SwiftUI04ViewE0AadEP05_makeH08modifier6inputs4bodyAD01_H7OutputsVAD11_GraphValueVyxG_AD01_H6InputsVAlD01_N0V_AQtctFZTW', symObjAddr: 0x6E0, symBinAddr: 0x39D94, symSize: 0x4 }
-  - { offset: 0x93759, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierV7SwiftUI04ViewE0AadEP05_makeH4List8modifier6inputs4bodyAD01_hJ7OutputsVAD11_GraphValueVyxG_AD01_hJ6InputsVAlD01_O0V_AQtctFZTW', symObjAddr: 0x6E4, symBinAddr: 0x39D98, symSize: 0x4 }
-  - { offset: 0x93775, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierV7SwiftUI04ViewE0AadEP14_viewListCount6inputs4bodySiSgAD01_hjK6InputsV_AjLXEtFZTW', symObjAddr: 0x6E8, symBinAddr: 0x39D9C, symSize: 0x18 }
-  - { offset: 0x93869, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierV4body7contentQr7SwiftUI05_ViewE8_ContentVyACG_tFyAA0dJ7WrapperCcfU_', symObjAddr: 0x5E0, symBinAddr: 0x39C94, symSize: 0x78 }
-  - { offset: 0x93972, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierV7SwiftUI04ViewE0AadEP4body7content4BodyQzAD01_hE8_ContentVyxG_tFTW', symObjAddr: 0x700, symBinAddr: 0x39DB4, symSize: 0xA4 }
-  - { offset: 0x93A22, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay20SensitiveViewWrapperC5frameACSo6CGRectV_tcfcTo', symObjAddr: 0x7D4, symBinAddr: 0x39E88, symSize: 0x6C }
-  - { offset: 0x93A98, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay20SensitiveViewWrapperC5coderACSgSo7NSCoderC_tcfcTo', symObjAddr: 0x840, symBinAddr: 0x39EF4, symSize: 0x80 }
-  - { offset: 0x93ACF, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay20SensitiveViewWrapperCfD', symObjAddr: 0x8C0, symBinAddr: 0x39F74, symSize: 0x30 }
-  - { offset: 0x93C85, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay14NetworkMonitorC6shared_WZ', symObjAddr: 0x8, symBinAddr: 0x3A5E0, symSize: 0x38 }
-  - { offset: 0x93CA9, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay14NetworkMonitorC6sharedACvpZ', symObjAddr: 0x36E0, symBinAddr: 0x5CA50, symSize: 0x0 }
-  - { offset: 0x93D33, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay14NetworkMonitorC6shared_WZ', symObjAddr: 0x8, symBinAddr: 0x3A5E0, symSize: 0x38 }
-  - { offset: 0x93D63, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay14NetworkMonitorCMa', symObjAddr: 0x408, symBinAddr: 0x3A9E0, symSize: 0x20 }
-  - { offset: 0x93D77, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay14NetworkMonitorCACyc33_467FD8CE7E4497E35A87710884C2B8FELlfcy0D06NWPathVcfU_TA', symObjAddr: 0x490, symBinAddr: 0x3AA24, symSize: 0x8 }
-  - { offset: 0x93DDE, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay14NetworkMonitorCACyc33_467FD8CE7E4497E35A87710884C2B8FELlfc', symObjAddr: 0x40, symBinAddr: 0x3A618, symSize: 0x160 }
-  - { offset: 0x93E58, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay14NetworkMonitorCACyc33_467FD8CE7E4497E35A87710884C2B8FELlfcy0D06NWPathVcfU_', symObjAddr: 0x1A0, symBinAddr: 0x3A778, symSize: 0x23C }
-  - { offset: 0x93EED, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay14NetworkMonitorCfD', symObjAddr: 0x3DC, symBinAddr: 0x3A9B4, symSize: 0x2C }
+  - { offset: 0x930CD, size: 0x8, addend: 0x0, symName: '_$sSo6UIViewC21MixpanelSessionReplayE02mpD9SensitiveSbSgvs', symObjAddr: 0x418, symBinAddr: 0x39ACC, symSize: 0x88 }
+  - { offset: 0x93101, size: 0x8, addend: 0x0, symName: '_$s7SwiftUI4ViewP21MixpanelSessionReplayE02mpF9SensitiveyQrSbF', symObjAddr: 0x564, symBinAddr: 0x39C18, symSize: 0x30 }
+  - { offset: 0x9314D, size: 0x8, addend: 0x0, symName: '_$sSo6UIViewC21MixpanelSessionReplayE02mpD9SensitiveSbSgvpABTk', symObjAddr: 0x6B0, symBinAddr: 0x39D64, symSize: 0x8C }
+  - { offset: 0x93183, size: 0x8, addend: 0x0, symName: '_$sSo6UIViewC21MixpanelSessionReplayE02mpD9SensitiveSbSgvM', symObjAddr: 0x73C, symBinAddr: 0x39DF0, symSize: 0x4C }
+  - { offset: 0x931B2, size: 0x8, addend: 0x0, symName: '_$sSo6UIViewC21MixpanelSessionReplayE02mpD9SensitiveSbSgvM.resume.0', symObjAddr: 0x788, symBinAddr: 0x39E3C, symSize: 0x90 }
+  - { offset: 0x931F1, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay20SensitiveViewWrapperCMa', symObjAddr: 0x84C, symBinAddr: 0x39EF8, symSize: 0x20 }
+  - { offset: 0x93205, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierVAC7SwiftUI04ViewE0AAWl', symObjAddr: 0x8C0, symBinAddr: 0x39F6C, symSize: 0x40 }
+  - { offset: 0x93219, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierVwet', symObjAddr: 0x910, symBinAddr: 0x39FAC, symSize: 0xA0 }
+  - { offset: 0x9322D, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierVMa', symObjAddr: 0xA60, symBinAddr: 0x3A04C, symSize: 0x10 }
+  - { offset: 0x93241, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierV7SwiftUI04ViewE0AA4BodyAdEP_AD0H0PWT', symObjAddr: 0xA70, symBinAddr: 0x3A05C, symSize: 0x10 }
+  - { offset: 0x93255, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierV4body7contentQr7SwiftUI05_ViewE8_ContentVyACG_tFyAA0dJ7WrapperCcfU_TA', symObjAddr: 0xA90, symBinAddr: 0x3A07C, symSize: 0x8 }
+  - { offset: 0x93269, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVwCP', symObjAddr: 0xA98, symBinAddr: 0x3A084, symSize: 0x2C }
+  - { offset: 0x9327D, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVwxx', symObjAddr: 0xAC4, symBinAddr: 0x3A0B0, symSize: 0x8 }
+  - { offset: 0x93291, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVwca', symObjAddr: 0xACC, symBinAddr: 0x3A0B8, symSize: 0x38 }
+  - { offset: 0x932A5, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVwta', symObjAddr: 0xB10, symBinAddr: 0x3A0F0, symSize: 0x30 }
+  - { offset: 0x932B9, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVwet', symObjAddr: 0xB40, symBinAddr: 0x3A120, symSize: 0x48 }
+  - { offset: 0x932CD, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVwst', symObjAddr: 0xB88, symBinAddr: 0x3A168, symSize: 0x3C }
+  - { offset: 0x932E1, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVMa', symObjAddr: 0xBC4, symBinAddr: 0x3A1A4, symSize: 0x10 }
+  - { offset: 0x932F5, size: 0x8, addend: 0x0, symName: '_$s7SwiftUI15ModifiedContentVyAA014_ViewModifier_D0Vy21MixpanelSessionReplay09SensitiveF0VGAA011_BackgroundF0VyAF0jE20WrapperRepresentableVGGACyxq_GAA0E0A2aQRzAA0eF0R_rlWl', symObjAddr: 0xBD8, symBinAddr: 0x3A1B8, symSize: 0xA0 }
+  - { offset: 0x93309, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI0E0AA4BodyAdEP_AGWT', symObjAddr: 0xD00, symBinAddr: 0x3A298, symSize: 0xC }
+  - { offset: 0x9331D, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AaD0E0PWb', symObjAddr: 0xD0C, symBinAddr: 0x3A2A4, symSize: 0x4 }
+  - { offset: 0x93331, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVAC7SwiftUI0E0AAWl', symObjAddr: 0xD10, symBinAddr: 0x3A2A8, symSize: 0x40 }
+  - { offset: 0x93345, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableVAC7SwiftUI06UIViewG0AAWl', symObjAddr: 0xD50, symBinAddr: 0x3A2E8, symSize: 0x40 }
+  - { offset: 0x933E4, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP09dismantleJ0_11coordinatory0J4TypeQz_11CoordinatorQztFZTW', symObjAddr: 0x258, symBinAddr: 0x3990C, symSize: 0x4 }
+  - { offset: 0x93400, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP15makeCoordinator0L0QzyFTW', symObjAddr: 0x25C, symBinAddr: 0x39910, symSize: 0x4 }
+  - { offset: 0x9341C, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP011_identifiedE4Tree2inAD011_IdentifiedeL0O0J4TypeQz_tFTW', symObjAddr: 0x260, symBinAddr: 0x39914, symSize: 0x4 }
+  - { offset: 0x93438, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP12sizeThatFits_02uiE07contextSo6CGSizeVSgAD08ProposedE4SizeV_0J4TypeQzAD0jG7ContextVyxGtFTW', symObjAddr: 0x264, symBinAddr: 0x39918, symSize: 0x30 }
+  - { offset: 0x93454, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP21_overrideSizeThatFits_2in02uiE0ySo6CGSizeVz_AD09_ProposedL0V0J4TypeQztFTW', symObjAddr: 0x294, symBinAddr: 0x39948, symSize: 0x4 }
+  - { offset: 0x93470, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP21_overrideLayoutTraits_3foryAD01_lM0Vz_0J4TypeQztFTW', symObjAddr: 0x298, symBinAddr: 0x3994C, symSize: 0x4 }
+  - { offset: 0x9348C, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP014_modifyBridgedE6InputsyyAD01_eM0VzFZTW', symObjAddr: 0x29C, symBinAddr: 0x39950, symSize: 0x14 }
+  - { offset: 0x934A8, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP14_layoutOptionsyAD09_Platformeg6LayoutL0V0J4TypeQzFZTW', symObjAddr: 0x2B0, symBinAddr: 0x39964, symSize: 0x14 }
+  - { offset: 0x934C4, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI0E0AadEP05_makeE04view6inputsAD01_E7OutputsVAD11_GraphValueVyxG_AD01_E6InputsVtFZTW', symObjAddr: 0x2C4, symBinAddr: 0x39978, symSize: 0x50 }
+  - { offset: 0x934E0, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI0E0AadEP05_makeE4List4view6inputsAD01_eK7OutputsVAD11_GraphValueVyxG_AD01_eK6InputsVtFZTW', symObjAddr: 0x314, symBinAddr: 0x399C8, symSize: 0x50 }
+  - { offset: 0x934FC, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI0E0AadEP4body4BodyQzvgTW', symObjAddr: 0x37C, symBinAddr: 0x39A30, symSize: 0x24 }
+  - { offset: 0x935AF, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI06UIViewG0AadEP04makeJ07context0J4TypeQzAD0jG7ContextVyxG_tFTW', symObjAddr: 0x20C, symBinAddr: 0x398C4, symSize: 0x48 }
+  - { offset: 0x9362C, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay33SensitiveViewWrapperRepresentableV7SwiftUI0E0AadEP14_viewListCount6inputsSiSgAD01_ekL6InputsV_tFZTW', symObjAddr: 0x364, symBinAddr: 0x39A18, symSize: 0x18 }
+  - { offset: 0x93648, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierV7SwiftUI04ViewE0AadEP05_makeH08modifier6inputs4bodyAD01_H7OutputsVAD11_GraphValueVyxG_AD01_H6InputsVAlD01_N0V_AQtctFZTW', symObjAddr: 0x4A0, symBinAddr: 0x39B54, symSize: 0x4 }
+  - { offset: 0x93664, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierV7SwiftUI04ViewE0AadEP05_makeH4List8modifier6inputs4bodyAD01_hJ7OutputsVAD11_GraphValueVyxG_AD01_hJ6InputsVAlD01_O0V_AQtctFZTW', symObjAddr: 0x4A4, symBinAddr: 0x39B58, symSize: 0x4 }
+  - { offset: 0x93680, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierV7SwiftUI04ViewE0AadEP14_viewListCount6inputs4bodySiSgAD01_hjK6InputsV_AjLXEtFZTW', symObjAddr: 0x4A8, symBinAddr: 0x39B5C, symSize: 0x18 }
+  - { offset: 0x93774, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierV4body7contentQr7SwiftUI05_ViewE8_ContentVyACG_tFyAA0dJ7WrapperCcfU_', symObjAddr: 0x3A0, symBinAddr: 0x39A54, symSize: 0x78 }
+  - { offset: 0x9387D, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay17SensitiveModifierV7SwiftUI04ViewE0AadEP4body7content4BodyQzAD01_hE8_ContentVyxG_tFTW', symObjAddr: 0x4C0, symBinAddr: 0x39B74, symSize: 0xA4 }
+  - { offset: 0x93928, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay20SensitiveViewWrapperC5frameACSo6CGRectV_tcfcTo', symObjAddr: 0x594, symBinAddr: 0x39C48, symSize: 0x6C }
+  - { offset: 0x9399E, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay20SensitiveViewWrapperC5coderACSgSo7NSCoderC_tcfcTo', symObjAddr: 0x600, symBinAddr: 0x39CB4, symSize: 0x80 }
+  - { offset: 0x939D5, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay20SensitiveViewWrapperCfD', symObjAddr: 0x680, symBinAddr: 0x39D34, symSize: 0x30 }
+  - { offset: 0x93B78, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay14NetworkMonitorC6shared_WZ', symObjAddr: 0x8, symBinAddr: 0x3A32C, symSize: 0x38 }
+  - { offset: 0x93B9C, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay14NetworkMonitorC6sharedACvpZ', symObjAddr: 0x36E0, symBinAddr: 0x5CA50, symSize: 0x0 }
+  - { offset: 0x93C26, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay14NetworkMonitorC6shared_WZ', symObjAddr: 0x8, symBinAddr: 0x3A32C, symSize: 0x38 }
+  - { offset: 0x93C56, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay14NetworkMonitorCMa', symObjAddr: 0x408, symBinAddr: 0x3A72C, symSize: 0x20 }
+  - { offset: 0x93C6A, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay14NetworkMonitorCACyc33_467FD8CE7E4497E35A87710884C2B8FELlfcy0D06NWPathVcfU_TA', symObjAddr: 0x490, symBinAddr: 0x3A770, symSize: 0x8 }
+  - { offset: 0x93CD1, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay14NetworkMonitorCACyc33_467FD8CE7E4497E35A87710884C2B8FELlfc', symObjAddr: 0x40, symBinAddr: 0x3A364, symSize: 0x160 }
+  - { offset: 0x93D4B, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay14NetworkMonitorCACyc33_467FD8CE7E4497E35A87710884C2B8FELlfcy0D06NWPathVcfU_', symObjAddr: 0x1A0, symBinAddr: 0x3A4C4, symSize: 0x23C }
+  - { offset: 0x93DE0, size: 0x8, addend: 0x0, symName: '_$s21MixpanelSessionReplay14NetworkMonitorCfD', symObjAddr: 0x3DC, symBinAddr: 0x3A700, symSize: 0x2C }
 ...
