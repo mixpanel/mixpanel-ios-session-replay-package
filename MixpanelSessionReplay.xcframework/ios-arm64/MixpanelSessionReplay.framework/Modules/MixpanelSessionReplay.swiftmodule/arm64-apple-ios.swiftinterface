@@ -33,7 +33,8 @@ public struct MPSessionReplayConfig : Swift.Codable {
   public var autoMaskedViews: Swift.Set<MixpanelSessionReplay.MPAutoMaskedViews>
   public var flushInterval: Foundation.TimeInterval
   public var enableLogging: Swift.Bool
-  public init(wifiOnly: Swift.Bool = true, autoMaskedViews: Swift.Set<MixpanelSessionReplay.MPAutoMaskedViews> = [.image, .text, .web, .map], autoStartRecording: Swift.Bool = true, recordingSessionsPercent: Swift.Double = 100, enableLogging: Swift.Bool = false, flushInterval: Foundation.TimeInterval = 10)
+  public var enableSessionReplayOniOS26AndLater: Swift.Bool
+  public init(wifiOnly: Swift.Bool = true, autoMaskedViews: Swift.Set<MixpanelSessionReplay.MPAutoMaskedViews> = [.image, .text, .web, .map], autoStartRecording: Swift.Bool = true, recordingSessionsPercent: Swift.Double = 100, enableLogging: Swift.Bool = false, flushInterval: Foundation.TimeInterval = 10, enableSessionReplayOniOS26AndLater: Swift.Bool = false)
   public static func from(json: Foundation.Data) throws -> MixpanelSessionReplay.MPSessionReplayConfig
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
@@ -52,6 +53,7 @@ extension Foundation.Data {
 public enum MPSessionReplayError : Swift.Error {
   case failedToInitialize
   case disabledByRemoteSetting(message: Swift.String)
+  case custom(message: Swift.String)
 }
 @_hasMissingDesignatedInitializers open class MPSessionReplay {
   open class func initialize(token: Swift.String, distinctId: Swift.String, config: MixpanelSessionReplay.MPSessionReplayConfig = MPSessionReplayConfig(), completion: @escaping (Swift.Result<MixpanelSessionReplay.MPSessionReplayInstance?, any Swift.Error>) -> Swift.Void = {_ in })
