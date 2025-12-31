@@ -1,0 +1,71 @@
+name: Publish Release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (without v prefix)'
+        required: true
+        type: string
+      skip_cocoapods:
+        description: 'Skip CocoaPods push'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  publish:
+    name: "📦 Publish Release"
+    runs-on: macos-latest
+    steps:
+      - name: Checkout public repo
+        uses: actions/checkout@v4
+      
+      - name: Download xcframework from private repo release
+        env:
+          GH_TOKEN: ${{ secrets.PRIVATE_REPO_PAT }}
+        run: |
+          gh release download "v${{ inputs.version }}" \
+            --repo mixpanel/mixpanel-ios-session-replay \
+            --pattern "MixpanelSessionReplay.xcframework.zip"
+      
+      - name: Update xcframework and podspec
+        run: |
+          rm -rf MixpanelSessionReplay.xcframework
+          unzip MixpanelSessionReplay.xcframework.zip
+          sed -i '' "s/s.version[[:space:]]*=.*/s.version          = '${{ inputs.version }}'/" MixpanelSessionReplay.podspec
+      
+      - name: Commit and push to test branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b test-release/${{ inputs.version }}
+          git add -A
+          git commit -m "Update to version ${{ inputs.version }}"
+          git push origin test-release/${{ inputs.version }}
+      
+      # Uncomment below when ready for production
+      # - name: Push to main and tag
+      #   run: |
+      #     git checkout main
+      #     git merge test-release/${{ inputs.version }}
+      #     git tag "v${{ inputs.version }}"
+      #     git push origin main --tags
+      #
+      # - name: Create release
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     gh release create "v${{ inputs.version }}" \
+      #       MixpanelSessionReplay.xcframework.zip \
+      #       --title "Release ${{ inputs.version }}" \
+      #       --generate-notes
+      #
+      # - name: Validate podspec
+      #   if: ${{ !inputs.skip_cocoapods }}
+      #   run: pod spec lint MixpanelSessionReplay.podspec --allow-warnings
+      #
+      # - name: Push to CocoaPods
+      #   if: ${{ !inputs.skip_cocoapods }}
+      #   env:
+      #     COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+      #   run: pod trunk push MixpanelSessionReplay.podspec --allow-warnings
