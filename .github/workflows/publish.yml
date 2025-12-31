@@ -25,7 +25,7 @@ jobs:
           GH_TOKEN: ${{ secrets.PRIVATE_REPO_PAT }}
         run: |
           gh release download "v${{ inputs.version }}" \
-            --repo mixpanel/mixpanel-ios-session-replay \
+            --repo ${{ secrets.PRIVATE_REPO }} \
             --pattern "MixpanelSessionReplay.xcframework.zip"
       
       - name: Update xcframework and podspec
