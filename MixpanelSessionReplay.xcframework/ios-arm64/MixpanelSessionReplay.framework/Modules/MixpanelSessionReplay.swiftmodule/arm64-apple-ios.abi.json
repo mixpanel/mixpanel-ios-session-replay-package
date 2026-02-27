@@ -4301,6 +4301,13 @@
       "value": "[]"
     },
     {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Swizzler.swift",
+      "kind": "FloatLiteral",
+      "offset": 4007,
+      "length": 3,
+      "value": "0.4"
+    },
+    {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Network\/FlushRequest.swift",
       "kind": "FloatLiteral",
       "offset": 163,
@@ -4462,6 +4469,55 @@
       "value": "\"https:\/\/api.mixpanel.com\/settings\""
     },
     {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Tracking\/ScreenRecorder.swift",
+      "kind": "IntegerLiteral",
+      "offset": 775,
+      "length": 3,
+      "value": "203"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Tracking\/ScreenRecorder.swift",
+      "kind": "FloatLiteral",
+      "offset": 779,
+      "length": 5,
+      "value": "255.0"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Tracking\/ScreenRecorder.swift",
+      "kind": "IntegerLiteral",
+      "offset": 793,
+      "length": 3,
+      "value": "203"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Tracking\/ScreenRecorder.swift",
+      "kind": "FloatLiteral",
+      "offset": 797,
+      "length": 5,
+      "value": "255.0"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Tracking\/ScreenRecorder.swift",
+      "kind": "IntegerLiteral",
+      "offset": 810,
+      "length": 3,
+      "value": "203"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Tracking\/ScreenRecorder.swift",
+      "kind": "FloatLiteral",
+      "offset": 814,
+      "length": 5,
+      "value": "255.0"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Tracking\/ScreenRecorder.swift",
+      "kind": "FloatLiteral",
+      "offset": 828,
+      "length": 3,
+      "value": "1.0"
+    },
+    {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/MPSessionReplayInstance.swift",
       "kind": "IntegerLiteral",
       "offset": 307,
@@ -4534,58 +4590,72 @@
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "BooleanLiteral",
-      "offset": 2271,
+      "offset": 2371,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "BooleanLiteral",
-      "offset": 2390,
+      "offset": 2404,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "BooleanLiteral",
-      "offset": 2512,
+      "offset": 2439,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "BooleanLiteral",
-      "offset": 2638,
+      "offset": 2474,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "Array",
-      "offset": 2775,
+      "offset": 2517,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "StringLiteral",
-      "offset": 3288,
+      "offset": 2787,
+      "length": 28,
+      "value": "\"SwiftUI.TextEditorTextView\""
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
+      "kind": "StringLiteral",
+      "offset": 2882,
       "length": 20,
       "value": "\"SwiftUI.ImageLayer\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "StringLiteral",
-      "offset": 3373,
+      "offset": 3028,
       "length": 23,
       "value": "\"SwiftUI.CGDrawingView\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "StringLiteral",
-      "offset": 3466,
-      "length": 28,
-      "value": "\"SwiftUI.TextEditorTextView\""
+      "offset": 3341,
+      "length": 66,
+      "value": "\"_TtC7SwiftUIP33_863CCF9D49B535DAEB1C7D61BEE53B5914CGDrawingLayer\""
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
+      "kind": "StringLiteral",
+      "offset": 3473,
+      "length": 15,
+      "value": "\"UIButtonLabel\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Logging\/Logger.swift",
@@ -4660,203 +4730,203 @@
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "StringLiteral",
-      "offset": 439,
+      "offset": 382,
       "length": 7,
-      "value": "\"1.2.0\""
+      "value": "\"1.2.1\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "StringLiteral",
-      "offset": 476,
+      "offset": 419,
       "length": 10,
       "value": "\"swift-sr\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "StringLiteral",
-      "offset": 1021,
+      "offset": 964,
       "length": 23,
       "value": "\"com.mixpanel.Mixpanel\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1266,
+      "offset": 1209,
       "length": 1,
       "value": "1"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1296,
+      "offset": 1239,
       "length": 1,
       "value": "2"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1333,
+      "offset": 1276,
       "length": 1,
       "value": "3"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1355,
+      "offset": 1298,
       "length": 1,
       "value": "4"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1379,
+      "offset": 1322,
       "length": 1,
       "value": "5"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1403,
+      "offset": 1346,
       "length": 1,
       "value": "6"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1459,
+      "offset": 1402,
       "length": 1,
       "value": "0"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1486,
+      "offset": 1429,
       "length": 1,
       "value": "1"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1520,
+      "offset": 1463,
       "length": 1,
       "value": "2"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1572,
+      "offset": 1515,
       "length": 1,
       "value": "7"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "FloatLiteral",
-      "offset": 1612,
+      "offset": 1555,
       "length": 4,
       "value": "10.0"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1673,
+      "offset": 1616,
       "length": 2,
       "value": "28"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "StringLiteral",
-      "offset": 1727,
+      "offset": 1670,
       "length": 36,
       "value": "\"https:\/\/api-js.mixpanel.com\/record\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1824,
+      "offset": 1767,
       "length": 4,
       "value": "-600"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1893,
+      "offset": 1836,
       "length": 3,
       "value": "500"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1957,
+      "offset": 1900,
       "length": 2,
       "value": "10"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 1990,
+      "offset": 1933,
       "length": 2,
-      "value": "10"
+      "value": "50"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 2023,
+      "offset": 1966,
       "length": 4,
       "value": "1000"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "StringLiteral",
-      "offset": 2060,
+      "offset": 2003,
       "length": 25,
       "value": "\"mp_session_replay_prefs\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 2149,
+      "offset": 2092,
       "length": 2,
       "value": "16"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "FloatLiteral",
-      "offset": 2214,
+      "offset": 2157,
       "length": 3,
       "value": "0.4"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "StringLiteral",
-      "offset": 2265,
+      "offset": 2208,
       "length": 28,
       "value": "\"com.mixpanel.sessionreplay\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 2328,
+      "offset": 2271,
       "length": 4,
       "value": "1001"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 2368,
+      "offset": 2311,
       "length": 4,
       "value": "1002"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 2406,
+      "offset": 2349,
       "length": 4,
       "value": "1003"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
       "kind": "IntegerLiteral",
-      "offset": 2443,
+      "offset": 2386,
       "length": 4,
       "value": "1004"
     },
