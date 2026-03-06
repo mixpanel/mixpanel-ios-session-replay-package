@@ -14,43 +14,43 @@
 		</data>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
 		<data>
-		XBC7JyPSDyNFwDqAHDtfgDvMLc8=
+		wi+EUg4lYTwFwM17RYoeJT9fyrY=
 		</data>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/arm64-apple-ios-simulator.private.swiftinterface</key>
 		<data>
-		YgNrBc/7hdIzlOM8XI+OgjhW0sE=
+		QWCa6qbq5oy8Ev16vLB1fcifApY=
 		</data>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/arm64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		Lh/a54i43RtzYAvB+1YSE6xttWk=
+		OaD9luYFJoVsDjeQ8OJCHcuNVu0=
 		</data>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/arm64-apple-ios-simulator.swiftinterface</key>
 		<data>
-		YgNrBc/7hdIzlOM8XI+OgjhW0sE=
+		QWCa6qbq5oy8Ev16vLB1fcifApY=
 		</data>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/arm64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		FeTQM8PT3gvWAsCH97GGM5l4Z4c=
+		yXv5undzMSOh17UPBOVEOFR6sJw=
 		</data>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
 		<data>
-		XBC7JyPSDyNFwDqAHDtfgDvMLc8=
+		wi+EUg4lYTwFwM17RYoeJT9fyrY=
 		</data>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/x86_64-apple-ios-simulator.private.swiftinterface</key>
 		<data>
-		9Dv30AtFHjjN5Y6MTR0iiB0BOtM=
+		CdvWbkIs1RKF1wsbQmviZLQnxVc=
 		</data>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		X4lU3GNYp/oTDLfidu4hwL5CTUE=
+		aAjdOO3pDjyXTfNwnmSuSJghuRM=
 		</data>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/x86_64-apple-ios-simulator.swiftinterface</key>
 		<data>
-		9Dv30AtFHjjN5Y6MTR0iiB0BOtM=
+		CdvWbkIs1RKF1wsbQmviZLQnxVc=
 		</data>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		HUw73mVHZAt+qQJe0xzJMc1IKjQ=
+		oN9oQTx67jZbKDeDZn+PZmankNI=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
@@ -74,70 +74,70 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			Z+gABBAKKCitsX8gc6wdrLDCZjEn81jnAQ0Qoi14Ayk=
+			U/fD4Dq8DWGa+KrwTmq+w46NZlK1ikVOdSEmu5AkLi0=
 			</data>
 		</dict>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/arm64-apple-ios-simulator.private.swiftinterface</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			5s2xP9+o8FbVOLoZlCLMK4omH0LTnFnKToJN4kk0eCM=
+			UhEmZR7Grxa92rc0FAToGSJ++jVH7bKbgwCoe+lgn24=
 			</data>
 		</dict>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/arm64-apple-ios-simulator.swiftdoc</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			yVob+GGkpq61GTYarFL5FQiWwIDrZ6i8kgygsSYMAJo=
+			6qXBWT46ZJmHj9pd6UN4Ds1CCRopYhVt4PpDvAcBGqw=
 			</data>
 		</dict>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/arm64-apple-ios-simulator.swiftinterface</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			5s2xP9+o8FbVOLoZlCLMK4omH0LTnFnKToJN4kk0eCM=
+			UhEmZR7Grxa92rc0FAToGSJ++jVH7bKbgwCoe+lgn24=
 			</data>
 		</dict>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/arm64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			7s34fODfXBe4BFiEh9OrZUgkykYntZOUy2LrQHDR2Vs=
+			8hel8pXmFO07BZCPLLRgbVjX2tjIivAC7zSnYI+uyXI=
 			</data>
 		</dict>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			Z+gABBAKKCitsX8gc6wdrLDCZjEn81jnAQ0Qoi14Ayk=
+			U/fD4Dq8DWGa+KrwTmq+w46NZlK1ikVOdSEmu5AkLi0=
 			</data>
 		</dict>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/x86_64-apple-ios-simulator.private.swiftinterface</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			r+Fz77yEzxci5lEu4BryB508rnEdU+mS7/NBj8YsPRE=
+			5aq2UXCnm170vEJ2xpCXtoZIja/e9Rlhx6ftjemw4UE=
 			</data>
 		</dict>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			6Zb5zKWfeNcIuoOM9bVE95962G3b2ZooxmdXELzyNpM=
+			s1081nguHnu7JFqzdunqo+khsWxa9IgeTc3UetdT4ow=
 			</data>
 		</dict>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/x86_64-apple-ios-simulator.swiftinterface</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			r+Fz77yEzxci5lEu4BryB508rnEdU+mS7/NBj8YsPRE=
+			5aq2UXCnm170vEJ2xpCXtoZIja/e9Rlhx6ftjemw4UE=
 			</data>
 		</dict>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			WDbQfGOWhO/ZEceICr3N8rF3NQWqIMl94EItOyec3jg=
+			YinGXhTBPUtI1RdK3CoHY6DDhQ0dxwhTSulMUmaN6TY=
 			</data>
 		</dict>
 		<key>Modules/module.modulemap</key>
