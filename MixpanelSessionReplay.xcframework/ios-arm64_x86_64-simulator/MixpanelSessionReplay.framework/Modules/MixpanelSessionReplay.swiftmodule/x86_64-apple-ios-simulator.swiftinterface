@@ -26,15 +26,27 @@ public enum MPAutoMaskedViews : Swift.String, Swift.Codable {
     get
   }
 }
+public enum RemoteSettingsMode : Swift.String, Swift.Codable {
+  case disabled
+  case strict
+  case fallback
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
 public struct MPSessionReplayConfig : Swift.Codable {
   public var wifiOnly: Swift.Bool
   public var recordingSessionsPercent: Swift.Double
+  @available(*, deprecated, message: "Use `recordingSessionsPercent` instead. Setting `recordingSessionsPercent` to 0 disables auto-start recording, while any value greater than 0 enables it. This property will be removed in a future release.")
   public var autoStartRecording: Swift.Bool
   public var autoMaskedViews: Swift.Set<MixpanelSessionReplay.MPAutoMaskedViews>
   public var flushInterval: Foundation.TimeInterval
   public var enableLogging: Swift.Bool
+  public var remoteSettingsMode: MixpanelSessionReplay.RemoteSettingsMode
   public var enableSessionReplayOniOS26AndLater: Swift.Bool
-  public init(wifiOnly: Swift.Bool = true, autoMaskedViews: Swift.Set<MixpanelSessionReplay.MPAutoMaskedViews> = [.image, .text, .web, .map], autoStartRecording: Swift.Bool = true, recordingSessionsPercent: Swift.Double = 100, enableLogging: Swift.Bool = false, flushInterval: Foundation.TimeInterval = 10, enableSessionReplayOniOS26AndLater: Swift.Bool = false)
+  public init(wifiOnly: Swift.Bool = true, autoMaskedViews: Swift.Set<MixpanelSessionReplay.MPAutoMaskedViews> = [.image, .text, .web, .map], autoStartRecording: Swift.Bool = true, recordingSessionsPercent: Swift.Double = 100, remoteSettingsMode: MixpanelSessionReplay.RemoteSettingsMode = .disabled, enableLogging: Swift.Bool = false, flushInterval: Foundation.TimeInterval = 10, enableSessionReplayOniOS26AndLater: Swift.Bool = false)
   public static func from(json: Foundation.Data) throws -> MixpanelSessionReplay.MPSessionReplayConfig
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
@@ -122,3 +134,6 @@ extension UIKit.UIView {
 extension MixpanelSessionReplay.MPAutoMaskedViews : Swift.Equatable {}
 extension MixpanelSessionReplay.MPAutoMaskedViews : Swift.Hashable {}
 extension MixpanelSessionReplay.MPAutoMaskedViews : Swift.RawRepresentable {}
+extension MixpanelSessionReplay.RemoteSettingsMode : Swift.Equatable {}
+extension MixpanelSessionReplay.RemoteSettingsMode : Swift.Hashable {}
+extension MixpanelSessionReplay.RemoteSettingsMode : Swift.RawRepresentable {}
