@@ -4929,28 +4929,28 @@
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/MPSessionReplayInstance.swift",
       "kind": "BooleanLiteral",
-      "offset": 1581,
+      "offset": 1844,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/MPSessionReplayInstance.swift",
       "kind": "Array",
-      "offset": 1794,
+      "offset": 2059,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/MPSessionReplayInstance.swift",
       "kind": "BooleanLiteral",
-      "offset": 1896,
+      "offset": 2307,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/MPSessionReplayInstance.swift",
       "kind": "FloatLiteral",
-      "offset": 5454,
+      "offset": 5939,
       "length": 5,
       "value": "100.0"
     },
@@ -5106,7 +5106,7 @@
       "kind": "StringLiteral",
       "offset": 382,
       "length": 7,
-      "value": "\"1.3.0\""
+      "value": "\"1.3.1\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
