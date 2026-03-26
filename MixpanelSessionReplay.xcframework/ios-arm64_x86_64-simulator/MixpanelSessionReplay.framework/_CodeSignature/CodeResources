@@ -14,7 +14,7 @@
 		</data>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
 		<data>
-		LkcwOYTKEEFRxx/uNaX06B7FDTo=
+		g6buJVhZwC5ZPTnTR0GXAYM49LE=
 		</data>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/arm64-apple-ios-simulator.private.swiftinterface</key>
 		<data>
@@ -30,11 +30,11 @@
 		</data>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/arm64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		YPgTrrEQRauuikwrwmt65ZhnxL8=
+		pqXHog3PHRsPf2Yx1m0rUYPBNww=
 		</data>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
 		<data>
-		LkcwOYTKEEFRxx/uNaX06B7FDTo=
+		g6buJVhZwC5ZPTnTR0GXAYM49LE=
 		</data>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/x86_64-apple-ios-simulator.private.swiftinterface</key>
 		<data>
@@ -50,7 +50,7 @@
 		</data>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		cddb8vht5kae9EmSPzFQivAqJIA=
+		ILLr/veKrmJD69S/Pw/9a4/s6O8=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
@@ -74,7 +74,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			1WcZDvNsvwjlbAcJXKPMivM28IJ4+fKJtVECEWw/mI8=
+			4TlSUAXUYT9+qylS/JlPndGYatNU/7HsmLnTNvKH0Yc=
 			</data>
 		</dict>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/arm64-apple-ios-simulator.private.swiftinterface</key>
@@ -102,14 +102,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			NwEtG5A+gIym4j4g2mB3UzVYU9cGByaRI8T7HDzJGwQ=
+			7kkATysfz8kV9wiKAcdX+PufjjcK1Pm4/ToDGqFZjTM=
 			</data>
 		</dict>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			1WcZDvNsvwjlbAcJXKPMivM28IJ4+fKJtVECEWw/mI8=
+			4TlSUAXUYT9+qylS/JlPndGYatNU/7HsmLnTNvKH0Yc=
 			</data>
 		</dict>
 		<key>Modules/MixpanelSessionReplay.swiftmodule/x86_64-apple-ios-simulator.private.swiftinterface</key>
@@ -137,7 +137,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			Fo0JdRFInVV75H4SNYGQG7sIcL7vE+BNyt+6vC7RrFo=
+			SG0d+4i5xoP8pWKnwsYkz+yMhaIAaTx9YBHDs20qIHI=
 			</data>
 		</dict>
 		<key>Modules/module.modulemap</key>
