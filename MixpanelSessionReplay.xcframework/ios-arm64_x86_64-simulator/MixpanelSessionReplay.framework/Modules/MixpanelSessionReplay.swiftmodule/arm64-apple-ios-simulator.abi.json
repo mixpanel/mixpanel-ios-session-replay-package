@@ -66,6 +66,881 @@
       },
       {
         "kind": "Import",
+        "name": "UIKit",
+        "printedName": "UIKit",
+        "declKind": "Import",
+        "moduleName": "MixpanelSessionReplay",
+        "declAttributes": [
+          "RawDocComment"
+        ]
+      },
+      {
+        "kind": "Import",
+        "name": "UIKit",
+        "printedName": "UIKit",
+        "declKind": "Import",
+        "moduleName": "MixpanelSessionReplay",
+        "declAttributes": [
+          "RawDocComment"
+        ]
+      },
+      {
+        "kind": "Import",
+        "name": "Foundation",
+        "printedName": "Foundation",
+        "declKind": "Import",
+        "moduleName": "MixpanelSessionReplay",
+        "declAttributes": [
+          "RawDocComment"
+        ]
+      },
+      {
+        "kind": "TypeDecl",
+        "name": "DebugOptions",
+        "printedName": "DebugOptions",
+        "children": [
+          {
+            "kind": "Var",
+            "name": "overlayColors",
+            "printedName": "overlayColors",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "MixpanelSessionReplay.DebugOverlayColors?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "DebugOverlayColors",
+                    "printedName": "MixpanelSessionReplay.DebugOverlayColors",
+                    "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV"
+                  }
+                ],
+                "usr": "s:Sq"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "s:21MixpanelSessionReplay12DebugOptionsV13overlayColorsAA0d7OverlayG0VSgvp",
+            "mangledName": "$s21MixpanelSessionReplay12DebugOptionsV13overlayColorsAA0d7OverlayG0VSgvp",
+            "moduleName": "MixpanelSessionReplay",
+            "declAttributes": [
+              "HasInitialValue",
+              "HasStorage",
+              "AccessControl",
+              "RawDocComment"
+            ],
+            "hasStorage": true,
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Optional",
+                    "printedName": "MixpanelSessionReplay.DebugOverlayColors?",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "DebugOverlayColors",
+                        "printedName": "MixpanelSessionReplay.DebugOverlayColors",
+                        "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV"
+                      }
+                    ],
+                    "usr": "s:Sq"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay12DebugOptionsV13overlayColorsAA0d7OverlayG0VSgvg",
+                "mangledName": "$s21MixpanelSessionReplay12DebugOptionsV13overlayColorsAA0d7OverlayG0VSgvg",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "get"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Set",
+                "printedName": "Set()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Optional",
+                    "printedName": "MixpanelSessionReplay.DebugOverlayColors?",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "DebugOverlayColors",
+                        "printedName": "MixpanelSessionReplay.DebugOverlayColors",
+                        "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV"
+                      }
+                    ],
+                    "usr": "s:Sq"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay12DebugOptionsV13overlayColorsAA0d7OverlayG0VSgvs",
+                "mangledName": "$s21MixpanelSessionReplay12DebugOptionsV13overlayColorsAA0d7OverlayG0VSgvs",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "set"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Modify",
+                "printedName": "Modify()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay12DebugOptionsV13overlayColorsAA0d7OverlayG0VSgvM",
+                "mangledName": "$s21MixpanelSessionReplay12DebugOptionsV13overlayColorsAA0d7OverlayG0VSgvM",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "_modify"
+              }
+            ]
+          },
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init(overlayColors:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "DebugOptions",
+                "printedName": "MixpanelSessionReplay.DebugOptions",
+                "usr": "s:21MixpanelSessionReplay12DebugOptionsV"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "MixpanelSessionReplay.DebugOverlayColors?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "DebugOverlayColors",
+                    "printedName": "MixpanelSessionReplay.DebugOverlayColors",
+                    "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sq"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:21MixpanelSessionReplay12DebugOptionsV13overlayColorsAcA0d7OverlayG0VSg_tcfc",
+            "mangledName": "$s21MixpanelSessionReplay12DebugOptionsV13overlayColorsAcA0d7OverlayG0VSg_tcfc",
+            "moduleName": "MixpanelSessionReplay",
+            "declAttributes": [
+              "AccessControl"
+            ],
+            "init_kind": "Designated"
+          },
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init(from:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "DebugOptions",
+                "printedName": "MixpanelSessionReplay.DebugOptions",
+                "usr": "s:21MixpanelSessionReplay12DebugOptionsV"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Decoder",
+                "printedName": "any Swift.Decoder",
+                "usr": "s:s7DecoderP"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:21MixpanelSessionReplay12DebugOptionsV4fromACs7Decoder_p_tKcfc",
+            "mangledName": "$s21MixpanelSessionReplay12DebugOptionsV4fromACs7Decoder_p_tKcfc",
+            "moduleName": "MixpanelSessionReplay",
+            "implicit": true,
+            "throwing": true,
+            "init_kind": "Designated"
+          },
+          {
+            "kind": "Function",
+            "name": "encode",
+            "printedName": "encode(to:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Void",
+                "printedName": "()"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Encoder",
+                "printedName": "any Swift.Encoder",
+                "usr": "s:s7EncoderP"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "s:21MixpanelSessionReplay12DebugOptionsV6encode2toys7Encoder_p_tKF",
+            "mangledName": "$s21MixpanelSessionReplay12DebugOptionsV6encode2toys7Encoder_p_tKF",
+            "moduleName": "MixpanelSessionReplay",
+            "implicit": true,
+            "throwing": true,
+            "funcSelfKind": "NonMutating"
+          }
+        ],
+        "declKind": "Struct",
+        "usr": "s:21MixpanelSessionReplay12DebugOptionsV",
+        "mangledName": "$s21MixpanelSessionReplay12DebugOptionsV",
+        "moduleName": "MixpanelSessionReplay",
+        "declAttributes": [
+          "AccessControl",
+          "RawDocComment"
+        ],
+        "conformances": [
+          {
+            "kind": "Conformance",
+            "name": "Copyable",
+            "printedName": "Copyable",
+            "usr": "s:s8CopyableP",
+            "mangledName": "$ss8CopyableP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Escapable",
+            "printedName": "Escapable",
+            "usr": "s:s9EscapableP",
+            "mangledName": "$ss9EscapableP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Decodable",
+            "printedName": "Decodable",
+            "usr": "s:Se",
+            "mangledName": "$sSe"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Encodable",
+            "printedName": "Encodable",
+            "usr": "s:SE",
+            "mangledName": "$sSE"
+          }
+        ]
+      },
+      {
+        "kind": "Import",
+        "name": "UIKit",
+        "printedName": "UIKit",
+        "declKind": "Import",
+        "moduleName": "MixpanelSessionReplay",
+        "declAttributes": [
+          "RawDocComment"
+        ]
+      },
+      {
+        "kind": "TypeDecl",
+        "name": "DebugOverlayColors",
+        "printedName": "DebugOverlayColors",
+        "children": [
+          {
+            "kind": "Var",
+            "name": "maskColor",
+            "printedName": "maskColor",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "UIKit.UIColor?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "UIColor",
+                    "printedName": "UIKit.UIColor",
+                    "usr": "c:objc(cs)UIColor"
+                  }
+                ],
+                "usr": "s:Sq"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV9maskColorSo7UIColorCSgvp",
+            "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV9maskColorSo7UIColorCSgvp",
+            "moduleName": "MixpanelSessionReplay",
+            "declAttributes": [
+              "HasInitialValue",
+              "HasStorage",
+              "AccessControl",
+              "RawDocComment"
+            ],
+            "hasStorage": true,
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Optional",
+                    "printedName": "UIKit.UIColor?",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "UIColor",
+                        "printedName": "UIKit.UIColor",
+                        "usr": "c:objc(cs)UIColor"
+                      }
+                    ],
+                    "usr": "s:Sq"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV9maskColorSo7UIColorCSgvg",
+                "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV9maskColorSo7UIColorCSgvg",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "get"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Set",
+                "printedName": "Set()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Optional",
+                    "printedName": "UIKit.UIColor?",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "UIColor",
+                        "printedName": "UIKit.UIColor",
+                        "usr": "c:objc(cs)UIColor"
+                      }
+                    ],
+                    "usr": "s:Sq"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV9maskColorSo7UIColorCSgvs",
+                "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV9maskColorSo7UIColorCSgvs",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "set"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Modify",
+                "printedName": "Modify()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV9maskColorSo7UIColorCSgvM",
+                "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV9maskColorSo7UIColorCSgvM",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "_modify"
+              }
+            ]
+          },
+          {
+            "kind": "Var",
+            "name": "autoMaskColor",
+            "printedName": "autoMaskColor",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "UIKit.UIColor?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "UIColor",
+                    "printedName": "UIKit.UIColor",
+                    "usr": "c:objc(cs)UIColor"
+                  }
+                ],
+                "usr": "s:Sq"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV13autoMaskColorSo7UIColorCSgvp",
+            "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV13autoMaskColorSo7UIColorCSgvp",
+            "moduleName": "MixpanelSessionReplay",
+            "declAttributes": [
+              "HasInitialValue",
+              "HasStorage",
+              "AccessControl",
+              "RawDocComment"
+            ],
+            "hasStorage": true,
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Optional",
+                    "printedName": "UIKit.UIColor?",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "UIColor",
+                        "printedName": "UIKit.UIColor",
+                        "usr": "c:objc(cs)UIColor"
+                      }
+                    ],
+                    "usr": "s:Sq"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV13autoMaskColorSo7UIColorCSgvg",
+                "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV13autoMaskColorSo7UIColorCSgvg",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "get"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Set",
+                "printedName": "Set()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Optional",
+                    "printedName": "UIKit.UIColor?",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "UIColor",
+                        "printedName": "UIKit.UIColor",
+                        "usr": "c:objc(cs)UIColor"
+                      }
+                    ],
+                    "usr": "s:Sq"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV13autoMaskColorSo7UIColorCSgvs",
+                "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV13autoMaskColorSo7UIColorCSgvs",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "set"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Modify",
+                "printedName": "Modify()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV13autoMaskColorSo7UIColorCSgvM",
+                "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV13autoMaskColorSo7UIColorCSgvM",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "_modify"
+              }
+            ]
+          },
+          {
+            "kind": "Var",
+            "name": "unmaskColor",
+            "printedName": "unmaskColor",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "UIKit.UIColor?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "UIColor",
+                    "printedName": "UIKit.UIColor",
+                    "usr": "c:objc(cs)UIColor"
+                  }
+                ],
+                "usr": "s:Sq"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV11unmaskColorSo7UIColorCSgvp",
+            "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV11unmaskColorSo7UIColorCSgvp",
+            "moduleName": "MixpanelSessionReplay",
+            "declAttributes": [
+              "HasInitialValue",
+              "HasStorage",
+              "AccessControl",
+              "RawDocComment"
+            ],
+            "hasStorage": true,
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Optional",
+                    "printedName": "UIKit.UIColor?",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "UIColor",
+                        "printedName": "UIKit.UIColor",
+                        "usr": "c:objc(cs)UIColor"
+                      }
+                    ],
+                    "usr": "s:Sq"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV11unmaskColorSo7UIColorCSgvg",
+                "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV11unmaskColorSo7UIColorCSgvg",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "get"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Set",
+                "printedName": "Set()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Optional",
+                    "printedName": "UIKit.UIColor?",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "UIColor",
+                        "printedName": "UIKit.UIColor",
+                        "usr": "c:objc(cs)UIColor"
+                      }
+                    ],
+                    "usr": "s:Sq"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV11unmaskColorSo7UIColorCSgvs",
+                "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV11unmaskColorSo7UIColorCSgvs",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "set"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Modify",
+                "printedName": "Modify()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV11unmaskColorSo7UIColorCSgvM",
+                "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV11unmaskColorSo7UIColorCSgvM",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "_modify"
+              }
+            ]
+          },
+          {
+            "kind": "Var",
+            "name": "alpha",
+            "printedName": "alpha",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Float",
+                "printedName": "Swift.Float",
+                "usr": "s:Sf"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV5alphaSfvp",
+            "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV5alphaSfvp",
+            "moduleName": "MixpanelSessionReplay",
+            "declAttributes": [
+              "HasStorage",
+              "AccessControl",
+              "RawDocComment"
+            ],
+            "hasStorage": true,
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Float",
+                    "printedName": "Swift.Float",
+                    "usr": "s:Sf"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV5alphaSfvg",
+                "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV5alphaSfvg",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "get"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Set",
+                "printedName": "Set()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Float",
+                    "printedName": "Swift.Float",
+                    "usr": "s:Sf"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV5alphaSfvs",
+                "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV5alphaSfvs",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "set"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Modify",
+                "printedName": "Modify()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV5alphaSfvM",
+                "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV5alphaSfvM",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "_modify"
+              }
+            ]
+          },
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init(maskColor:autoMaskColor:unmaskColor:alpha:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "DebugOverlayColors",
+                "printedName": "MixpanelSessionReplay.DebugOverlayColors",
+                "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "UIKit.UIColor?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "UIColor",
+                    "printedName": "UIKit.UIColor",
+                    "usr": "c:objc(cs)UIColor"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "UIKit.UIColor?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "UIColor",
+                    "printedName": "UIKit.UIColor",
+                    "usr": "c:objc(cs)UIColor"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "UIKit.UIColor?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "UIColor",
+                    "printedName": "UIKit.UIColor",
+                    "usr": "c:objc(cs)UIColor"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Float",
+                "printedName": "Swift.Float",
+                "hasDefaultArg": true,
+                "usr": "s:Sf"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV9maskColor08autoMaskH006unmaskH05alphaACSo7UIColorCSg_A2JSftcfc",
+            "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV9maskColor08autoMaskH006unmaskH05alphaACSo7UIColorCSg_A2JSftcfc",
+            "moduleName": "MixpanelSessionReplay",
+            "declAttributes": [
+              "AccessControl"
+            ],
+            "init_kind": "Designated"
+          },
+          {
+            "kind": "Function",
+            "name": "encode",
+            "printedName": "encode(to:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Void",
+                "printedName": "()"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Encoder",
+                "printedName": "any Swift.Encoder",
+                "usr": "s:s7EncoderP"
+              }
+            ],
+            "declKind": "Func",
+            "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV6encode2toys7Encoder_p_tKF",
+            "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV6encode2toys7Encoder_p_tKF",
+            "moduleName": "MixpanelSessionReplay",
+            "declAttributes": [
+              "AccessControl"
+            ],
+            "throwing": true,
+            "funcSelfKind": "NonMutating"
+          },
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init(from:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "DebugOverlayColors",
+                "printedName": "MixpanelSessionReplay.DebugOverlayColors",
+                "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Decoder",
+                "printedName": "any Swift.Decoder",
+                "usr": "s:s7DecoderP"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV4fromACs7Decoder_p_tKcfc",
+            "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV4fromACs7Decoder_p_tKcfc",
+            "moduleName": "MixpanelSessionReplay",
+            "declAttributes": [
+              "AccessControl"
+            ],
+            "throwing": true,
+            "init_kind": "Designated"
+          }
+        ],
+        "declKind": "Struct",
+        "usr": "s:21MixpanelSessionReplay18DebugOverlayColorsV",
+        "mangledName": "$s21MixpanelSessionReplay18DebugOverlayColorsV",
+        "moduleName": "MixpanelSessionReplay",
+        "declAttributes": [
+          "AccessControl",
+          "RawDocComment"
+        ],
+        "conformances": [
+          {
+            "kind": "Conformance",
+            "name": "Copyable",
+            "printedName": "Copyable",
+            "usr": "s:s8CopyableP",
+            "mangledName": "$ss8CopyableP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Escapable",
+            "printedName": "Escapable",
+            "usr": "s:s9EscapableP",
+            "mangledName": "$ss9EscapableP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Decodable",
+            "printedName": "Decodable",
+            "usr": "s:Se",
+            "mangledName": "$sSe"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Encodable",
+            "printedName": "Encodable",
+            "usr": "s:SE",
+            "mangledName": "$sSE"
+          }
+        ]
+      },
+      {
+        "kind": "Import",
         "name": "Foundation",
         "printedName": "Foundation",
         "declKind": "Import",
@@ -1416,9 +2291,120 @@
             ]
           },
           {
+            "kind": "Var",
+            "name": "debugOptions",
+            "printedName": "debugOptions",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "MixpanelSessionReplay.DebugOptions?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "DebugOptions",
+                    "printedName": "MixpanelSessionReplay.DebugOptions",
+                    "usr": "s:21MixpanelSessionReplay12DebugOptionsV"
+                  }
+                ],
+                "usr": "s:Sq"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV12debugOptionsAA05DebugG0VSgvp",
+            "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV12debugOptionsAA05DebugG0VSgvp",
+            "moduleName": "MixpanelSessionReplay",
+            "declAttributes": [
+              "HasInitialValue",
+              "HasStorage",
+              "AccessControl",
+              "RawDocComment"
+            ],
+            "hasStorage": true,
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Optional",
+                    "printedName": "MixpanelSessionReplay.DebugOptions?",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "DebugOptions",
+                        "printedName": "MixpanelSessionReplay.DebugOptions",
+                        "usr": "s:21MixpanelSessionReplay12DebugOptionsV"
+                      }
+                    ],
+                    "usr": "s:Sq"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV12debugOptionsAA05DebugG0VSgvg",
+                "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV12debugOptionsAA05DebugG0VSgvg",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "get"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Set",
+                "printedName": "Set()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Optional",
+                    "printedName": "MixpanelSessionReplay.DebugOptions?",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "DebugOptions",
+                        "printedName": "MixpanelSessionReplay.DebugOptions",
+                        "usr": "s:21MixpanelSessionReplay12DebugOptionsV"
+                      }
+                    ],
+                    "usr": "s:Sq"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV12debugOptionsAA05DebugG0VSgvs",
+                "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV12debugOptionsAA05DebugG0VSgvs",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "set"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Modify",
+                "printedName": "Modify()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV12debugOptionsAA05DebugG0VSgvM",
+                "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV12debugOptionsAA05DebugG0VSgvM",
+                "moduleName": "MixpanelSessionReplay",
+                "implicit": true,
+                "accessorKind": "_modify"
+              }
+            ]
+          },
+          {
             "kind": "Constructor",
             "name": "init",
-            "printedName": "init(wifiOnly:autoMaskedViews:autoStartRecording:recordingSessionsPercent:remoteSettingsMode:enableLogging:flushInterval:enableSessionReplayOniOS26AndLater:)",
+            "printedName": "init(wifiOnly:autoMaskedViews:autoStartRecording:recordingSessionsPercent:remoteSettingsMode:enableLogging:flushInterval:enableSessionReplayOniOS26AndLater:debugOptions:)",
             "children": [
               {
                 "kind": "TypeNominal",
@@ -1489,11 +2475,26 @@
                 "printedName": "Swift.Bool",
                 "hasDefaultArg": true,
                 "usr": "s:Sb"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "MixpanelSessionReplay.DebugOptions?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "DebugOptions",
+                    "printedName": "MixpanelSessionReplay.DebugOptions",
+                    "usr": "s:21MixpanelSessionReplay12DebugOptionsV"
+                  }
+                ],
+                "hasDefaultArg": true,
+                "usr": "s:Sq"
               }
             ],
             "declKind": "Constructor",
-            "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV8wifiOnly15autoMaskedViews0H14StartRecording24recordingSessionsPercent18remoteSettingsMode13enableLogging13flushInterval0sbC15OniOS26AndLaterACSb_ShyAA06MPAutoiJ0OGSbSdAA06RemoteqR0OSbSdSbtcfc",
-            "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV8wifiOnly15autoMaskedViews0H14StartRecording24recordingSessionsPercent18remoteSettingsMode13enableLogging13flushInterval0sbC15OniOS26AndLaterACSb_ShyAA06MPAutoiJ0OGSbSdAA06RemoteqR0OSbSdSbtcfc",
+            "usr": "s:21MixpanelSessionReplay09MPSessionC6ConfigV8wifiOnly15autoMaskedViews0H14StartRecording24recordingSessionsPercent18remoteSettingsMode13enableLogging13flushInterval0sbC15OniOS26AndLater12debugOptionsACSb_ShyAA06MPAutoiJ0OGSbSdAA06RemoteqR0OSbSdSbAA12DebugOptionsVSgtcfc",
+            "mangledName": "$s21MixpanelSessionReplay09MPSessionC6ConfigV8wifiOnly15autoMaskedViews0H14StartRecording24recordingSessionsPercent18remoteSettingsMode13enableLogging13flushInterval0sbC15OniOS26AndLater12debugOptionsACSb_ShyAA06MPAutoiJ0OGSbSdAA06RemoteqR0OSbSdSbAA12DebugOptionsVSgtcfc",
             "moduleName": "MixpanelSessionReplay",
             "declAttributes": [
               "AccessControl",
@@ -4668,16 +5669,72 @@
       "value": "false"
     },
     {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Debug\/DebugMaskOverlayView.swift",
+      "kind": "Dictionary",
+      "offset": 763,
+      "length": 3,
+      "value": "[]"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Debug\/DebugMaskOverlayManager.swift",
+      "kind": "BooleanLiteral",
+      "offset": 1202,
+      "length": 5,
+      "value": "false"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Debug\/DebugMaskOverlayManager.swift",
+      "kind": "Dictionary",
+      "offset": 1513,
+      "length": 3,
+      "value": "[]"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Debug\/DebugMaskOverlayManager.swift",
+      "kind": "FloatLiteral",
+      "offset": 1650,
+      "length": 3,
+      "value": "0.5"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Debug\/DebugMaskOverlayManager.swift",
+      "kind": "BooleanLiteral",
+      "offset": 1779,
+      "length": 5,
+      "value": "false"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Debug\/DebugMaskOverlayManager.swift",
+      "kind": "BooleanLiteral",
+      "offset": 1862,
+      "length": 5,
+      "value": "false"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Debug\/DebugMaskOverlayManager.swift",
+      "kind": "BooleanLiteral",
+      "offset": 2082,
+      "length": 5,
+      "value": "false"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Debug\/DebugOverlayColors.swift",
+      "kind": "FloatLiteral",
+      "offset": 1335,
+      "length": 3,
+      "value": "0.5"
+    },
+    {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Swizzler.swift",
       "kind": "Dictionary",
-      "offset": 2503,
+      "offset": 2772,
       "length": 3,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Swizzler.swift",
       "kind": "FloatLiteral",
-      "offset": 4007,
+      "offset": 4276,
       "length": 3,
       "value": "0.4"
     },
@@ -4740,42 +5797,42 @@
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Models\/MPSessionReplayConfig.swift",
       "kind": "BooleanLiteral",
-      "offset": 9141,
+      "offset": 9550,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Models\/MPSessionReplayConfig.swift",
       "kind": "BooleanLiteral",
-      "offset": 9253,
+      "offset": 9662,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Models\/MPSessionReplayConfig.swift",
       "kind": "IntegerLiteral",
-      "offset": 9298,
+      "offset": 9707,
       "length": 3,
       "value": "100"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Models\/MPSessionReplayConfig.swift",
       "kind": "BooleanLiteral",
-      "offset": 9385,
+      "offset": 9794,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Models\/MPSessionReplayConfig.swift",
       "kind": "IntegerLiteral",
-      "offset": 9426,
+      "offset": 9835,
       "length": 2,
       "value": "10"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Models\/MPSessionReplayConfig.swift",
       "kind": "BooleanLiteral",
-      "offset": 9477,
+      "offset": 9886,
       "length": 5,
       "value": "false"
     },
@@ -4929,28 +5986,28 @@
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/MPSessionReplayInstance.swift",
       "kind": "BooleanLiteral",
-      "offset": 1844,
+      "offset": 2454,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/MPSessionReplayInstance.swift",
       "kind": "Array",
-      "offset": 2059,
+      "offset": 2669,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/MPSessionReplayInstance.swift",
       "kind": "BooleanLiteral",
-      "offset": 2307,
+      "offset": 2917,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/MPSessionReplayInstance.swift",
       "kind": "FloatLiteral",
-      "offset": 6150,
+      "offset": 6902,
       "length": 5,
       "value": "100.0"
     },
@@ -4963,71 +6020,99 @@
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
+      "kind": "IntegerLiteral",
+      "offset": 1989,
+      "length": 1,
+      "value": "0"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
+      "kind": "IntegerLiteral",
+      "offset": 2007,
+      "length": 1,
+      "value": "1"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
+      "kind": "IntegerLiteral",
+      "offset": 2025,
+      "length": 1,
+      "value": "2"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
+      "kind": "IntegerLiteral",
+      "offset": 2048,
+      "length": 1,
+      "value": "3"
+    },
+    {
+      "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "BooleanLiteral",
-      "offset": 2371,
+      "offset": 2999,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "BooleanLiteral",
-      "offset": 2404,
+      "offset": 3032,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "BooleanLiteral",
-      "offset": 2439,
+      "offset": 3067,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "BooleanLiteral",
-      "offset": 2474,
+      "offset": 3102,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "Array",
-      "offset": 2517,
+      "offset": 3145,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "StringLiteral",
-      "offset": 2787,
+      "offset": 3415,
       "length": 28,
       "value": "\"SwiftUI.TextEditorTextView\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "StringLiteral",
-      "offset": 2882,
+      "offset": 3510,
       "length": 20,
       "value": "\"SwiftUI.ImageLayer\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "StringLiteral",
-      "offset": 3028,
+      "offset": 3656,
       "length": 23,
       "value": "\"SwiftUI.CGDrawingView\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "StringLiteral",
-      "offset": 3341,
+      "offset": 3969,
       "length": 66,
       "value": "\"_TtC7SwiftUIP33_863CCF9D49B535DAEB1C7D61BEE53B5914CGDrawingLayer\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/SensitiveViews\/SensitiveViewManager.swift",
       "kind": "StringLiteral",
-      "offset": 3473,
+      "offset": 4101,
       "length": 15,
       "value": "\"UIButtonLabel\""
     },
@@ -5106,7 +6191,7 @@
       "kind": "StringLiteral",
       "offset": 382,
       "length": 7,
-      "value": "\"1.3.2\""
+      "value": "\"1.4.0\""
     },
     {
       "filePath": "\/Users\/runner\/work\/mixpanel-ios-session-replay\/mixpanel-ios-session-replay\/MixpanelSessionReplay\/MixpanelSessionReplay\/Utils\/Constants.swift",
