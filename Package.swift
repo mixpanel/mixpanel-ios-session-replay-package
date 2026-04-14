@@ -27,7 +27,7 @@ let package = Package(
             ]
         ),
         .binaryTarget(
-            name: "MixpanelSessionReplayBinary",
+            name: "MixpanelSessionReplay",
             path: "MixpanelSessionReplay.xcframework")
     ])
 
