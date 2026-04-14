@@ -8,7 +8,7 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "MixpanelSessionReplay", 
+            name: "MixpanelSessionReplay",
             targets: ["MixpanelSessionReplay"])
     ],
     dependencies: [
@@ -19,9 +19,15 @@ let package = Package(
         )
     ],
     targets: [
+        .target(
+            name: "MixpanelSessionReplay",
+            dependencies: [
+                "MixpanelSessionReplayBinary",
+                .product(name: "MixpanelSwiftCommon", package: "MixpanelSwiftCommon")
+            ]
+        ),
         .binaryTarget(
-            name: "MixpanelSessionReplay", 
-            path: "MixpanelSessionReplay.xcframework",
-            dependencies: ["MixpanelSwiftCommon"])
+            name: "MixpanelSessionReplayBinary",
+            path: "MixpanelSessionReplay.xcframework")
     ])
 
