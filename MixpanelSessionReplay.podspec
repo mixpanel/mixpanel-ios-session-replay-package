@@ -11,4 +11,5 @@ Pod::Spec.new do |s|
     s.swift_version = "5.0"
     s.ios.deployment_target  = '13.0'
     s.ios.frameworks = 'UIKit', 'Foundation', 'WebKit', 'MapKit'
+    s.dependency 'MixpanelSwiftCommon', '~> 1.0.0'
 end
