@@ -18,6 +18,13 @@ import _StringProcessing
 import _SwiftConcurrencyShims
 import ObjectiveC.runtime
 import zlib
+public struct RecordingEventTrigger : Swift.Codable {
+  public let percentage: Swift.Double
+  public let propertyFilters: [Swift.String : Any]?
+  public init(from decoder: any Swift.Decoder) throws
+  public func encode(to encoder: any Swift.Encoder) throws
+  public init(percentage: Swift.Double, propertyFilters: [Swift.String : Any]? = nil)
+}
 public struct DebugOptions : Swift.Codable {
   public var overlayColors: MixpanelSessionReplay.DebugOverlayColors?
   public init(overlayColors: MixpanelSessionReplay.DebugOverlayColors? = DebugOverlayColors())
@@ -98,6 +105,9 @@ public struct ServerProxyResource {
   public var isRecording: Swift.Bool {
     get
   }
+  public var isEventTriggersEnabled: Swift.Bool {
+    get
+  }
   open var wifiOnly: Swift.Bool {
     get
     set
@@ -118,6 +128,8 @@ public struct ServerProxyResource {
   public func flush(completionHandler: @escaping () -> Swift.Void = {})
   public func addSensitiveClass(_ aClass: Swift.AnyClass)
   public func removeSensitiveClass(_ aClass: Swift.AnyClass)
+  public func disableEventTriggers()
+  public func enableEventTriggers()
   @objc deinit
 }
 public struct APIConstants {

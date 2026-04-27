@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name         = "MixpanelSessionReplay"
-    s.version          = '1.4.0'
+    s.version          = '1.5.0'
     s.summary      = "Mixpanel Session Replay library for iOS (Swift)"
     s.homepage     = "https://mixpanel.com"
     s.license = 'Apache License, Version 2.0'
@@ -11,4 +11,5 @@ Pod::Spec.new do |s|
     s.swift_version = "5.0"
     s.ios.deployment_target  = '13.0'
     s.ios.frameworks = 'UIKit', 'Foundation', 'WebKit', 'MapKit'
+    s.dependency 'MixpanelSwiftCommon', '~> 1.0.1'
 end
