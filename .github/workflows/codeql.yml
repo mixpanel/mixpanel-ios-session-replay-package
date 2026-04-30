@@ -11,7 +11,7 @@ on:
 jobs:
   analyze:
     name: Analyze (swift)
-    runs-on: macos-latest
+    runs-on: macos-26
     permissions:
       security-events: write
       actions: read
@@ -19,13 +19,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
-      - name: Select Xcode version
-        run: sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90  # v1
+        with:
+          xcode-version: '26.2'
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@<SHA>  # v3.x.x
         with:
           languages: swift
 
@@ -38,6 +40,6 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@<SHA>  # v3.x.x
         with:
           category: "/language:swift"
