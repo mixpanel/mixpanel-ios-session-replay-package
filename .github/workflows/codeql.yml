@@ -32,9 +32,9 @@ jobs:
           languages: swift
 
       - name: Build
+        working-directory: MixpanelSessionReplay
         run: |
           xcodebuild clean build \
-            -project MixpanelSessionReplay/MixpanelSessionReplay.xcodeproj \
             -scheme MixpanelSessionReplay \
             -destination 'generic/platform=iOS' \
             CODE_SIGNING_ALLOWED=NO
