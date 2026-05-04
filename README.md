@@ -91,7 +91,7 @@ This section is for **app developers integrating the SDK** into their iOS applic
 
 ## Requirements
 
-- Active Mixpanel account (Enterprise)
+- Active Mixpanel account
 
 ---
 
