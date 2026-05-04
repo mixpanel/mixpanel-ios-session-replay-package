@@ -2,7 +2,12 @@
 .DS_Store
 
 # Xcode
+.build/
 build/*
+Build/*
+output/*
+.swiftpm/*
+Package.resolved
 *.pbxuser
 !default.pbxuser
 *.mode1v3
@@ -19,7 +24,6 @@ profile
 *.cer
 *.p12
 *.mobileprovision
-
-# Swift Package Manager
-.swiftpm/
-.build/
+	
+# Claude
+.claude/*

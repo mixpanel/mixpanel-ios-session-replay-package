@@ -1,0 +1,21 @@
+name: iOS CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main, development ]
+jobs:
+  build:
+    runs-on: macos-26
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+    - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90  # v1
+      with:
+        xcode-version: '26.2'
+    - name: Run Test
+      working-directory: MixpanelSessionReplay
+      run: |
+        set -o pipefail
+        xcodebuild -scheme MixpanelSessionReplay -derivedDataPath Build/ -destination "name=iPhone 17,OS=26.2" -configuration Debug ONLY_ACTIVE_ARCH=NO ENABLE_TESTABILITY=YES -enableCodeCoverage YES clean build test | xcpretty -c;
