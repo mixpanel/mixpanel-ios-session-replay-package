@@ -61,7 +61,6 @@
 		864DFFEF2C3EDF92003B258E /* EventHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 864DFFEE2C3EDF92003B258E /* EventHandler.swift */; };
 		864DFFF12C3EE3CA003B258E /* RawEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 864DFFF02C3EE3CA003B258E /* RawEvent.swift */; };
 		864DFFFE2C41F2BF003B258E /* EventServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 864DFFFD2C41F2BF003B258E /* EventServiceTests.swift */; };
-		8650D2C52C13B041008903B1 /* MixpanelSessionReplay.docc in Sources */ = {isa = PBXBuildFile; fileRef = 8650D2C42C13B041008903B1 /* MixpanelSessionReplay.docc */; };
 		8650D2CB2C13B042008903B1 /* MixpanelSessionReplay.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8650D2C02C13B041008903B1 /* MixpanelSessionReplay.framework */; };
 		8650D2D12C13B042008903B1 /* MixpanelSessionReplay.h in Headers */ = {isa = PBXBuildFile; fileRef = 8650D2C32C13B041008903B1 /* MixpanelSessionReplay.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8650D2E92C13BC39008903B1 /* FlushRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8650D2E12C13BC39008903B1 /* FlushRequest.swift */; };
@@ -148,7 +147,6 @@
 		864DFFFD2C41F2BF003B258E /* EventServiceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventServiceTests.swift; sourceTree = "<group>"; };
 		8650D2C02C13B041008903B1 /* MixpanelSessionReplay.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MixpanelSessionReplay.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8650D2C32C13B041008903B1 /* MixpanelSessionReplay.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MixpanelSessionReplay.h; sourceTree = "<group>"; };
-		8650D2C42C13B041008903B1 /* MixpanelSessionReplay.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = MixpanelSessionReplay.docc; sourceTree = "<group>"; };
 		8650D2CA2C13B042008903B1 /* MixpanelSessionReplayTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MixpanelSessionReplayTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8650D2E12C13BC39008903B1 /* FlushRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlushRequest.swift; sourceTree = "<group>"; };
 		8650D2E42C13BC39008903B1 /* EventPublisher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventPublisher.swift; sourceTree = "<group>"; };
@@ -398,7 +396,6 @@
 				861224EA2C17A2C300ACF6BF /* MPSessionReplayInstance.swift */,
 				16C9EFC22D4AAD840005ED7E /* MPSessionReplay.swift */,
 				8650D2C32C13B041008903B1 /* MixpanelSessionReplay.h */,
-				8650D2C42C13B041008903B1 /* MixpanelSessionReplay.docc */,
 			);
 			path = MixpanelSessionReplay;
 			sourceTree = "<group>";
@@ -560,7 +557,6 @@
 				6C55EC602F36779400E72850 /* DebugOptions.swift in Sources */,
 				6C55EC622F36779400E72850 /* DebugOverlayColors.swift in Sources */,
 				1602FC692F8576E200CAD8E1 /* RecordingEventTriggerEvaluator.swift in Sources */,
-				8650D2C52C13B041008903B1 /* MixpanelSessionReplay.docc in Sources */,
 				1723182C2C35ED9700EF3FEF /* Swizzler.swift in Sources */,
 				8650D2E92C13BC39008903B1 /* FlushRequest.swift in Sources */,
 				17BB0FF62C408FC4005FBFB0 /* MPSessionReplayConfig.swift in Sources */,
