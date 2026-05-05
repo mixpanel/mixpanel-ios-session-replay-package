@@ -187,7 +187,7 @@ class MPSessionReplayTests: XCTestCase {
     }
 
     func testInitializeWithStrictModeRecordingDisabled() {
-        // Configure mock to return JSON response with recording disabled (kill switch)
+        // Configure mock to return JSON response with recording disabled (remote enablement switch)
         mockNetwork.responseJson = """
             {
                 "code": 200,
@@ -209,7 +209,7 @@ class MPSessionReplayTests: XCTestCase {
             enableSessionReplayOniOS26AndLater: true
         )
 
-        let expectation = self.expectation(description: "Initialization fails due to kill switch")
+        let expectation = self.expectation(description: "Initialization fails due to remote enablement switch")
         var initResult: Result<MPSessionReplayInstance?, Error>?
 
         MPSessionReplay.initialize(token: testToken, distinctId: testDistinctId, config: config) { result in
@@ -382,7 +382,7 @@ class MPSessionReplayTests: XCTestCase {
     // MARK: - Disabled Mode Tests
 
     func testInitializeWithDisabledModeSuccess() {
-        // In disabled mode, remote config is fetched but NOT merged - only used for kill switch check
+        // In disabled mode, remote config is fetched but NOT merged - only used for remote enablement switch check
         mockNetwork.responseJson = """
             {
                 "code": 200,
@@ -425,14 +425,14 @@ class MPSessionReplayTests: XCTestCase {
     }
 
     func testInitializeWithDisabledModeRecordingDisabled() {
-        // Even in disabled mode, kill switch (recording disabled) should prevent initialization
+        // Even in disabled mode, remote enablement switch (recording disabled) should prevent initialization
         mockNetwork.responseJson = """
             {
                 "code": 200,
                 "status": "OK",
                 "recording": {
                     "is_enabled": false,
-                    "error": "Recording disabled via kill switch"
+                    "error": "Recording disabled via remote enablement switch"
                 },
                 "sdk_config": {
                     "config": {"record_sessions_percent": 50}
@@ -447,7 +447,7 @@ class MPSessionReplayTests: XCTestCase {
             enableSessionReplayOniOS26AndLater: true
         )
 
-        let expectation = self.expectation(description: "Initialization fails due to kill switch")
+        let expectation = self.expectation(description: "Initialization fails due to remote enablement switch")
         var initResult: Result<MPSessionReplayInstance?, Error>?
 
         MPSessionReplay.initialize(token: testToken, distinctId: testDistinctId, config: config) { result in
@@ -462,7 +462,7 @@ class MPSessionReplayTests: XCTestCase {
                 XCTFail("Initialization should fail when recording is disabled even in disabled mode")
             case .failure(let error):
                 if case MPSessionReplayError.disabledByRemoteSetting(let message) = error {
-                    XCTAssertEqual(message, "Recording disabled via kill switch", "Error message should match")
+                    XCTAssertEqual(message, "Recording disabled via remote enablement switch", "Error message should match")
                 } else {
                     XCTFail("Error should be disabledByRemoteSetting, got: \(error)")
                 }

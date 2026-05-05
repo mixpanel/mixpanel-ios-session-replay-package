@@ -44,10 +44,10 @@ class SettingsService {
             switch result {
                 case .success(let settings):
                     // Handle disabled mode: If the remote settings are disabled, we still fetch the remote settings
-                    // to get the isRecording(killSwitch) flag, but we do not merge the configs with the original config.
+                    // to get the isRecording(remote enablement switch) flag, but we do not merge the configs with the original config.
                     if mode == .disabled {
                         Logger.info(message: "Remote settings mode is disabled, using original config")
-                        // Remove the sdkConfig from the settings response to prevent any accidental usage of remote sdk config values in disabled mode, but keep the recording settings to respect kill switch if present in remote settings
+                        // Remove the sdkConfig from the settings response to prevent any accidental usage of remote sdk config values in disabled mode, but keep the recording settings to respect remote enablement switch if present in remote settings
                         let updatedSettings = SettingsResponse(sdkConfig: nil, recording: settings.recording)
                         completion(updatedSettings, originalConfig)
                         return
@@ -149,9 +149,9 @@ class SettingsService {
                 completion(cachedSettings, config)
 
             case .disabled:
-                // Disabled mode: use the cached settings without merging to check kill switch
+                // Disabled mode: use the cached settings without merging to check remote enablement switch
                 let cachedSettings = getCachedSettingsState(token: token)
-                Logger.warn(message: "Disabled mode: Using cached setting for kill switch check")
+                Logger.warn(message: "Disabled mode: Using cached setting for remote enablement switch check")
                 completion(cachedSettings, originalConfig)
         }
     }

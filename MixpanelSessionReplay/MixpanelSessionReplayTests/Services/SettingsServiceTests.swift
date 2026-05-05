@@ -48,7 +48,7 @@ class SettingsServiceTests: XCTestCase {
     // MARK: - Disabled Mode Behavior Tests
 
     func testDisabledMode_SuccessWithValidConfig_DoesNotMergeConfig() {
-        // Disabled mode should fetch remote settings to check kill switch,
+        // Disabled mode should fetch remote settings to check remote enablement switch,
         // but should NOT merge remote SDK config with original config
 
         // Configure mock to return JSON response - tests full JSON decoding path
@@ -84,7 +84,7 @@ class SettingsServiceTests: XCTestCase {
 
         waitForExpectations(timeout: 0.5, handler: nil)
 
-        // Settings should be fetched for kill switch check
+        // Settings should be fetched for remote enablement switch check
         XCTAssertNotNil(resultSettings, "Settings should be fetched even in disabled mode")
         XCTAssertTrue(resultSettings?.recording?.isEnabled ?? false, "Recording should be enabled")
         XCTAssertNil(resultSettings?.sdkConfig, "Remote SDK config should not be returned.")
@@ -96,7 +96,7 @@ class SettingsServiceTests: XCTestCase {
         XCTAssertEqual(resultConfig?.enableLogging, true, "Original enableLogging should be preserved")
     }
 
-    func testDisabledMode_FailureWithCache_UsesCacheForKillSwitchButDoesNotMerge() {
+    func testDisabledMode_FailureWithCache_UsesCacheForRemoteEnablementSwitchButDoesNotMerge() {
         // Cache a successful response (using model object for caching is fine - we're testing cache retrieval)
         let cachedResponse = SettingsResponse(
             sdkConfig: SDKConfigWrapper(
@@ -132,7 +132,7 @@ class SettingsServiceTests: XCTestCase {
 
         waitForExpectations(timeout: 0.5, handler: nil)
 
-        // Cached settings should be returned for kill switch check
+        // Cached settings should be returned for remote enablement switch check
         XCTAssertNotNil(resultSettings, "Cached settings should be returned")
         XCTAssertTrue(resultSettings?.recording?.isEnabled ?? false, "Cached recording should be enabled")
 
@@ -517,7 +517,7 @@ class SettingsServiceTests: XCTestCase {
     // MARK: - Remote Settings Mode Tests
 
     func testRemoteSettingsModeDisabled() {
-        // Mode: disabled still fetches remote settings to check the recording kill switch,
+        // Mode: disabled still fetches remote settings to check the recording remote enablement switch,
         // but does NOT merge SDK config with original config
 
         // Configure mock to return JSON response - tests full JSON decoding path
@@ -551,7 +551,7 @@ class SettingsServiceTests: XCTestCase {
 
         waitForExpectations(timeout: 0.5, handler: nil)
 
-        XCTAssertNotNil(resultSettings, "Settings should be fetched to check recording kill switch")
+        XCTAssertNotNil(resultSettings, "Settings should be fetched to check recording remote enablement switch")
         XCTAssertTrue(resultSettings?.recording?.isEnabled ?? false, "Recording should be enabled")
         XCTAssertEqual(
             resultConfig?.recordingSessionsPercent, 100,

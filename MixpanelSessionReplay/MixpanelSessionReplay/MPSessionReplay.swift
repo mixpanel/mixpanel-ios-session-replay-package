@@ -155,7 +155,7 @@ final class MPSessionReplayManager {
                 return
             }
 
-            // Check recording setting(kill switch) to initialize the SDK
+            // Check recording setting(remote enablement switch) to initialize the SDK
             if let recording = settings?.recording, !recording.isEnabled {
                 PrintLogging.shared.log(.warning, "Session Replay is disabled via remote settings.")
                 let errorMessage = recording.error ?? "Recording is disabled by remote config setting."
