@@ -5,7 +5,7 @@ Last tag: 1.4.0
 
 ### Features
 
-- Feature - Event trigger based session recording and Event bridge
+- Feature - Event bridge integration and Event trigger based session recording.
 
 ### Fixes
 
