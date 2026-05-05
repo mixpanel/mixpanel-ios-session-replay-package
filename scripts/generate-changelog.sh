@@ -6,11 +6,11 @@ set -euo pipefail
 # Auto-linkifies PR references
 
 VERSION="$1"
-REPO="${2:-mixpanel/mixpanel-ios-session-replay}"
+REPO="${2:-mixpanel/mixpanel-ios-session-replay-package}"
 
 if [ -z "$VERSION" ]; then
   echo "Usage: $0 <version> [repo]"
-  echo "Example: $0 1.6.0 mixpanel/mixpanel-ios-session-replay"
+  echo "Example: $0 1.6.0 mixpanel/mixpanel-ios-session-replay-package"
   exit 1
 fi
 

@@ -75,7 +75,7 @@ jobs:
           echo "Generating changelog for version $NEW_VERSION..."
 
           # Generate new changelog entry
-          ./scripts/generate-changelog.sh "$NEW_VERSION" "mixpanel/mixpanel-ios-session-replay" > /tmp/new-changelog.md
+          ./scripts/generate-changelog.sh "$NEW_VERSION" "mixpanel/mixpanel-ios-session-replay-package" > /tmp/new-changelog.md
 
           # Prepend to existing CHANGELOG.md or create new one
           if [ -f CHANGELOG.md ]; then
