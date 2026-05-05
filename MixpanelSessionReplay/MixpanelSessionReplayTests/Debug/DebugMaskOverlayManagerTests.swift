@@ -28,8 +28,22 @@ class DebugMaskOverlayManagerTests: BaseTests {
         super.tearDown()
     }
 
+    func testCreateInDebugBuilds() {
+        #if DEBUG
+        let manager = DebugMaskOverlayManager.create(colors: colors)
+        XCTAssertNotNil(manager, "Manager should be created in DEBUG builds")
+        #else
+        let manager = DebugMaskOverlayManager.create(colors: colors)
+        XCTAssertNil(manager, "Manager should not be created in release builds")
+        #endif
+    }
+
     func testEnableDisableLifecycle() {
-        let manager = DebugMaskOverlayManager(colors: colors)
+        #if DEBUG
+        guard let manager = DebugMaskOverlayManager.create(colors: colors) else {
+            XCTFail("Manager should be created in DEBUG builds")
+            return
+        }
 
         let expectation1 = expectation(description: "Enable completes")
         let expectation2 = expectation(description: "Disable completes")
@@ -49,10 +63,15 @@ class DebugMaskOverlayManagerTests: BaseTests {
         }
 
         wait(for: [expectation1, expectation2], timeout: 1.0)
+        #endif
     }
 
     func testEnableIsIdempotent() {
-        let manager = DebugMaskOverlayManager(colors: colors)
+        #if DEBUG
+        guard let manager = DebugMaskOverlayManager.create(colors: colors) else {
+            XCTFail("Manager should be created in DEBUG builds")
+            return
+        }
 
         let expectation = self.expectation(description: "Multiple enables complete")
 
@@ -65,10 +84,15 @@ class DebugMaskOverlayManagerTests: BaseTests {
         }
 
         wait(for: [expectation], timeout: 1.0)
+        #endif
     }
 
     func testDisableIsIdempotent() {
-        let manager = DebugMaskOverlayManager(colors: colors)
+        #if DEBUG
+        guard let manager = DebugMaskOverlayManager.create(colors: colors) else {
+            XCTFail("Manager should be created in DEBUG builds")
+            return
+        }
 
         let expectation = self.expectation(description: "Multiple disables complete")
 
@@ -83,10 +107,15 @@ class DebugMaskOverlayManagerTests: BaseTests {
         }
 
         wait(for: [expectation], timeout: 1.0)
+        #endif
     }
 
     func testUpdateMaskRegions() {
-        let manager = DebugMaskOverlayManager(colors: colors)
+        #if DEBUG
+        guard let manager = DebugMaskOverlayManager.create(colors: colors) else {
+            XCTFail("Manager should be created in DEBUG builds")
+            return
+        }
 
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
 
@@ -109,10 +138,15 @@ class DebugMaskOverlayManagerTests: BaseTests {
         }
 
         wait(for: [expectation], timeout: 1.0)
+        #endif
     }
 
     func testTransitioningStateHidesOverlays() {
-        let manager = DebugMaskOverlayManager(colors: colors)
+        #if DEBUG
+        guard let manager = DebugMaskOverlayManager.create(colors: colors) else {
+            XCTFail("Manager should be created in DEBUG builds")
+            return
+        }
 
         let expectation = self.expectation(description: "Transitioning state completes")
 
@@ -132,10 +166,15 @@ class DebugMaskOverlayManagerTests: BaseTests {
         }
 
         wait(for: [expectation], timeout: 1.0)
+        #endif
     }
 
     func testEnableTransitioningStateWithDelay() {
-        let manager = DebugMaskOverlayManager(colors: colors)
+        #if DEBUG
+        guard let manager = DebugMaskOverlayManager.create(colors: colors) else {
+            XCTFail("Manager should be created in DEBUG builds")
+            return
+        }
 
         let expectation = self.expectation(description: "Transitioning with delay completes")
 
@@ -163,10 +202,15 @@ class DebugMaskOverlayManagerTests: BaseTests {
         }
 
         wait(for: [expectation], timeout: 2.0)
+        #endif
     }
 
     func testUpdateMaskRegionsWithEmptyDecisions() {
-        let manager = DebugMaskOverlayManager(colors: colors)
+        #if DEBUG
+        guard let manager = DebugMaskOverlayManager.create(colors: colors) else {
+            XCTFail("Manager should be created in DEBUG builds")
+            return
+        }
 
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
         let emptyDecisions: [HashableRect: MaskDecision] = [:]
@@ -185,10 +229,15 @@ class DebugMaskOverlayManagerTests: BaseTests {
         }
 
         wait(for: [expectation], timeout: 1.0)
+        #endif
     }
 
     func testConcurrentUpdatesAreHandledSafely() {
-        let manager = DebugMaskOverlayManager(colors: colors)
+        #if DEBUG
+        guard let manager = DebugMaskOverlayManager.create(colors: colors) else {
+            XCTFail("Manager should be created in DEBUG builds")
+            return
+        }
 
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
 
@@ -217,10 +266,15 @@ class DebugMaskOverlayManagerTests: BaseTests {
         }
 
         wait(for: [expectation], timeout: 1.0)
+        #endif
     }
 
     func testSensitiveViewManagerListenerIntegration() {
-        let manager = DebugMaskOverlayManager(colors: colors)
+        #if DEBUG
+        guard let manager = DebugMaskOverlayManager.create(colors: colors) else {
+            XCTFail("Manager should be created in DEBUG builds")
+            return
+        }
 
         let expectation = self.expectation(description: "Listener receives callback")
 
@@ -255,9 +309,11 @@ class DebugMaskOverlayManagerTests: BaseTests {
 
         // Clean up
         SensitiveViewManager.shared.maskRegionsListener = nil
+        #endif
     }
 
     func testDisableRemovesListener() {
+        #if DEBUG
         // Set up a listener
         let originalListener: ([HashableRect: MaskDecision], UIWindow?) -> Void = { _, _ in }
         SensitiveViewManager.shared.maskRegionsListener = originalListener
@@ -268,5 +324,6 @@ class DebugMaskOverlayManagerTests: BaseTests {
         SensitiveViewManager.shared.maskRegionsListener = nil
 
         XCTAssertNil(SensitiveViewManager.shared.maskRegionsListener, "Listener should be nil after cleanup")
+        #endif
     }
 }

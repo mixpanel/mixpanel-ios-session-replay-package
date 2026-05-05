@@ -12,9 +12,23 @@ import UIKit
 /// This manager attaches an overlay view to each root window and updates
 /// the displayed mask regions when they change.
 ///
-/// - Warning: This overlay is intended for debugging purposes only. It is the caller's
-///   responsibility to ensure it is not enabled in production builds.
+/// **Important**: This overlay only works in debug builds to prevent
+/// accidental exposure in production. Use `create()` to obtain an instance.
 class DebugMaskOverlayManager {
+
+    /// Creates a DebugMaskOverlayManager if the app is debuggable.
+    /// Returns nil for non-debuggable (release) builds to prevent accidental exposure.
+    ///
+    /// - Parameter colors: The overlay color configuration
+    /// - Returns: DebugMaskOverlayManager instance if debuggable, nil otherwise
+    static func create(colors: DebugOverlayColors) -> DebugMaskOverlayManager? {
+        #if DEBUG
+        return DebugMaskOverlayManager(colors: colors)
+        #else
+        Logger.warn(message: "Debug mask overlay is disabled in release builds")
+        return nil
+        #endif
+    }
 
     private let colors: DebugOverlayColors
 
@@ -39,10 +53,7 @@ class DebugMaskOverlayManager {
     }
     static var isSwizzled = false
 
-    /// Creates a DebugMaskOverlayManager with the given overlay colors.
-    ///
-    /// - Parameter colors: The overlay color configuration to use.
-    init(colors: DebugOverlayColors) {
+    private init(colors: DebugOverlayColors) {
         self.colors = colors
         // Initialize map table with weak keys and strong values
         overlayViews = NSMapTable<UIWindow, DebugMaskOverlayView>(

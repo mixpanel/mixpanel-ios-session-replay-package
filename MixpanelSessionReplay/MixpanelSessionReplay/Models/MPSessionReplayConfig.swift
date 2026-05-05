@@ -160,9 +160,7 @@ public struct MPSessionReplayConfig: Codable {
 
     /// Debug feature configuration. When not nil, debug features are enabled.
     ///
-    /// - Warning: Debug options should only be enabled in debug builds. It is the caller's
-    ///   responsibility to ensure these options are not enabled in production, as they may
-    ///   expose visual overlays and other debug information to end users.
+    /// Only works in debug builds to prevent accidental exposure in production.
     ///
     /// - Default: `nil` (disabled)
     /// - SeeAlso: ``DebugOptions``, ``DebugOverlayColors``

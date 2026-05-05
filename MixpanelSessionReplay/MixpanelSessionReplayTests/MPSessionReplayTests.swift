@@ -462,7 +462,8 @@ class MPSessionReplayTests: XCTestCase {
                 XCTFail("Initialization should fail when recording is disabled even in disabled mode")
             case .failure(let error):
                 if case MPSessionReplayError.disabledByRemoteSetting(let message) = error {
-                    XCTAssertEqual(message, "Recording disabled via remote enablement switch", "Error message should match")
+                    XCTAssertEqual(
+                        message, "Recording disabled via remote enablement switch", "Error message should match")
                 } else {
                     XCTFail("Error should be disabledByRemoteSetting, got: \(error)")
                 }

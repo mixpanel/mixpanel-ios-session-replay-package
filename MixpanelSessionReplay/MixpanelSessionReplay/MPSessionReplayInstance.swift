@@ -45,9 +45,11 @@ open class MPSessionReplayInstance: MPSessionReplaying {
             token: token, distinctId: distinctId, eventService: eventService, wifiOnly: config.wifiOnly,
             flushInterval: config.flushInterval)
 
-        // Initialize debug mask overlay if enabled
-        if let overlayColors = config.debugOptions?.overlayColors {
-            debugMaskOverlayManager = DebugMaskOverlayManager(colors: overlayColors)
+        // Initialize debug mask overlay if enabled (DEBUG builds only)
+        if let overlayColors = config.debugOptions?.overlayColors,
+            let manager = DebugMaskOverlayManager.create(colors: overlayColors)
+        {
+            debugMaskOverlayManager = manager
 
             // Set up mask regions listener
             SensitiveViewManager.shared.maskRegionsListener = { [weak self] (decisions, window) -> Void in
