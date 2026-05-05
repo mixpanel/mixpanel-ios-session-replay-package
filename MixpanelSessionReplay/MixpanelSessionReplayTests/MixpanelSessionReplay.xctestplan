@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "EAE543D7-ACEA-4D40-A51A-F399784143A6",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:MixpanelSessionReplay.xcodeproj",
+        "identifier" : "8650D2C92C13B042008903B1",
+        "name" : "MixpanelSessionReplayTests"
+      }
+    }
+  ],
+  "version" : 1
+}

@@ -1,26 +1,13 @@
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/71290498/231855731-2d3774c3-dc41-4595-abfb-9c49f5f84103.png" alt="Mixpanel Session Replay iOS SDK" height="150"/>
+</p>
+
+
+<a name="introduction"></a>
 # Mixpanel iOS Session Replay SDK
 
 **Session Replay for iOS lets you visually replay your user's app interactions, providing powerful qualitative insights to complement your quantitative analytics.**
-
----
-
-### ⚠️ iOS 26 Compatibility Notice
-
--   **iOS 26+ with Xcode 26: SwiftUI Automasking Issue — Fixed in [v1.2.1](https://github.com/mixpanel/mixpanel-ios-session-replay-package/releases/tag/v1.2.1)**
-
-  The iOS 26 "Liquid Glass" rendering changes that affected automasking in Session Replay for SwiftUI apps have been addressed in v1.2.1. Upgrade to v1.2.1 to get the fix.
-
-  **Who was affected:** SwiftUI apps using automasking for text or images, built with Xcode 26, and running on iOS 26+.
-
-  **If you are on v1.2.0:** Session Replay is disabled by default for apps built with Xcode 26+ running on iOS 26+. Upgrade to v1.2.1 and enable session replay by setting `config.enableSessionReplayOniOS26AndLater = true` during SDK initialization.
-
-  **If you re-enabled Session Replay on v1.2.0:** Upgrade to v1.2.1 to get the fix.
-
-  **If you disabled automasking as a workaround:** Upgrade to v1.2.1 and enable the automasking config.
-
-  While the iOS 26 "Liquid Glass" fix is now available, we still recommend thoroughly testing session replays in your app before pushing to production. We also encourage explicitly masking sensitive views rather than relying solely on the SDK's automasking.
-
-  **Note:** The `enableSessionReplayOniOS26AndLater` flag is still used by SDK in v1.2.1 but will be removed in a future minor version.
 
 ---
 
@@ -30,10 +17,81 @@ Mixpanel Session Replay enables you to quickly understand **why** users behave a
 
 ---
 
+# SDK Development
+
+This section is relevant **only if you are developing or contributing to this SDK repository**.
+
+## Swift Formatting (Apple swift-format)
+
+This repository uses Apple's swift-format to ensure consistent Swift formatting across all developers.
+
+Formatting rules are defined in the `.swift-format` file at the repo root.
+
+### Prerequisite
+Install swift-format:
+```bash
+brew install swift-format
+```
+
+### Format Swift Code Locally
+
+Format the entire repository:
+```bash
+sh ./scripts/format-swift.sh
+```
+
+Format a single file:
+```bash
+sh ./scripts/format-swift.sh MixpanelSessionReplay/MixpanelSessionReplay/MyFile.swift
+```
+
+Format multiple files:
+```bash
+sh ./scripts/format-swift.sh MixpanelSessionReplay/FileA.swift MixpanelSessionReplay/FileB.swift
+```
+
+## Required Git Hook Setup
+
+After pulling the repo, run:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+This enables the pre-commit hook that checks formatting before each commit.
+
+### How it works
+
+1. When you commit, the hook checks if staged Swift files are properly formatted
+2. If formatting issues are found, the commit is blocked
+3. The hook displays which files need formatting and provides the exact command to fix them
+4. After running the formatter, stage the files again and recommit
+
+### Example
+
+```
+🧹 Running Apple swift-format pre-commit hook (staged only)
+→ Checking formatting on staged Swift files
+
+❌ These files need formatting:
+   MixpanelSessionReplay/Foo.swift
+   MixpanelSessionReplay/Bar.swift
+
+Run the formatter and re-stage:
+  sh ./scripts/format-swift.sh MixpanelSessionReplay/Foo.swift MixpanelSessionReplay/Bar.swift
+```
+
+Then run the suggested command, re-stage, and commit again.
+
+---
+
+# SDK Integration
+
+This section is for **app developers integrating the SDK** into their iOS applications.
+
 ## Requirements
 
-- Active Mixpanel account (Enterprise)
-- Mixpanel Swift SDK `v4.3.1` or later
+- Active Mixpanel account
 
 ---
 
@@ -50,7 +108,7 @@ Open **podfile** and add Mixpanel Session Replay library to your dependencies:
 
 ```
 target 'MyApp' do
-     pod 'MixpanelSessionReplay', :git => 'https://github.com/mixpanel/mixpanel-ios-session-replay-package.git', :tag => 'v1.0.0'
+     pod 'MixpanelSessionReplay', :git => 'https://github.com/mixpanel/mixpanel-ios-session-replay-package.git', :tag => '1.0.0'
 end
 ```
 
@@ -58,105 +116,23 @@ Install the Mixpanel Session Replay by running the following in the Xcode projec
 ```
 pod install
 ```
----
-
-## Quick Start
-
-### SwiftUI
-
-```swift
-import Mixpanel
-import MixpanelSessionReplay
-
-struct YourApp: App {
-    @Environment(\.scenePhase) private var scenePhase
-
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
-        .onChange(of: scenePhase) {
-            if scenePhase == .active {
-                let config = MPSessionReplayConfig(wifiOnly: false, enableLogging: true)
-                MPSessionReplay.initialize(
-                    token: Mixpanel.mainInstance().apiToken,
-                    distinctId: Mixpanel.mainInstance().distinctId,
-                    config: config
-                )
-            }
-        }
-    }
-}
-```
-
-### UIKit
-
-```swift
-import UIKit
-import Mixpanel
-import MixpanelSessionReplay
-
-@main
-class AppDelegate: UIResponder, UIApplicationDelegate {
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        Mixpanel.initialize(token: "YOUR_MIXPANEL_TOKEN")
-
-        let config = MPSessionReplayConfig(wifiOnly: false, enableLogging: true)
-        MPSessionReplay.initialize(
-            token: Mixpanel.mainInstance().apiToken,
-            distinctId: Mixpanel.mainInstance().distinctId,
-            config: config
-        )
-        return true
-    }
-
-    func applicationDidBecomeActive(_ application: UIApplication) {
-        MPSessionReplay.getInstance()?.startRecording()
-    }
-}
-```
 
 ---
 
-## Configuration
+## Setup & Usage
 
-Customize your session replay by modifying `MPSessionReplayConfig`:
+For detailed setup instructions, configuration options, and usage examples, please visit our official documentation:
 
-- `wifiOnly`: Restricts uploads to WiFi connections (default: `true`).
-- `autoMaskedViews`: Automatically masks sensitive views (`.image`, `.text`, `.web`, `.map` by default).
-- `autoStartRecording`: Whether or not to automatically start recording upon initialization (default: `true`)
-- `autoStartRecordingSessionsPercent`: Controls session sampling from `0.0` (none) to `100.0` (all, default) when `autoStartRecording` is `true` .
-- `enableLogging`: Turn on debug logs (default: false)
-- `flushInterval`: How frequently to flush replay events (default: 10 seconds)
+**[📚 Mixpanel Session Replay for Swift - Complete Guide](https://docs.mixpanel.com/docs/tracking-methods/sdks/swift/swift-replay)**
 
----
-
-## Privacy & Data Masking
-
-By default, Mixpanel automatically masks sensitive views:
-
-- All text field inputs (cannot be unmasked)
-- Images, Labels, WebViews, MapViews (can be manually adjusted)
-
-To manually control sensitivity:
-
-```swift
-// SwiftUI
-Image("photo").mpReplaySensitive(true)
-
-// UIKit
-yourUIView.mpReplaySensitive = true
-```
+The documentation covers:
+- Quick start setup
+- Initialization and configuration
+- Recording sessions
+- Privacy controls and sensitive data masking
+- Advanced features and customization
 
 ---
 
-## Resources
+Have any questions? Reach out to Mixpanel [Support](https://help.mixpanel.com/hc/en-us/requests/new) to speak to someone smart, quickly.
 
-- [Full Documentation](https://mixpanel.com/docs/session-replay/session-replay-web)
-- [Legal: Beta Terms](https://mixpanel.com/legal/session-replay-beta-service-addendum)
-
----
-
-## Support
-
-Questions or feedback? Contact your Mixpanel Account Manager.

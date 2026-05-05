@@ -1,0 +1,145 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.6.0 without v prefix)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: prepare-release-${{ inputs.version }}
+  cancel-in-progress: true
+
+jobs:
+  prepare-release:
+    name: "📝 Prepare Release"
+    runs-on: macos-26
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Check if PR already exists
+        id: check_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_EXISTS=$(gh pr list --head release/${{ inputs.version }} --json number --jq 'length')
+          echo "PR_EXISTS=$PR_EXISTS" >> $GITHUB_OUTPUT
+
+      - name: Checkout existing release branch
+        if: ${{ steps.check_pr.outputs.PR_EXISTS != '0' }}
+        run: |
+          git fetch origin release/${{ inputs.version }}
+          git checkout release/${{ inputs.version }}
+
+      - name: Create release branch
+        if: ${{ steps.check_pr.outputs.PR_EXISTS == '0' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b release/${{ inputs.version }}
+
+      - name: Get current version
+        if: ${{ steps.check_pr.outputs.PR_EXISTS == '0' }}
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(grep -E 'private static let libVersion = "[0-9]+\.[0-9]+\.[0-9]+"' MixpanelSessionReplay/MixpanelSessionReplay/Utils/Constants.swift | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+)".*/\1/')
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Update version in files
+        if: ${{ steps.check_pr.outputs.PR_EXISTS == '0' }}
+        run: |
+          OLD_VERSION="${{ steps.current_version.outputs.CURRENT_VERSION }}"
+          NEW_VERSION="${{ inputs.version }}"
+
+          # Update MixpanelSessionReplay.podspec
+          sed -i '' "s/s.version[[:space:]]*=[[:space:]]*'$OLD_VERSION'/s.version               = '$NEW_VERSION'/" MixpanelSessionReplay.podspec
+
+          # Update Constants.swift
+          sed -i '' "s/private static let libVersion = \"$OLD_VERSION\"/private static let libVersion = \"$NEW_VERSION\"/" MixpanelSessionReplay/MixpanelSessionReplay/Utils/Constants.swift
+
+      - name: Generate changelog
+        if: ${{ steps.check_pr.outputs.PR_EXISTS == '0' }}
+        run: |
+          NEW_VERSION="${{ inputs.version }}"
+
+          echo "Generating changelog for version $NEW_VERSION..."
+
+          # Generate new changelog entry
+          ./scripts/generate-changelog.sh "$NEW_VERSION" "mixpanel/mixpanel-ios-session-replay" > /tmp/new-changelog.md
+
+          # Prepend to existing CHANGELOG.md or create new one
+          if [ -f CHANGELOG.md ]; then
+            # Backup existing changelog
+            cp CHANGELOG.md /tmp/existing-changelog.md
+            # Prepend new entry
+            cat /tmp/new-changelog.md > CHANGELOG.md
+            cat /tmp/existing-changelog.md >> CHANGELOG.md
+          else
+            # Create new CHANGELOG.md
+            echo "# Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            cat /tmp/new-changelog.md >> CHANGELOG.md
+          fi
+
+          echo "✓ Changelog generated"
+
+      - name: Commit and push changes
+        if: ${{ steps.check_pr.outputs.PR_EXISTS == '0' }}
+        run: |
+          git add MixpanelSessionReplay.podspec MixpanelSessionReplay/MixpanelSessionReplay/Utils/Constants.swift CHANGELOG.md
+          git commit \
+            -m "release: prepare ${{ inputs.version }}" \
+            -m "- Updated version to ${{ inputs.version }}
+          - Updated changelog"
+          git push origin release/${{ inputs.version }}
+
+      - name: Create pull request
+        if: ${{ steps.check_pr.outputs.PR_EXISTS == '0' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --title "release: prepare ${{ inputs.version }}" \
+            --body "## Release ${{ inputs.version }}
+
+          This PR prepares the release for version ${{ inputs.version }}.
+
+          ### Changes
+          - Updated version in MixpanelSessionReplay.podspec
+          - Updated version in MixpanelSessionReplay/MixpanelSessionReplay/Utils/Constants.swift
+          - Updated CHANGELOG.md with commits since last release
+
+          ### Changelog
+          The changelog has been auto-generated from conventional commit messages.
+          Please review and edit if needed before merging.
+
+          ### Next Steps
+          1. Review the changes (especially the changelog)
+          2. Approve and merge this PR
+          3. Run the \`Release SPM\` workflow from main branch with version \`${{ inputs.version }}\`
+
+          ---
+          *Created by GitHub Actions workflow*" \
+            --base main \
+            --head release/${{ inputs.version }}
+
+      - name: PR created successfully
+        run: |
+          echo "✅ Release PR prepared successfully!"
+          echo ""
+          echo "Next steps:"
+          echo "1. Review and approve the PR: https://github.com/${{ github.repository }}/pull/$(gh pr list --head release/${{ inputs.version }} --json number --jq '.[0].number')"
+          echo "2. Merge the PR to main"
+          echo "3. Run 'Release SPM' workflow from main branch"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
