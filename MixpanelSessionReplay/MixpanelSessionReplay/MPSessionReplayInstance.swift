@@ -294,8 +294,9 @@ open class MPSessionReplayInstance: MPSessionReplaying {
             URLQueryItem(name: "distinct_id", value: flushService.getDistinctId()),
             URLQueryItem(name: "token", value: token),
         ]
-        components?.percentEncodedQuery = components?.percentEncodedQuery?.replacingOccurrences(
-            of: "+", with: "%2B")
+        if let encodedQuery = components?.percentEncodedQuery {
+            components?.percentEncodedQuery = encodedQuery.replacingOccurrences(of: "+", with: "%2B")
+        }
         return components?.url?.absoluteString
     }
 
