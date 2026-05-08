@@ -64,6 +64,13 @@ open class MPSessionReplay {
         }
         return nil
     }
+
+    /// Returns the URL to view the current session replay in the Mixpanel dashboard.
+    ///
+    /// - Returns: The session replay URL if recording is active, or `nil` if not recording.
+    open class func getSessionReplayUrl() -> String? {
+        return MPSessionReplay.getInstance()?.getSessionReplayUrl()
+    }
 }
 
 final class MPSessionReplayManager {

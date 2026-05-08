@@ -226,4 +226,61 @@ class MPSessionReplayInstanceTests: BaseTests {
 
         XCTAssertEqual(instance.flushService.getDistinctId(), newDistinctId)
     }
+
+    // MARK: - getSessionReplayUrl Tests
+
+    func testGetSessionReplayUrl_ReturnsNilWhenNotRecording() {
+        XCTAssertFalse(instance.isRecording)
+        XCTAssertNil(instance.getSessionReplayUrl())
+    }
+
+    func testGetSessionReplayUrl_ReturnsCorrectURLWhenRecording() {
+        startRecording()
+        XCTAssertTrue(instance.isRecording)
+
+        let url = instance.getSessionReplayUrl()
+        XCTAssertNotNil(url)
+
+        let replayId = SessionManager.shared.replayId
+        let distinctId = instance.flushService.getDistinctId()
+        let token = instance.token
+
+        XCTAssertTrue(url!.contains("https://mixpanel.com/projects/replay-redirect"))
+        XCTAssertTrue(url!.contains("replay_id=\(replayId)"))
+        XCTAssertTrue(url!.contains("distinct_id=\(distinctId)"))
+        XCTAssertTrue(url!.contains("token=\(token)"))
+    }
+
+    func testGetSessionReplayUrl_ReturnsValidURLWithSpecialCharacters() {
+        // Create instance with special characters that require encoding
+        let specialDistinctId = "user+test&param=value"
+        let config = MPSessionReplayConfig(
+            wifiOnly: false, autoStartRecording: false, enableLogging: false)
+        let testInstance = MPSessionReplayInstance(
+            token: "test-token",
+            distinctId: specialDistinctId,
+            config: config
+        )
+
+        testInstance.startRecording(sessionsPercent: 100)
+        XCTAssertTrue(testInstance.isRecording)
+
+        let urlString = testInstance.getSessionReplayUrl()
+        XCTAssertNotNil(urlString)
+
+        // Verify it's a valid URL that can be parsed
+        let url = URL(string: urlString!)
+        XCTAssertNotNil(url, "getSessionReplayUrl must return a valid URL")
+
+        // Verify all query parameters can be correctly extracted
+        let components = URLComponents(string: urlString!)
+        XCTAssertNotNil(components)
+
+        let distinctIdItem = components?.queryItems?.first { $0.name == "distinct_id" }
+        XCTAssertEqual(
+            distinctIdItem?.value, specialDistinctId,
+            "distinctId should be properly encoded and decodable")
+
+        testInstance.stopRecording()
+    }
 }

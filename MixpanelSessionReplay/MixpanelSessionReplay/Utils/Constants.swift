@@ -78,6 +78,8 @@ struct PayloadObjectID {
 
 struct EndPoints {
     static let defaultRecord = "https://api-js.mixpanel.com/record"
+    /// Base URL for session replay redirect (works for all data residency regions).
+    static let sessionReplayRedirect = "https://mixpanel.com/projects/replay-redirect"
 }
 
 struct TimingAdjustment {
