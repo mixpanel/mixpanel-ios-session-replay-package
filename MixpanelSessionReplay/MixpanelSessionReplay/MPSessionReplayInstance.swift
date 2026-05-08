@@ -294,7 +294,9 @@ open class MPSessionReplayInstance: MPSessionReplaying {
             URLQueryItem(name: "distinct_id", value: flushService.getDistinctId()),
             URLQueryItem(name: "token", value: token),
         ]
-        return components?.string
+        components?.percentEncodedQuery = components?.percentEncodedQuery?.replacingOccurrences(
+            of: "+", with: "%2B")
+        return components?.url?.absoluteString
     }
 
     func record(_ triggerTimestamp: Int64? = nil) {

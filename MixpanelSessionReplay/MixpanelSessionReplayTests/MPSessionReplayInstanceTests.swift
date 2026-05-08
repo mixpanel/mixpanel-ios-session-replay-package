@@ -280,6 +280,9 @@ class MPSessionReplayInstanceTests: BaseTests {
         XCTAssertEqual(
             distinctIdItem?.value, specialDistinctId,
             "distinctId should be properly encoded and decodable")
+        let encodedQuery = components?.percentEncodedQuery
+        XCTAssertTrue(encodedQuery?.contains("distinct_id=user%2Btest%26param%3Dvalue") == true)
+        XCTAssertFalse(encodedQuery?.contains("distinct_id=user+test") == true)
 
         testInstance.stopRecording()
     }
