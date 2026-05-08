@@ -227,18 +227,18 @@ class MPSessionReplayInstanceTests: BaseTests {
         XCTAssertEqual(instance.flushService.getDistinctId(), newDistinctId)
     }
 
-    // MARK: - getSessionReplayUrl Tests
+    // MARK: - getSessionReplayURL Tests
 
     func testGetSessionReplayUrl_ReturnsNilWhenNotRecording() {
         XCTAssertFalse(instance.isRecording)
-        XCTAssertNil(instance.getSessionReplayUrl())
+        XCTAssertNil(instance.getSessionReplayURL())
     }
 
     func testGetSessionReplayUrl_ReturnsCorrectURLWhenRecording() {
         startRecording()
         XCTAssertTrue(instance.isRecording)
 
-        let url = instance.getSessionReplayUrl()
+        let url = instance.getSessionReplayURL()
         XCTAssertNotNil(url)
 
         let replayId = SessionManager.shared.replayId
@@ -265,12 +265,12 @@ class MPSessionReplayInstanceTests: BaseTests {
         testInstance.startRecording(sessionsPercent: 100)
         XCTAssertTrue(testInstance.isRecording)
 
-        let urlString = testInstance.getSessionReplayUrl()
+        let urlString = testInstance.getSessionReplayURL()
         XCTAssertNotNil(urlString)
 
         // Verify it's a valid URL that can be parsed
         let url = URL(string: urlString!)
-        XCTAssertNotNil(url, "getSessionReplayUrl must return a valid URL")
+        XCTAssertNotNil(url, "getSessionReplayURL must return a valid URL")
 
         // Verify all query parameters can be correctly extracted
         let components = URLComponents(string: urlString!)
