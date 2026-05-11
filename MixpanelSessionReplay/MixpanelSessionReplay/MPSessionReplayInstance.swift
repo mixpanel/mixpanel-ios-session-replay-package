@@ -283,6 +283,23 @@ open class MPSessionReplayInstance: MPSessionReplaying {
             })
     }
 
+    /// Returns the URL to view the current session replay in the Mixpanel dashboard.
+    ///
+    /// - Returns: The session replay URL if recording is active, or `nil` if not recording.
+    public func getSessionReplayURL() -> String? {
+        guard isRecording else { return nil }
+        var components = URLComponents(string: EndPoints.sessionReplayRedirect)
+        components?.queryItems = [
+            URLQueryItem(name: "replay_id", value: SessionManager.shared.replayId),
+            URLQueryItem(name: "distinct_id", value: flushService.getDistinctId()),
+            URLQueryItem(name: "token", value: token),
+        ]
+        if let encodedQuery = components?.percentEncodedQuery {
+            components?.percentEncodedQuery = encodedQuery.replacingOccurrences(of: "+", with: "%2B")
+        }
+        return components?.url?.absoluteString
+    }
+
     func record(_ triggerTimestamp: Int64? = nil) {
         if shouldRecordSession && isScreenDirty() {
             let timestamp = triggerTimestamp ?? TimestampUtils.timestamp()
