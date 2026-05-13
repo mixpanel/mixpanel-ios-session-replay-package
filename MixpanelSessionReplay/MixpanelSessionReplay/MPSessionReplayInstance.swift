@@ -43,6 +43,7 @@ open class MPSessionReplayInstance: MPSessionReplaying {
         eventService = EventService()
         flushService = FlushService(
             token: token, distinctId: distinctId, eventService: eventService, wifiOnly: config.wifiOnly,
+            serverUrl: config.serverUrl,
             flushInterval: config.flushInterval)
 
         // Initialize debug mask overlay if enabled (DEBUG builds only)
@@ -288,7 +289,7 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     /// - Returns: The session replay URL if recording is active, or `nil` if not recording.
     public func getSessionReplayURL() -> String? {
         guard isRecording else { return nil }
-        var components = URLComponents(string: EndPoints.sessionReplayRedirect)
+        var components = URLComponents(string: MPSessionReplayAPI.sessionReplayRedirect)
         components?.queryItems = [
             URLQueryItem(name: "replay_id", value: SessionManager.shared.replayId),
             URLQueryItem(name: "distinct_id", value: flushService.getDistinctId()),

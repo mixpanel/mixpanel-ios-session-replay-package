@@ -22,7 +22,6 @@ class SettingsService {
     private let userDefaults: UserDefaults
 
     static let settingsTimeoutMS = 5.0
-    static let settingsEndpoint = "https://api.mixpanel.com/settings"
 
     init(
         network: Network = Network(), version: String, mpLib: String,
@@ -91,7 +90,7 @@ class SettingsService {
         }
 
         let apiRequest = APIRequest(
-            endPoint: Self.settingsEndpoint,
+            endPoint: MPSessionReplayAPI.settingsEndpoint,
             method: .get,
             requestBody: nil,
             queryItems: queryItems,

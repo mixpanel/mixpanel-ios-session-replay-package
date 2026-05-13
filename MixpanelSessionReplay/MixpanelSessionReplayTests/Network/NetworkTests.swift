@@ -30,7 +30,7 @@ class NetworkTests: XCTestCase {
     }
 
     func testPerformAPIRequestSuccess() {
-        let url = URL(string: EndPoints.defaultRecord)!
+        let url = URL(string: MPSessionReplayAPI.recordEndpoint())!
         let responseData = "Success".data(using: .utf8)
         let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)!
 
@@ -39,7 +39,7 @@ class NetworkTests: XCTestCase {
         }
 
         let apiRequest = APIRequest(
-            endPoint: EndPoints.defaultRecord,
+            endPoint: MPSessionReplayAPI.recordEndpoint(),
             method: .get,
             requestBody: nil,
             queryItems: nil,
@@ -70,7 +70,7 @@ class NetworkTests: XCTestCase {
         }
 
         let apiRequest = APIRequest(
-            endPoint: EndPoints.defaultRecord,
+            endPoint: MPSessionReplayAPI.recordEndpoint(),
             method: .get,
             requestBody: nil,
             queryItems: nil,
@@ -94,7 +94,7 @@ class NetworkTests: XCTestCase {
     }
 
     func testPerformAPIRequestInvalidResponse() {
-        let url = URL(string: EndPoints.defaultRecord)!
+        let url = URL(string: MPSessionReplayAPI.recordEndpoint())!
         let response = HTTPURLResponse(url: url, statusCode: 500, httpVersion: nil, headerFields: nil)!
 
         MockURLProtocol.requestHandler = { request in
@@ -102,7 +102,7 @@ class NetworkTests: XCTestCase {
         }
 
         let apiRequest = APIRequest(
-            endPoint: EndPoints.defaultRecord,
+            endPoint: MPSessionReplayAPI.recordEndpoint(),
             method: .get,
             requestBody: nil,
             queryItems: nil,
