@@ -147,9 +147,9 @@ final class MPSessionReplayManager {
         let settingsService =
             testOverride_settingsService
             ?? SettingsService(
-                serverURL: config.serverURL,
                 version: APIConstants.currentLibVersion,
                 mpLib: APIConstants.currentMpLib,
+                serverURL: config.serverURL,
             )
         settingsService.getRemoteConfiguration(
             token: token,
