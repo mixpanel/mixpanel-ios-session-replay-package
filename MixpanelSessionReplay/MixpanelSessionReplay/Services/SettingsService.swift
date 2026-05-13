@@ -24,9 +24,10 @@ class SettingsService {
     static let settingsTimeoutMS = 5.0
 
     init(
-        network: Network = Network(), serverURL: String = MPSessionReplayAPI.usDataResidency, version: String,
+        network: Network = Network(), version: String,
         mpLib: String,
-        userDefaults: UserDefaults = UserDefaults(suiteName: ReplaySettings.userDefaultsName) ?? UserDefaults.standard
+        userDefaults: UserDefaults = UserDefaults(suiteName: ReplaySettings.userDefaultsName) ?? UserDefaults.standard,
+        serverURL: String = MPSessionReplayAPI.usDataResidency
     ) {
         self.network = network
         self.version = version

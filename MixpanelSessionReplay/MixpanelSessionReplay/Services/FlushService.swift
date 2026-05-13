@@ -21,9 +21,8 @@ class FlushService {
 
     init(
         token: String, distinctId: String, eventService: EventService, wifiOnly: Bool,
-        serverURL: String = MPSessionReplayAPI.usDataResidency,
         flushRequest: FlushRequest? = nil, networkMonitor: NetworkMonitoring = NetworkMonitor.shared,
-        flushInterval: TimeInterval
+        flushInterval: TimeInterval, serverURL: String = MPSessionReplayAPI.usDataResidency
     ) {
         self.token = token
         self.serverURL = serverURL

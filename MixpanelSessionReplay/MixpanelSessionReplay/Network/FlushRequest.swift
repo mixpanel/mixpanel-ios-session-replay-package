@@ -15,8 +15,8 @@ class FlushRequest {
     private let recordApiUrl: String
 
     init(
-        token: String, distinctId: String, serverURL: String = MPSessionReplayAPI.usDataResidency,
-        network: Network = Network()
+        token: String, distinctId: String, network: Network = Network(),
+        serverURL: String = MPSessionReplayAPI.usDataResidency
     ) {
         self.token = token
         self.distinctId = distinctId

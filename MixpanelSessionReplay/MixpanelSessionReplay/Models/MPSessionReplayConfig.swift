@@ -118,27 +118,6 @@ public struct MPSessionReplayConfig: Codable {
     /// - SeeAlso: ``RemoteSettingsMode``
     public var remoteSettingsMode: RemoteSettingsMode = .disabled
 
-    /// Specifies the data residency base URL for sending session replay data.
-    ///
-    /// Use the predefined data residency constants:
-    /// - `MPSessionReplayAPI.usDataResidency` - US data residency (default): "https://api-js.mixpanel.com"
-    /// - `MPSessionReplayAPI.euDataResidency` - EU data residency: "https://api-eu.mixpanel.com"
-    /// - `MPSessionReplayAPI.inDataResidency` - India data residency: "https://api-in.mixpanel.com"
-    ///
-    /// Example:
-    /// ```swift
-    /// let config = MPSessionReplayConfig(serverURL: MPSessionReplayAPI.euDataResidency)
-    /// ```
-    ///
-    /// - Note: The URL is trimmed and validated when SDK is getting initialized. If url validation fails, SDK will not be initialized.
-    ///
-    /// - Default: `MPSessionReplayAPI.usDataResidency` (US data residency)
-    public var serverURL: String = MPSessionReplayAPI.usDataResidency {
-        didSet {
-            serverURL = getTrimmedServerURL(urlString: serverURL)
-        }
-    }
-
     /// Specifies the flush interval in seconds. The default is 10 seconds.
     /// Screenshots are collected and sent to Mixpanel in batches of 10.
     /// One batch is sent after each flush interval.
@@ -187,6 +166,27 @@ public struct MPSessionReplayConfig: Codable {
     /// - SeeAlso: ``DebugOptions``, ``DebugOverlayColors``
     public var debugOptions: DebugOptions?
 
+    /// Specifies the data residency base URL for sending session replay data.
+    ///
+    /// Use the predefined data residency constants:
+    /// - `MPSessionReplayAPI.usDataResidency` - US data residency (default): "https://api-js.mixpanel.com"
+    /// - `MPSessionReplayAPI.euDataResidency` - EU data residency: "https://api-eu.mixpanel.com"
+    /// - `MPSessionReplayAPI.inDataResidency` - India data residency: "https://api-in.mixpanel.com"
+    ///
+    /// Example:
+    /// ```swift
+    /// let config = MPSessionReplayConfig(serverURL: MPSessionReplayAPI.euDataResidency)
+    /// ```
+    ///
+    /// - Note: The URL is trimmed and validated when SDK is getting initialized. If url validation fails, SDK will not be initialized.
+    ///
+    /// - Default: `MPSessionReplayAPI.usDataResidency` (US data residency)
+    public var serverURL: String = MPSessionReplayAPI.usDataResidency {
+        didSet {
+            serverURL = getTrimmedServerURL(urlString: serverURL)
+        }
+    }
+
     /// Initializes a new `MPSessionReplayConfig` with the provided settings.
     ///
     /// - Parameters:
@@ -194,36 +194,36 @@ public struct MPSessionReplayConfig: Codable {
     ///   - autoMaskedViews: Defines the views (from the `MPAutoMaskedViews` enum) that should be automatically masked in the replay.
     ///   This parameter is optional, with a default value of `[.image, .text, .web, .map]`.
     ///   To disable masking completely, explicitly pass an empty set `[]`.
-    ///   - autoStartRecording: **Deprecated**, use `recordingSessionsPercent` instead. This property will be removed in a future release.
+    ///   - autoStartRecording: **Deprec ated**, use `recordingSessionsPercent` instead. This property will be removed in a future release.
     ///   - recordingSessionsPercent: The sampling rate for automatically started recording session replays.
     ///   - remoteSettingsMode: Controls how remote configuration settings are fetched.
-    ///   - serverURL: The data residency base URL. Use `MPSessionReplayAPI.usDataResidency` (default), `MPSessionReplayAPI.euDataResidency`, `MPSessionReplayAPI.inDataResidency`, or a custom URL.
     ///   - enableLogging: Enables debug-level logging for the SDK.
     ///   - flushInterval: Specifies the flush interval in seconds.
     ///   - enableSessionReplayOniOS26AndLater: Forces Session Replay to be enabled on iOS 26 and later.
     ///   - debugOptions: Debug feature configuration. When not nil, enables debug features (debug builds only).
+    ///   - serverURL: The data residency base URL. Use `MPSessionReplayAPI.usDataResidency` (default), `MPSessionReplayAPI.euDataResidency`, `MPSessionReplayAPI.inDataResidency`, or a custom URL.
     public init(
         wifiOnly: Bool = true,
         autoMaskedViews: Set<MPAutoMaskedViews> = [.image, .text, .web, .map],
         autoStartRecording: Bool = true,
         recordingSessionsPercent: Double = 100,
         remoteSettingsMode: RemoteSettingsMode = .disabled,
-        serverURL: String = MPSessionReplayAPI.usDataResidency,
         enableLogging: Bool = false,
         flushInterval: TimeInterval = 10,
         enableSessionReplayOniOS26AndLater: Bool = false,
-        debugOptions: DebugOptions? = nil
+        debugOptions: DebugOptions? = nil,
+        serverURL: String = MPSessionReplayAPI.usDataResidency,
     ) {
         self.wifiOnly = wifiOnly
         self.autoMaskedViews = autoMaskedViews
         self.autoStartRecording = autoStartRecording
         self.recordingSessionsPercent = recordingSessionsPercent
         self.remoteSettingsMode = remoteSettingsMode
-        self.serverURL = getTrimmedServerURL(urlString: serverURL)
         self.enableLogging = enableLogging
         self.flushInterval = flushInterval
         self.enableSessionReplayOniOS26AndLater = enableSessionReplayOniOS26AndLater
         self.debugOptions = debugOptions
+        self.serverURL = getTrimmedServerURL(urlString: serverURL)
     }
 
     /// Validates the serverURL and logs errors if invalid
