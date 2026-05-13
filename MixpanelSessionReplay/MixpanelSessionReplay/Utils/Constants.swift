@@ -95,17 +95,17 @@ public struct MPSessionReplayAPI {
     private static let settingsPath = "/settings"
 
     /// Returns the full settings endpoint URL for the given data residency base URL
-    /// - Parameter serverUrl: The data residency base URL (e.g., MPSessionReplayAPI.usDataResidency)
+    /// - Parameter serverURL: The data residency base URL (e.g., MPSessionReplayAPI.usDataResidency)
     /// - Returns: Full settings endpoint URL (e.g., "https://api.mixpanel.com/settings")
-    static func settingsEndpoint(for serverUrl: String = MPSessionReplayAPI.usDataResidency) -> String {
+    static func settingsEndpoint(for serverURL: String = MPSessionReplayAPI.usDataResidency) -> String {
         "\(eventsEndpoint)\(settingsPath)"
     }
 
     /// Returns the full record endpoint URL for the given data residency base URL
-    /// - Parameter serverUrl: The data residency base URL (e.g., MPSessionReplayAPI.usDataResidency)
+    /// - Parameter serverURL: The data residency base URL (e.g., MPSessionReplayAPI.usDataResidency)
     /// - Returns: Full record endpoint URL (e.g., "https://api.mixpanel.com/record")
-    static func recordEndpoint(for serverUrl: String = MPSessionReplayAPI.usDataResidency) -> String {
-        return "\(serverUrl)\(recordPath)"
+    static func recordEndpoint(for serverURL: String = MPSessionReplayAPI.usDataResidency) -> String {
+        return "\(serverURL)\(recordPath)"
     }
 }
 

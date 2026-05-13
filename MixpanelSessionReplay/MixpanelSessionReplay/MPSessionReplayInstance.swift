@@ -43,7 +43,7 @@ open class MPSessionReplayInstance: MPSessionReplaying {
         eventService = EventService()
         flushService = FlushService(
             token: token, distinctId: distinctId, eventService: eventService, wifiOnly: config.wifiOnly,
-            serverUrl: config.serverUrl,
+            serverURL: config.serverURL,
             flushInterval: config.flushInterval)
 
         // Initialize debug mask overlay if enabled (DEBUG builds only)

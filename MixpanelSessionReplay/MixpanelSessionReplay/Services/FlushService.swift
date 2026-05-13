@@ -11,7 +11,7 @@ class FlushService {
     public var wifiOnly: Bool
 
     private let token: String
-    private let serverUrl: String
+    private let serverURL: String
     var flushTimer: Timer?
     var flushSerialQueue: DispatchQueue
     private var eventService: EventService
@@ -21,15 +21,15 @@ class FlushService {
 
     init(
         token: String, distinctId: String, eventService: EventService, wifiOnly: Bool,
-        serverUrl: String = MPSessionReplayAPI.usDataResidency,
+        serverURL: String = MPSessionReplayAPI.usDataResidency,
         flushRequest: FlushRequest? = nil, networkMonitor: NetworkMonitoring = NetworkMonitor.shared,
         flushInterval: TimeInterval
     ) {
         self.token = token
-        self.serverUrl = serverUrl
+        self.serverURL = serverURL
         self.eventService = eventService
         self.wifiOnly = wifiOnly
-        self.flushRequest = flushRequest ?? FlushRequest(token: token, distinctId: distinctId, serverUrl: serverUrl)
+        self.flushRequest = flushRequest ?? FlushRequest(token: token, distinctId: distinctId, serverURL: serverURL)
         self.networkMonitor = networkMonitor
         self.flushInterval = flushInterval
         flushSerialQueue = DispatchQueue(
@@ -81,7 +81,7 @@ class FlushService {
     }
 
     func updateDistinctId(_ distinctId: String) {
-        self.flushRequest = FlushRequest(token: token, distinctId: distinctId, serverUrl: serverUrl)
+        self.flushRequest = FlushRequest(token: token, distinctId: distinctId, serverURL: serverURL)
         Logger.info(message: "Updated distinct id successfully.")
     }
 

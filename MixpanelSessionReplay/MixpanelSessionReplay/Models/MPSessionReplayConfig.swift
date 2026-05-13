@@ -127,15 +127,15 @@ public struct MPSessionReplayConfig: Codable {
     ///
     /// Example:
     /// ```swift
-    /// let config = MPSessionReplayConfig(serverUrl: MPSessionReplayAPI.euDataResidency)
+    /// let config = MPSessionReplayConfig(serverURL: MPSessionReplayAPI.euDataResidency)
     /// ```
     ///
     /// - Note: The URL is trimmed and validated when SDK is getting initialized. If url validation fails, SDK will not be initialized.
     ///
     /// - Default: `MPSessionReplayAPI.usDataResidency` (US data residency)
-    public var serverUrl: String = MPSessionReplayAPI.usDataResidency {
+    public var serverURL: String = MPSessionReplayAPI.usDataResidency {
         didSet {
-            serverUrl = getTrimmedServerUrl(urlString: serverUrl)
+            serverURL = getTrimmedServerURL(urlString: serverURL)
         }
     }
 
@@ -197,7 +197,7 @@ public struct MPSessionReplayConfig: Codable {
     ///   - autoStartRecording: **Deprecated**, use `recordingSessionsPercent` instead. This property will be removed in a future release.
     ///   - recordingSessionsPercent: The sampling rate for automatically started recording session replays.
     ///   - remoteSettingsMode: Controls how remote configuration settings are fetched.
-    ///   - serverUrl: The data residency base URL. Use `MPSessionReplayAPI.usDataResidency` (default), `MPSessionReplayAPI.euDataResidency`, `MPSessionReplayAPI.inDataResidency`, or a custom URL.
+    ///   - serverURL: The data residency base URL. Use `MPSessionReplayAPI.usDataResidency` (default), `MPSessionReplayAPI.euDataResidency`, `MPSessionReplayAPI.inDataResidency`, or a custom URL.
     ///   - enableLogging: Enables debug-level logging for the SDK.
     ///   - flushInterval: Specifies the flush interval in seconds.
     ///   - enableSessionReplayOniOS26AndLater: Forces Session Replay to be enabled on iOS 26 and later.
@@ -208,7 +208,7 @@ public struct MPSessionReplayConfig: Codable {
         autoStartRecording: Bool = true,
         recordingSessionsPercent: Double = 100,
         remoteSettingsMode: RemoteSettingsMode = .disabled,
-        serverUrl: String = MPSessionReplayAPI.usDataResidency,
+        serverURL: String = MPSessionReplayAPI.usDataResidency,
         enableLogging: Bool = false,
         flushInterval: TimeInterval = 10,
         enableSessionReplayOniOS26AndLater: Bool = false,
@@ -219,20 +219,20 @@ public struct MPSessionReplayConfig: Codable {
         self.autoStartRecording = autoStartRecording
         self.recordingSessionsPercent = recordingSessionsPercent
         self.remoteSettingsMode = remoteSettingsMode
-        self.serverUrl = getTrimmedServerUrl(urlString: serverUrl)
+        self.serverURL = getTrimmedServerURL(urlString: serverURL)
         self.enableLogging = enableLogging
         self.flushInterval = flushInterval
         self.enableSessionReplayOniOS26AndLater = enableSessionReplayOniOS26AndLater
         self.debugOptions = debugOptions
     }
 
-    /// Validates the serverUrl and logs errors if invalid
-    public func validateServerUrl() -> Bool {
+    /// Validates the serverURL and logs errors if invalid
+    public func validateServerURL() -> Bool {
         // Check if URL can be constructed
-        guard let url = URL(string: serverUrl) else {
+        guard let url = URL(string: serverURL) else {
             PrintLogging.shared.log(
                 .error,
-                "Invalid serverUrl provided: '\(serverUrl)'. This is not a valid URL format. Session replay data will fail to send. Please provide a valid HTTPS URL."
+                "Invalid serverURL provided: '\(serverURL)'. This is not a valid URL format. Session replay data will fail to send. Please provide a valid HTTPS URL."
             )
             return false
         }
@@ -242,7 +242,7 @@ public struct MPSessionReplayConfig: Codable {
             let scheme = url.scheme ?? "unknown"
             PrintLogging.shared.log(
                 .error,
-                "Insecure serverUrl provided: '\(serverUrl)'. The URL uses '\(scheme)' instead of 'https'. Session replay data transmission requires HTTPS for security. Please use a valid HTTPS URL."
+                "Insecure serverURL provided: '\(serverURL)'. The URL uses '\(scheme)' instead of 'https'. Session replay data transmission requires HTTPS for security. Please use a valid HTTPS URL."
             )
             return false
         }
@@ -251,7 +251,7 @@ public struct MPSessionReplayConfig: Codable {
         guard let host = url.host, !host.isEmpty else {
             PrintLogging.shared.log(
                 .error,
-                "Invalid serverUrl provided: '\(serverUrl)'. The URL has no valid host. Session replay data will fail to send. Please provide a complete URL with a valid host."
+                "Invalid serverURL provided: '\(serverURL)'. The URL has no valid host. Session replay data will fail to send. Please provide a complete URL with a valid host."
             )
             return false
         }
@@ -260,7 +260,7 @@ public struct MPSessionReplayConfig: Codable {
         if !url.path.isEmpty && url.path != "/" {
             PrintLogging.shared.log(
                 .error,
-                "Invalid serverUrl provided: '\(serverUrl)'. The URL should not contain a path. Please provide only the base URL (e.g., 'https://api.mixpanel.com' not 'https://api.mixpanel.com/path"
+                "Invalid serverURL provided: '\(serverURL)'. The URL should not contain a path. Please provide only the base URL (e.g., 'https://api.mixpanel.com' not 'https://api.mixpanel.com/path"
             )
             return false
         }
@@ -268,7 +268,7 @@ public struct MPSessionReplayConfig: Codable {
         return true
     }
 
-    private func getTrimmedServerUrl(urlString: String) -> String {
+    private func getTrimmedServerURL(urlString: String) -> String {
         return urlString.trimmingCharacters(in: CharacterSet.whitespaces.union(CharacterSet(charactersIn: "/")))
     }
 

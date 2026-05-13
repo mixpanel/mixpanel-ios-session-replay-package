@@ -15,12 +15,12 @@ class FlushRequest {
     private let recordApiUrl: String
 
     init(
-        token: String, distinctId: String, serverUrl: String = MPSessionReplayAPI.usDataResidency,
+        token: String, distinctId: String, serverURL: String = MPSessionReplayAPI.usDataResidency,
         network: Network = Network()
     ) {
         self.token = token
         self.distinctId = distinctId
-        self.recordApiUrl = MPSessionReplayAPI.recordEndpoint(for: serverUrl)
+        self.recordApiUrl = MPSessionReplayAPI.recordEndpoint(for: serverURL)
 
         if let data = "\(token):".data(using: .utf8) {
             headers["Authorization"] = "Basic \(data.base64EncodedString())"
