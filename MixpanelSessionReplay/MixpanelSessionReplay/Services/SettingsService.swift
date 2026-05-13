@@ -20,18 +20,20 @@ class SettingsService {
     private let version: String
     private let mpLib: String
     private let userDefaults: UserDefaults
-
+    private let settingsEndPoint: String
     static let settingsTimeoutMS = 5.0
-    static let settingsEndpoint = "https://api.mixpanel.com/settings"
 
     init(
-        network: Network = Network(), version: String, mpLib: String,
-        userDefaults: UserDefaults = UserDefaults(suiteName: ReplaySettings.userDefaultsName) ?? UserDefaults.standard
+        network: Network = Network(), version: String,
+        mpLib: String,
+        userDefaults: UserDefaults = UserDefaults(suiteName: ReplaySettings.userDefaultsName) ?? UserDefaults.standard,
+        serverURL: String = MPSessionReplayAPI.usDataResidency
     ) {
         self.network = network
         self.version = version
         self.userDefaults = userDefaults
         self.mpLib = mpLib
+        settingsEndPoint = MPSessionReplayAPI.settingsEndpoint(for: serverURL)
     }
 
     func getRemoteConfiguration(
@@ -91,7 +93,7 @@ class SettingsService {
         }
 
         let apiRequest = APIRequest(
-            endPoint: Self.settingsEndpoint,
+            endPoint: settingsEndPoint,
             method: .get,
             requestBody: nil,
             queryItems: queryItems,

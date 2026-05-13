@@ -101,22 +101,6 @@ public struct MPSessionReplayConfig: Codable {
     /// This default behavior can be overridden through the configuration.
     public var autoMaskedViews: Set<MPAutoMaskedViews> = [.image, .text, .web, .map]
 
-    /// Specifies the flush interval in seconds. The default is 10 seconds.
-    /// Screenshots are collected and sent to Mixpanel in batches of 10.
-    /// One batch is sent after each flush interval.
-    /// You can adjust the flush interval to delay or expedite the sending of screenshots.
-    public var flushInterval: TimeInterval = ReplaySettings.flushInterval
-
-    /// Enables debug-level logging for the SDK.
-    ///
-    /// - When set to `true`, the SDK will print verbose debug logs to the console to assist with development and troubleshooting.
-    ///   These logs may include internal events, configuration status, and lifecycle hooks relevant to session replay.
-    ///
-    /// - When set to `false`, logging is suppressed except for critical errors or warnings.
-    ///
-    /// - Default: `false`
-    public var enableLogging: Bool = false
-
     /// Specifies how the SDK should handle remote configuration fetched from Mixpanel servers.
     ///
     /// Remote settings allow you to dynamically control session replay behavior from the Mixpanel dashboard
@@ -133,6 +117,22 @@ public struct MPSessionReplayConfig: Codable {
     ///
     /// - SeeAlso: ``RemoteSettingsMode``
     public var remoteSettingsMode: RemoteSettingsMode = .disabled
+
+    /// Specifies the flush interval in seconds. The default is 10 seconds.
+    /// Screenshots are collected and sent to Mixpanel in batches of 10.
+    /// One batch is sent after each flush interval.
+    /// You can adjust the flush interval to delay or expedite the sending of screenshots.
+    public var flushInterval: TimeInterval = ReplaySettings.flushInterval
+
+    /// Enables debug-level logging for the SDK.
+    ///
+    /// - When set to `true`, the SDK will print verbose debug logs to the console to assist with development and troubleshooting.
+    ///   These logs may include internal events, configuration status, and lifecycle hooks relevant to session replay.
+    ///
+    /// - When set to `false`, logging is suppressed except for critical errors or warnings.
+    ///
+    /// - Default: `false`
+    public var enableLogging: Bool = false
 
     /// Forces Session Replay to be enabled on iOS 26 and later, bypassing compatibility checks.
     ///
@@ -166,6 +166,27 @@ public struct MPSessionReplayConfig: Codable {
     /// - SeeAlso: ``DebugOptions``, ``DebugOverlayColors``
     public var debugOptions: DebugOptions?
 
+    /// Specifies the data residency base URL for sending session replay data.
+    ///
+    /// Use the predefined data residency constants:
+    /// - `MPSessionReplayAPI.usDataResidency` - US data residency (default): "https://api-js.mixpanel.com"
+    /// - `MPSessionReplayAPI.euDataResidency` - EU data residency: "https://api-eu.mixpanel.com"
+    /// - `MPSessionReplayAPI.inDataResidency` - India data residency: "https://api-in.mixpanel.com"
+    ///
+    /// Example:
+    /// ```swift
+    /// let config = MPSessionReplayConfig(serverURL: MPSessionReplayAPI.euDataResidency)
+    /// ```
+    ///
+    /// - Note: The URL is trimmed and validated when SDK is getting initialized. If url validation fails, SDK will not be initialized.
+    ///
+    /// - Default: `MPSessionReplayAPI.usDataResidency` (US data residency)
+    public var serverURL: String = MPSessionReplayAPI.usDataResidency {
+        didSet {
+            serverURL = getTrimmedServerURL(urlString: serverURL)
+        }
+    }
+
     /// Initializes a new `MPSessionReplayConfig` with the provided settings.
     ///
     /// - Parameters:
@@ -173,13 +194,14 @@ public struct MPSessionReplayConfig: Codable {
     ///   - autoMaskedViews: Defines the views (from the `MPAutoMaskedViews` enum) that should be automatically masked in the replay.
     ///   This parameter is optional, with a default value of `[.image, .text, .web, .map]`.
     ///   To disable masking completely, explicitly pass an empty set `[]`.
-    ///   - autoStartRecording: **Deprecated**, use `recordingSessionsPercent` instead. This property will be removed in a future release.
+    ///   - autoStartRecording: **Deprec ated**, use `recordingSessionsPercent` instead. This property will be removed in a future release.
     ///   - recordingSessionsPercent: The sampling rate for automatically started recording session replays.
     ///   - remoteSettingsMode: Controls how remote configuration settings are fetched.
     ///   - enableLogging: Enables debug-level logging for the SDK.
     ///   - flushInterval: Specifies the flush interval in seconds.
     ///   - enableSessionReplayOniOS26AndLater: Forces Session Replay to be enabled on iOS 26 and later.
     ///   - debugOptions: Debug feature configuration. When not nil, enables debug features (debug builds only).
+    ///   - serverURL: The data residency base URL. Use `MPSessionReplayAPI.usDataResidency` (default), `MPSessionReplayAPI.euDataResidency`, `MPSessionReplayAPI.inDataResidency`, or a custom URL.
     public init(
         wifiOnly: Bool = true,
         autoMaskedViews: Set<MPAutoMaskedViews> = [.image, .text, .web, .map],
@@ -189,7 +211,8 @@ public struct MPSessionReplayConfig: Codable {
         enableLogging: Bool = false,
         flushInterval: TimeInterval = 10,
         enableSessionReplayOniOS26AndLater: Bool = false,
-        debugOptions: DebugOptions? = nil
+        debugOptions: DebugOptions? = nil,
+        serverURL: String = MPSessionReplayAPI.usDataResidency,
     ) {
         self.wifiOnly = wifiOnly
         self.autoMaskedViews = autoMaskedViews
@@ -200,6 +223,53 @@ public struct MPSessionReplayConfig: Codable {
         self.flushInterval = flushInterval
         self.enableSessionReplayOniOS26AndLater = enableSessionReplayOniOS26AndLater
         self.debugOptions = debugOptions
+        self.serverURL = getTrimmedServerURL(urlString: serverURL)
+    }
+
+    /// Validates the serverURL and logs errors if invalid
+    public func validateServerURL() -> Bool {
+        // Check if URL can be constructed
+        guard let url = URL(string: serverURL) else {
+            PrintLogging.shared.log(
+                .error,
+                "Invalid serverURL provided: '\(serverURL)'. This is not a valid URL format. Session replay data will fail to send. Please provide a valid HTTPS URL."
+            )
+            return false
+        }
+
+        // Check if using HTTPS
+        guard url.scheme == "https" else {
+            let scheme = url.scheme ?? "unknown"
+            PrintLogging.shared.log(
+                .error,
+                "Insecure serverURL provided: '\(serverURL)'. The URL uses '\(scheme)' instead of 'https'. Session replay data transmission requires HTTPS for security. Please use a valid HTTPS URL."
+            )
+            return false
+        }
+
+        // Check if host exists and is not empty
+        guard let host = url.host, !host.isEmpty else {
+            PrintLogging.shared.log(
+                .error,
+                "Invalid serverURL provided: '\(serverURL)'. The URL has no valid host. Session replay data will fail to send. Please provide a complete URL with a valid host."
+            )
+            return false
+        }
+
+        // Check if URL contains a path (should be base URL only)
+        if !url.path.isEmpty && url.path != "/" {
+            PrintLogging.shared.log(
+                .error,
+                "Invalid serverURL provided: '\(serverURL)'. The URL should not contain a path. Please provide only the base URL (e.g., 'https://api.mixpanel.com' not 'https://api.mixpanel.com/path"
+            )
+            return false
+        }
+
+        return true
+    }
+
+    private func getTrimmedServerURL(urlString: String) -> String {
+        return urlString.trimmingCharacters(in: CharacterSet.whitespaces.union(CharacterSet(charactersIn: "/")))
     }
 
     // Initialize from JSON
