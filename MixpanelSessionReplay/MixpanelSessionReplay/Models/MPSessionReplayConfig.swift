@@ -194,7 +194,7 @@ public struct MPSessionReplayConfig: Codable {
     ///   - autoMaskedViews: Defines the views (from the `MPAutoMaskedViews` enum) that should be automatically masked in the replay.
     ///   This parameter is optional, with a default value of `[.image, .text, .web, .map]`.
     ///   To disable masking completely, explicitly pass an empty set `[]`.
-    ///   - autoStartRecording: **Deprec ated**, use `recordingSessionsPercent` instead. This property will be removed in a future release.
+    ///   - autoStartRecording: **Deprecated**, use `recordingSessionsPercent` instead. This property will be removed in a future release.
     ///   - recordingSessionsPercent: The sampling rate for automatically started recording session replays.
     ///   - remoteSettingsMode: Controls how remote configuration settings are fetched.
     ///   - enableLogging: Enables debug-level logging for the SDK.
