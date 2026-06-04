@@ -64,7 +64,7 @@ class MPSessionReplayConfigTests: XCTestCase {
                 "enableLogging": true,
                 "flushInterval": 10.0,
                 "enableSessionReplayOniOS26AndLater": true,
-                "serverURL": "https://api-js.mixpanel.com"
+                "serverURL": "https://api.mixpanel.com"
             }
             """
         let jsonData = jsonString.data(using: .utf8)!
@@ -77,7 +77,7 @@ class MPSessionReplayConfigTests: XCTestCase {
         XCTAssertTrue(decodedConfig.enableLogging)
         XCTAssertEqual(decodedConfig.flushInterval, 10.0)
         XCTAssertEqual(decodedConfig.enableSessionReplayOniOS26AndLater, true)
-        XCTAssertEqual(decodedConfig.serverURL, "https://api-js.mixpanel.com")
+        XCTAssertEqual(decodedConfig.serverURL, "https://api.mixpanel.com")
         XCTAssertNil(decodedConfig.debugOptions)
     }
 
@@ -116,30 +116,30 @@ class MPSessionReplayConfigTests: XCTestCase {
         let config = MPSessionReplayConfig()
         XCTAssertEqual(
             config.serverURL,
-            MPSessionReplayAPI.usDataResidency,
+            DataResidency.us,
             "Default serverURL should be US data residency"
         )
     }
 
     func testCustomServerUrlUSDataResidency() {
-        let config = MPSessionReplayConfig(serverURL: MPSessionReplayAPI.usDataResidency)
-        XCTAssertEqual(config.serverURL, MPSessionReplayAPI.usDataResidency)
+        let config = MPSessionReplayConfig(serverURL: DataResidency.us)
+        XCTAssertEqual(config.serverURL, DataResidency.us)
     }
 
     func testCustomServerUrlEUDataResidency() {
-        let config = MPSessionReplayConfig(serverURL: MPSessionReplayAPI.euDataResidency)
+        let config = MPSessionReplayConfig(serverURL: DataResidency.eu)
         XCTAssertEqual(
             config.serverURL,
-            MPSessionReplayAPI.euDataResidency,
+            DataResidency.eu,
             "Should accept EU data residency URL"
         )
     }
 
     func testCustomServerUrlIndiaDataResidency() {
-        let config = MPSessionReplayConfig(serverURL: MPSessionReplayAPI.inDataResidency)
+        let config = MPSessionReplayConfig(serverURL: DataResidency.in)
         XCTAssertEqual(
             config.serverURL,
-            MPSessionReplayAPI.inDataResidency,
+            DataResidency.in,
             "Should accept India data residency URL"
         )
     }
@@ -155,7 +155,7 @@ class MPSessionReplayConfigTests: XCTestCase {
     }
 
     func testServerUrlEncodingDecoding() throws {
-        let originalConfig = MPSessionReplayConfig(serverURL: MPSessionReplayAPI.euDataResidency)
+        let originalConfig = MPSessionReplayConfig(serverURL: DataResidency.eu)
         let jsonData = try originalConfig.toJSON()
         let decodedConfig = try MPSessionReplayConfig.from(json: jsonData)
 
@@ -193,19 +193,19 @@ class MPSessionReplayConfigTests: XCTestCase {
     // MARK: - Server URL Validation Tests
 
     func testValidateServerUrlWithUSDataResidency() {
-        let config = MPSessionReplayConfig(serverURL: MPSessionReplayAPI.usDataResidency)
+        let config = MPSessionReplayConfig(serverURL: DataResidency.us)
         let isValid = config.validateServerURL()
         XCTAssertTrue(isValid, "US data residency URL should be valid")
     }
 
     func testValidateServerUrlWithEUDataResidency() {
-        let config = MPSessionReplayConfig(serverURL: MPSessionReplayAPI.euDataResidency)
+        let config = MPSessionReplayConfig(serverURL: DataResidency.eu)
         let isValid = config.validateServerURL()
         XCTAssertTrue(isValid, "EU data residency URL should be valid")
     }
 
     func testValidateServerUrlWithIndiaDataResidency() {
-        let config = MPSessionReplayConfig(serverURL: MPSessionReplayAPI.inDataResidency)
+        let config = MPSessionReplayConfig(serverURL: DataResidency.in)
         let isValid = config.validateServerURL()
         XCTAssertTrue(isValid, "India data residency URL should be valid")
     }
@@ -324,7 +324,7 @@ class MPSessionReplayConfigTests: XCTestCase {
                 "autoMaskedViews": ["text"],
                 "autoStartRecording": true,
                 "remoteSettingsMode": "disabled",
-                "serverURL": "https://api-js.mixpanel.com",
+                "serverURL": "https://api.mixpanel.com",
                 "enableLogging": false,
                 "flushInterval": 10.0,
                 "enableSessionReplayOniOS26AndLater": false
@@ -341,7 +341,7 @@ class MPSessionReplayConfigTests: XCTestCase {
                 "autoMaskedViews": ["text"],
                 "autoStartRecording": true,
                 "remoteSettingsMode": "strict",
-                "serverURL": "https://api-js.mixpanel.com",
+                "serverURL": "https://api.mixpanel.com",
                 "enableLogging": false,
                 "flushInterval": 10.0,
                 "enableSessionReplayOniOS26AndLater": false
@@ -358,7 +358,7 @@ class MPSessionReplayConfigTests: XCTestCase {
                 "autoMaskedViews": ["text"],
                 "autoStartRecording": true,
                 "remoteSettingsMode": "fallback",
-                "serverURL": "https://api-js.mixpanel.com",
+                "serverURL": "https://api.mixpanel.com",
                 "enableLogging": false,
                 "flushInterval": 10.0,
                 "enableSessionReplayOniOS26AndLater": false

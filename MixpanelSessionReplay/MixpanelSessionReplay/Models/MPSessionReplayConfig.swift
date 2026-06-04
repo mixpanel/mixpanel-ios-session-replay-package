@@ -169,19 +169,19 @@ public struct MPSessionReplayConfig: Codable {
     /// Specifies the data residency base URL for sending session replay data.
     ///
     /// Use the predefined data residency constants:
-    /// - `MPSessionReplayAPI.usDataResidency` - US data residency (default): "https://api-js.mixpanel.com"
-    /// - `MPSessionReplayAPI.euDataResidency` - EU data residency: "https://api-eu.mixpanel.com"
-    /// - `MPSessionReplayAPI.inDataResidency` - India data residency: "https://api-in.mixpanel.com"
+    /// - `DataResidency.us` - US data residency (default): "https://api.mixpanel.com"
+    /// - `DataResidency.eu` - EU data residency: "https://api-eu.mixpanel.com"
+    /// - `DataResidency.in` - India data residency: "https://api-in.mixpanel.com"
     ///
     /// Example:
     /// ```swift
-    /// let config = MPSessionReplayConfig(serverURL: MPSessionReplayAPI.euDataResidency)
+    /// let config = MPSessionReplayConfig(serverURL: DataResidency.eu)
     /// ```
     ///
     /// - Note: The URL is trimmed and validated when SDK is getting initialized. If url validation fails, SDK will not be initialized.
     ///
-    /// - Default: `MPSessionReplayAPI.usDataResidency` (US data residency)
-    public var serverURL: String = MPSessionReplayAPI.usDataResidency {
+    /// - Default: `DataResidency.us` (US data residency)
+    public var serverURL: String = DataResidency.us {
         didSet {
             serverURL = getTrimmedServerURL(urlString: serverURL)
         }
@@ -201,7 +201,7 @@ public struct MPSessionReplayConfig: Codable {
     ///   - flushInterval: Specifies the flush interval in seconds.
     ///   - enableSessionReplayOniOS26AndLater: Forces Session Replay to be enabled on iOS 26 and later.
     ///   - debugOptions: Debug feature configuration. When not nil, enables debug features (debug builds only).
-    ///   - serverURL: The data residency base URL. Use `MPSessionReplayAPI.usDataResidency` (default), `MPSessionReplayAPI.euDataResidency`, `MPSessionReplayAPI.inDataResidency`, or a custom URL.
+    ///   - serverURL: The data residency base URL. Use `DataResidency.us` (default), `DataResidency.eu`, `DataResidency.in`, or a custom URL.
     public init(
         wifiOnly: Bool = true,
         autoMaskedViews: Set<MPAutoMaskedViews> = [.image, .text, .web, .map],
@@ -212,7 +212,7 @@ public struct MPSessionReplayConfig: Codable {
         flushInterval: TimeInterval = 10,
         enableSessionReplayOniOS26AndLater: Bool = false,
         debugOptions: DebugOptions? = nil,
-        serverURL: String = MPSessionReplayAPI.usDataResidency,
+        serverURL: String = DataResidency.us,
     ) {
         self.wifiOnly = wifiOnly
         self.autoMaskedViews = autoMaskedViews

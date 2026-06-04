@@ -27,7 +27,7 @@ class SettingsService {
         network: Network = Network(), version: String,
         mpLib: String,
         userDefaults: UserDefaults = UserDefaults(suiteName: ReplaySettings.userDefaultsName) ?? UserDefaults.standard,
-        serverURL: String = MPSessionReplayAPI.usDataResidency
+        serverURL: String = DataResidency.us
     ) {
         self.network = network
         self.version = version

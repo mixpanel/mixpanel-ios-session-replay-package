@@ -16,7 +16,7 @@ class FlushRequest {
 
     init(
         token: String, distinctId: String, network: Network = Network(),
-        serverURL: String = MPSessionReplayAPI.usDataResidency
+        serverURL: String = DataResidency.us
     ) {
         self.token = token
         self.distinctId = distinctId

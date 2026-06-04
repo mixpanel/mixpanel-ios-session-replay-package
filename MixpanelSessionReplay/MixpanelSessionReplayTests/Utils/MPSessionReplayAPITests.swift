@@ -15,15 +15,15 @@ final class MPSessionReplayAPITests: XCTestCase {
 
     func testUSDataResidencyConstant() {
         XCTAssertEqual(
-            MPSessionReplayAPI.usDataResidency,
-            "https://api-js.mixpanel.com",
+            DataResidency.us,
+            "https://api.mixpanel.com",
             "US data residency URL should be correct"
         )
     }
 
     func testEUDataResidencyConstant() {
         XCTAssertEqual(
-            MPSessionReplayAPI.euDataResidency,
+            DataResidency.eu,
             "https://api-eu.mixpanel.com",
             "EU data residency URL should be correct"
         )
@@ -31,7 +31,7 @@ final class MPSessionReplayAPITests: XCTestCase {
 
     func testIndiaDataResidencyConstant() {
         XCTAssertEqual(
-            MPSessionReplayAPI.inDataResidency,
+            DataResidency.in,
             "https://api-in.mixpanel.com",
             "India data residency URL should be correct"
         )
@@ -40,16 +40,16 @@ final class MPSessionReplayAPITests: XCTestCase {
     // MARK: - Record Endpoint Tests
 
     func testRecordEndpointForUSDataResidency() {
-        let endpoint = MPSessionReplayAPI.recordEndpoint(for: MPSessionReplayAPI.usDataResidency)
+        let endpoint = MPSessionReplayAPI.recordEndpoint(for: DataResidency.us)
         XCTAssertEqual(
             endpoint,
-            "https://api-js.mixpanel.com/record",
+            "https://api.mixpanel.com/record",
             "US record endpoint should append /record path"
         )
     }
 
     func testRecordEndpointForEUDataResidency() {
-        let endpoint = MPSessionReplayAPI.recordEndpoint(for: MPSessionReplayAPI.euDataResidency)
+        let endpoint = MPSessionReplayAPI.recordEndpoint(for: DataResidency.eu)
         XCTAssertEqual(
             endpoint,
             "https://api-eu.mixpanel.com/record",
@@ -58,7 +58,7 @@ final class MPSessionReplayAPITests: XCTestCase {
     }
 
     func testRecordEndpointForIndiaDataResidency() {
-        let endpoint = MPSessionReplayAPI.recordEndpoint(for: MPSessionReplayAPI.inDataResidency)
+        let endpoint = MPSessionReplayAPI.recordEndpoint(for: DataResidency.in)
         XCTAssertEqual(
             endpoint,
             "https://api-in.mixpanel.com/record",
@@ -80,7 +80,7 @@ final class MPSessionReplayAPITests: XCTestCase {
         let endpoint = MPSessionReplayAPI.recordEndpoint()
         XCTAssertEqual(
             endpoint,
-            "https://api-js.mixpanel.com/record",
+            "https://api.mixpanel.com/record",
             "Record endpoint should default to US data residency"
         )
     }
@@ -89,7 +89,7 @@ final class MPSessionReplayAPITests: XCTestCase {
 
     func testSettingsEndpointIsConstant() {
         XCTAssertEqual(
-            MPSessionReplayAPI.settingsEndpoint,
+            MPSessionReplayAPI.settingsEndpoint(),
             "https://api.mixpanel.com/settings",
             "Settings endpoint should be constant across all data residencies"
         )
@@ -99,48 +99,48 @@ final class MPSessionReplayAPITests: XCTestCase {
 
     func testDataResidencyURLsDoNotContainPaths() {
         XCTAssertFalse(
-            MPSessionReplayAPI.usDataResidency.hasSuffix("/"),
+            DataResidency.us.hasSuffix("/"),
             "US data residency URL should not end with slash"
         )
         XCTAssertFalse(
-            MPSessionReplayAPI.usDataResidency.contains("/record"),
+            DataResidency.us.contains("/record"),
             "US data residency URL should not contain /record path"
         )
 
         XCTAssertFalse(
-            MPSessionReplayAPI.euDataResidency.hasSuffix("/"),
+            DataResidency.eu.hasSuffix("/"),
             "EU data residency URL should not end with slash"
         )
         XCTAssertFalse(
-            MPSessionReplayAPI.euDataResidency.contains("/record"),
+            DataResidency.eu.contains("/record"),
             "EU data residency URL should not contain /record path"
         )
 
         XCTAssertFalse(
-            MPSessionReplayAPI.inDataResidency.hasSuffix("/"),
+            DataResidency.in.hasSuffix("/"),
             "India data residency URL should not end with slash"
         )
         XCTAssertFalse(
-            MPSessionReplayAPI.inDataResidency.contains("/record"),
+            DataResidency.in.contains("/record"),
             "India data residency URL should not contain /record path"
         )
     }
 
     func testAllDataResidencyURLsAreHTTPS() {
         XCTAssertTrue(
-            MPSessionReplayAPI.usDataResidency.hasPrefix("https://"),
+            DataResidency.us.hasPrefix("https://"),
             "US data residency should use HTTPS"
         )
         XCTAssertTrue(
-            MPSessionReplayAPI.euDataResidency.hasPrefix("https://"),
+            DataResidency.eu.hasPrefix("https://"),
             "EU data residency should use HTTPS"
         )
         XCTAssertTrue(
-            MPSessionReplayAPI.inDataResidency.hasPrefix("https://"),
+            DataResidency.in.hasPrefix("https://"),
             "India data residency should use HTTPS"
         )
         XCTAssertTrue(
-            MPSessionReplayAPI.settingsEndpoint.hasPrefix("https://"),
+            MPSessionReplayAPI.settingsEndpoint().hasPrefix("https://"),
             "Settings endpoint should use HTTPS"
         )
     }
