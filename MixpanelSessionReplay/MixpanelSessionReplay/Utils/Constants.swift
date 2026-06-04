@@ -84,7 +84,7 @@ struct PayloadObjectID {
 /// ```swift
 /// let config = MPSessionReplayConfig(serverURL: DataResidency.us)
 /// ```
-public struct DataResidency {
+public enum DataResidency {
     /// Base URL for US data residency (default).
     public static let us = "https://api.mixpanel.com"
     /// Base URL for EU data residency.
