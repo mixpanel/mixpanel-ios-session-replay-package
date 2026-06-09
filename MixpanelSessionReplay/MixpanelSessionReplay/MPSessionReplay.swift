@@ -149,7 +149,7 @@ final class MPSessionReplayManager {
             ?? SettingsService(
                 version: APIConstants.currentLibVersion,
                 mpLib: APIConstants.currentMpLib,
-                serverURL: config.serverURL,
+                serverURL: config.serverURL
             )
         settingsService.getRemoteConfiguration(
             token: token,

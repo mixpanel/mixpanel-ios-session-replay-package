@@ -129,7 +129,7 @@ class MockNetwork: Network {
                 let response = HTTPURLResponse(
                     url: URL(string: "https://test.com")!,
                     statusCode: 200,
-                    httpVersion: nil, headerFields: [:],
+                    httpVersion: nil, headerFields: [:]
                 )
                 //return data from here so that the sendDecodableRequest can decode it without needing to set up a separate stub for sendDecodableRequest
                 completion(.success((data, response!)))
