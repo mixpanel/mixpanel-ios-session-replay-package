@@ -212,7 +212,7 @@ public struct MPSessionReplayConfig: Codable {
         flushInterval: TimeInterval = 10,
         enableSessionReplayOniOS26AndLater: Bool = false,
         debugOptions: DebugOptions? = nil,
-        serverURL: String = DataResidency.us,
+        serverURL: String = DataResidency.us
     ) {
         self.wifiOnly = wifiOnly
         self.autoMaskedViews = autoMaskedViews
@@ -252,15 +252,6 @@ public struct MPSessionReplayConfig: Codable {
             PrintLogging.shared.log(
                 .error,
                 "Invalid serverURL provided: '\(serverURL)'. The URL has no valid host. Session replay data will fail to send. Please provide a complete URL with a valid host."
-            )
-            return false
-        }
-
-        // Check if URL contains a path (should be base URL only)
-        if !url.path.isEmpty && url.path != "/" {
-            PrintLogging.shared.log(
-                .error,
-                "Invalid serverURL provided: '\(serverURL)'. The URL should not contain a path. Please provide only the base URL (e.g., 'https://api.mixpanel.com' not 'https://api.mixpanel.com/path"
             )
             return false
         }

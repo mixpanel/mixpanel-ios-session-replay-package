@@ -34,6 +34,7 @@
 		169611DA2EF547EB00923CFE /* SessionReplayCompatibilityChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169611D92EF547EA00923CFE /* SessionReplayCompatibilityChecker.swift */; };
 		16991D0A2DDE580100E43ED4 /* ThreadUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16991D092DDE57FC00E43ED4 /* ThreadUtils.swift */; };
 		16C9EFC32D4AAD840005ED7E /* MPSessionReplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C9EFC22D4AAD840005ED7E /* MPSessionReplay.swift */; };
+		16D9D0D72FD7D4FD005A6762 /* MPSessionReplayAPITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D9D0D62FD7D4FD005A6762 /* MPSessionReplayAPITests.swift */; };
 		1707D96A2DEE424F00D330D6 /* SwizzlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1707D9692DEE424F00D330D6 /* SwizzlerTests.swift */; };
 		1723182C2C35ED9700EF3FEF /* Swizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1723182B2C35ED9700EF3FEF /* Swizzler.swift */; };
 		174B50A32CC8618E00861A62 /* ScreenRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174B50A22CC8618E00861A62 /* ScreenRecorder.swift */; };
@@ -116,6 +117,7 @@
 		169611D92EF547EA00923CFE /* SessionReplayCompatibilityChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayCompatibilityChecker.swift; sourceTree = "<group>"; };
 		16991D092DDE57FC00E43ED4 /* ThreadUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadUtils.swift; sourceTree = "<group>"; };
 		16C9EFC22D4AAD840005ED7E /* MPSessionReplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPSessionReplay.swift; sourceTree = "<group>"; };
+		16D9D0D62FD7D4FD005A6762 /* MPSessionReplayAPITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPSessionReplayAPITests.swift; sourceTree = "<group>"; };
 		1707D9692DEE424F00D330D6 /* SwizzlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwizzlerTests.swift; sourceTree = "<group>"; };
 		1723182B2C35ED9700EF3FEF /* Swizzler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Swizzler.swift; sourceTree = "<group>"; };
 		174B50A22CC8618E00861A62 /* ScreenRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenRecorder.swift; sourceTree = "<group>"; };
@@ -235,6 +237,7 @@
 		167A788A2D6F729F00298D2C /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				16D9D0D62FD7D4FD005A6762 /* MPSessionReplayAPITests.swift */,
 				16851AD52EF5C7AE004E574B /* SessionReplayCompatibilityCheckerTests.swift */,
 				167A789A2D762C8C00298D2C /* ViewUtilsTests.swift */,
 				1707D9692DEE424F00D330D6 /* SwizzlerTests.swift */,
@@ -597,6 +600,7 @@
 				167A78962D7626F000298D2C /* BaseTests.swift in Sources */,
 				164C4AAD2F33144100230843 /* MPSessionReplayTests.swift in Sources */,
 				864D00022C450954003B258E /* FlushServiceTests.swift in Sources */,
+				16D9D0D72FD7D4FD005A6762 /* MPSessionReplayAPITests.swift in Sources */,
 				16851AD62EF5C7AF004E574B /* SessionReplayCompatibilityCheckerTests.swift in Sources */,
 				1659D0472F7A64B0009208CE /* MaskDecisionTests.swift in Sources */,
 				1659D0482F7A64B0009208CE /* DebugOptionsTests.swift in Sources */,

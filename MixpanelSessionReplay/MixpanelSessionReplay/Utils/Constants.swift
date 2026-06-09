@@ -105,7 +105,7 @@ struct MPSessionReplayAPI {
     /// - Parameter serverURL: The data residency base URL (e.g., DataResidency.us)
     /// - Returns: Full settings endpoint URL (e.g., "https://api.mixpanel.com/settings")
     static func settingsEndpoint(for serverURL: String = DataResidency.us) -> String {
-        "\(DataResidency.us)\(settingsPath)"
+        "\(serverURL)\(settingsPath)"
     }
 
     /// Returns the full record endpoint URL for the given data residency base URL

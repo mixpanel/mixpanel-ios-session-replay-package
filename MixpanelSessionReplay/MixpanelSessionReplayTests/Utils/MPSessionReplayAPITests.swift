@@ -87,11 +87,21 @@ final class MPSessionReplayAPITests: XCTestCase {
 
     // MARK: - Settings Endpoint Tests
 
-    func testSettingsEndpointIsConstant() {
+    func testSettingsEndpoint() {
         XCTAssertEqual(
             MPSessionReplayAPI.settingsEndpoint(),
             "https://api.mixpanel.com/settings",
-            "Settings endpoint should be constant across all data residencies"
+            "Settings endpoint should return default when no data residency is specified"
+        )
+        XCTAssertEqual(
+            MPSessionReplayAPI.settingsEndpoint(for: DataResidency.in),
+            "https://api-in.mixpanel.com/settings",
+            "Settings endpoint should be of In data residency"
+        )
+        XCTAssertEqual(
+            MPSessionReplayAPI.settingsEndpoint(for: DataResidency.eu),
+            "https://api-eu.mixpanel.com/settings",
+            "Settings endpoint should be of EU data residency"
         )
     }
 
