@@ -15,7 +15,7 @@ public struct APIConstants {
     static let minRetryBackoff = 60.0
     static let maxRetryBackoff = 600.0
     static let failuresTillBackoff = 2
-    private static let libVersion = "1.5.0"
+    private static let libVersion = "1.5.1"
     private static let mpLib = "swift-sr"
 }
 
