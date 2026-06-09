@@ -12,10 +12,15 @@ class FlushRequest {
     let distinctId: String
     private var headers: [String: String] = [:]
     private let network: Network
+    private let recordApiUrl: String
 
-    init(token: String, distinctId: String, network: Network = Network()) {
+    init(
+        token: String, distinctId: String, network: Network = Network(),
+        serverURL: String = DataResidency.us
+    ) {
         self.token = token
         self.distinctId = distinctId
+        self.recordApiUrl = MPSessionReplayAPI.recordEndpoint(for: serverURL)
 
         if let data = "\(token):".data(using: .utf8) {
             headers["Authorization"] = "Basic \(data.base64EncodedString())"
@@ -40,7 +45,7 @@ class FlushRequest {
             do {
                 let requestDataZip = try requestDataRaw.gzipCompressed()
                 let request = APIRequest(
-                    endPoint: EndPoints.defaultRecord, method: .post, requestBody: requestDataZip,
+                    endPoint: recordApiUrl, method: .post, requestBody: requestDataZip,
                     queryItems: buildQueryItems(payloadInfo: payloadInfo), headers: headers, timeoutInterval: nil)
 
                 let semaphore = DispatchSemaphore(value: 0)

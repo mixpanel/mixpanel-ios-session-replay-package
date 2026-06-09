@@ -76,10 +76,44 @@ struct PayloadObjectID {
     static let mainSnapshot = 28
 }
 
-struct EndPoints {
-    static let defaultRecord = "https://api-js.mixpanel.com/record"
+/// Data residency base URLs for Mixpanel Session Replay.
+///
+/// Use these constants to specify the data center region when configuring Session Replay.
+///
+/// Example:
+/// ```swift
+/// let config = MPSessionReplayConfig(serverURL: DataResidency.us)
+/// ```
+public enum DataResidency {
+    /// Base URL for US data residency (default).
+    public static let us = "https://api.mixpanel.com"
+    /// Base URL for EU data residency.
+    public static let eu = "https://api-eu.mixpanel.com"
+    /// Base URL for India data residency.
+    public static let `in` = "https://api-in.mixpanel.com"
+}
+
+struct MPSessionReplayAPI {
     /// Base URL for session replay redirect (works for all data residency regions).
     static let sessionReplayRedirect = "https://mixpanel.com/projects/replay-redirect"
+
+    // Paths
+    private static let recordPath = "/record"
+    private static let settingsPath = "/settings"
+
+    /// Returns the full settings endpoint URL for the given data residency base URL
+    /// - Parameter serverURL: The data residency base URL (e.g., DataResidency.us)
+    /// - Returns: Full settings endpoint URL (e.g., "https://api.mixpanel.com/settings")
+    static func settingsEndpoint(for serverURL: String = DataResidency.us) -> String {
+        "\(serverURL)\(settingsPath)"
+    }
+
+    /// Returns the full record endpoint URL for the given data residency base URL
+    /// - Parameter serverURL: The data residency base URL (e.g., DataResidency.us)
+    /// - Returns: Full record endpoint URL (e.g., "https://api.mixpanel.com/record")
+    static func recordEndpoint(for serverURL: String = DataResidency.us) -> String {
+        return "\(serverURL)\(recordPath)"
+    }
 }
 
 struct TimingAdjustment {

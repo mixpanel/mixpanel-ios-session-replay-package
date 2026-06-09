@@ -126,16 +126,29 @@ final class MPSessionReplayManager {
         token: String, distinctId: String, config: MPSessionReplayConfig,
         completion: @escaping (Result<MPSessionReplayInstance?, Error>) -> Void
     ) {
-        deinitializeInstance()
-
         updateLoggingEnabled(config.enableLogging)
+
+        if !config.validateServerURL() {
+            PrintLogging.shared.log(
+                .error,
+                "SDK initialization failed: \(config.serverURL) is not a valid server URL. Provide valid server URL and try initializing again."
+            )
+            completion(
+                .failure(
+                    MPSessionReplayError.custom(
+                        message: "SDK initialization failed: \(config.serverURL) is not a valid server URL")))
+            return
+        }
+
+        deinitializeInstance()
 
         // Check settings before creating instance
         let settingsService =
             testOverride_settingsService
             ?? SettingsService(
                 version: APIConstants.currentLibVersion,
-                mpLib: APIConstants.currentMpLib
+                mpLib: APIConstants.currentMpLib,
+                serverURL: config.serverURL
             )
         settingsService.getRemoteConfiguration(
             token: token,
