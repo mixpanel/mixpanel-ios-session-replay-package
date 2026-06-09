@@ -133,7 +133,6 @@ jobs:
 
       - name: Check for trailing commas in function calls
         if: always()
-        continue-on-error: true  # Non-blocking: informational only
         run: |
           echo "→ Checking for trailing commas in function calls (invalid in Swift < 6.1)"
           echo ""
