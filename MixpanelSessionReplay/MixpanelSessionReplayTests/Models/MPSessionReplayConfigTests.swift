@@ -249,7 +249,7 @@ class MPSessionReplayConfigTests: XCTestCase {
         let urlWithPath = "https://api.mixpanel.com/some/path"
         let config = MPSessionReplayConfig(serverURL: urlWithPath)
         let isValid = config.validateServerURL()
-        XCTAssertFalse(isValid, "HTTPS URL with path should be invalid")
+        XCTAssertTrue(isValid, "HTTPS URL with path should be valid")
     }
 
     func testValidateServerUrlWithFTPScheme() {

@@ -9,7 +9,6 @@ import UIKit
 public enum MPSessionReplayError: Error {
     case failedToInitialize
     case disabledByRemoteSetting(message: String)
-    case invalidConfigServerUrl(message: String)
     case custom(message: String)
 }
 
@@ -136,7 +135,7 @@ final class MPSessionReplayManager {
             )
             completion(
                 .failure(
-                    MPSessionReplayError.invalidConfigServerUrl(
+                    MPSessionReplayError.custom(
                         message: "SDK initialization failed: \(config.serverURL) is not a valid server URL")))
             return
         }
