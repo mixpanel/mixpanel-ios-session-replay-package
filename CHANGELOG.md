@@ -1,3 +1,12 @@
+## [1.5.1](https://github.com/mixpanel/mixpanel-ios-session-replay-package/tree/1.5.1) (2026-06-09)
+
+### Features
+
+- support for data residency (#36) ([#36](https://github.com/mixpanel/mixpanel-ios-session-replay-package/pull/36))
+- Add getSessionReplayUrl API to return replay link for active session (#34) ([#34](https://github.com/mixpanel/mixpanel-ios-session-replay-package/pull/34))
+
+[Full Changelog](https://github.com/mixpanel/mixpanel-ios-session-replay-package/compare/1.5.0...1.5.1)
+
 # Changelog
 
 Last tag: 1.4.0
