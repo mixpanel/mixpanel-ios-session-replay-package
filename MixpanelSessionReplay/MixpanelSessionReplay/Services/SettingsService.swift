@@ -154,7 +154,9 @@ class SettingsService {
                 // Disabled mode: use the cached settings without merging to check remote enablement switch
                 let cachedSettings = getCachedSettingsState(token: token)
                 Logger.warn(message: "Disabled mode: Using cached setting for remote enablement switch check")
-                completion(cachedSettings, originalConfig)
+                // Remove sdkConfig from settings response as Disabled mode does not use Remote configuration
+                let updatedSettings = SettingsResponse(sdkConfig: nil, recording: cachedSettings.recording)
+                completion(updatedSettings, originalConfig)
         }
     }
 
