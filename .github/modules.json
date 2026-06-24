@@ -1,0 +1,13 @@
+{
+  "session-replay": {
+    "tag_prefix": "",
+    "podspec": "MixpanelSessionReplay.podspec",
+    "version_files": [
+      "MixpanelSessionReplay.podspec",
+      "MixpanelSessionReplay/MixpanelSessionReplay/Utils/Constants.swift"
+    ],
+    "changelog": "CHANGELOG.md",
+    "readme": "README.md",
+    "package_name": "mixpanel-ios-session-replay"
+  }
+}
