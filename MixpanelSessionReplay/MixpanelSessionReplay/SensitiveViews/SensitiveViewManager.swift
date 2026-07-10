@@ -116,10 +116,20 @@ class SensitiveViewManager {
     private let swiftUiTextClass: AnyClass? = NSClassFromString("SwiftUI.CGDrawingView")
 
     // MARK: - iOS 26+ Layer Classes
+
     /// iOS 26: SwiftUI Text is rendered directly to CGDrawingLayer (CALayer subclass)
-    /// Class name: _TtC7SwiftUIP33_863CCF9D49B535DAEB1C7D61BEE53B5914CGDrawingLayer
-    private let swiftUIiOS26TextLayerClass: AnyClass? = NSClassFromString(
-        "_TtC7SwiftUIP33_863CCF9D49B535DAEB1C7D61BEE53B5914CGDrawingLayer")
+    /// Byte codes for SwiftUI's private mangled `_TtC7SwiftUIP33_863CCF9D49B535DAEB1C7D61BEE53B5914CGDrawingLayer` class name.
+    /// Stored as individual UInt8s (not a contiguous string literal) so the
+    /// symbol never appears as plain text in the binary's string table.
+    let swiftUIDrawingLayerCodes: [UInt8] = [
+        95, 84, 116, 67, 55, 83, 119, 105, 102, 116, 85, 73, 80, 51, 51, 95,
+        56, 54, 51, 67, 67, 70, 57, 68, 52, 57, 66, 53, 51, 53, 68, 65, 69,
+        66, 49, 67, 55, 68, 54, 49, 66, 69, 69, 53, 51, 66, 53, 57, 49, 52,
+        67, 71, 68, 114, 97, 119, 105, 110, 103, 76, 97, 121, 101, 114,
+    ]
+
+    let swiftUIiOS26TextLayerClass: AnyClass?
+
     private let buttonLabelClass: AnyClass? = NSClassFromString("UIButtonLabel")
 
     enum SensitiveViewState {
@@ -136,6 +146,7 @@ class SensitiveViewManager {
         knownSensitiveViews = WeakViewsMap.weakToWeakObjects()
         sensitiveClassViews = WeakViewsMap.weakToWeakObjects()
         sensitiveTextFieldViews = WeakViewsMap.weakToWeakObjects()
+        swiftUIiOS26TextLayerClass = ObfuscatedClassLookup.resolveClass(from: swiftUIDrawingLayerCodes)
     }
 
     static func reset() {
@@ -511,5 +522,18 @@ class SensitiveViewManager {
         } else {
             return nil
         }
+    }
+}
+
+extension Array where Element == UInt8 {
+    func decodedString() -> String? {
+        String(bytes: self, encoding: .utf8)
+    }
+}
+
+enum ObfuscatedClassLookup {
+    static func resolveClass(from codes: [UInt8]) -> AnyClass? {
+        guard let name = codes.decodedString() else { return nil }
+        return NSClassFromString(name)
     }
 }

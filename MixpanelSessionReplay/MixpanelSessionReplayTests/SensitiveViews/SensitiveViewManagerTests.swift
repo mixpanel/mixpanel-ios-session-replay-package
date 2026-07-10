@@ -6,6 +6,7 @@
 //  Copyright © 2025 Mixpanel. All rights reserved.
 //
 
+import SwiftUI
 import WebKit
 import XCTest
 
@@ -506,5 +507,34 @@ class SensitiveViewManagerTests: BaseTests {
         // Verify auto-detected layers are marked as .auto
         let autoEntries = sensitiveFrames.filter { $0.value == .auto }
         XCTAssertTrue(autoEntries.count >= 1, "Image layer should be marked as auto")
+    }
+
+    func test_decodedCharCodes_matchExpectedMangledName() {
+        let decoded = manager.swiftUIDrawingLayerCodes.decodedString() ?? nil
+        XCTAssertEqual(
+            decoded,
+            "_TtC7SwiftUIP33_863CCF9D49B535DAEB1C7D61BEE53B5914CGDrawingLayer",
+            "Decoded byte array no longer matches the real SwiftUI private class name. "
+                + "If this fails, either the byte array was edited incorrectly, or Apple has "
+                + "renamed/re-mangled the class in a newer SwiftUI — re-derive the codes."
+        )
+    }
+
+    func test_decodedName_resolvesToARealClass() throws {
+        try XCTSkipUnless(
+            {
+                if #available(iOS 26.0, *) { return true }
+                return false
+            }(),
+            "CGDrawingLayer only exists on iOS 26+"
+        )
+
+        let resolvedClass: AnyClass? = ObfuscatedClassLookup.resolveClass(from: manager.swiftUIDrawingLayerCodes)
+
+        XCTAssertNotNil(
+            resolvedClass,
+            "NSClassFromString failed to resolve the decoded name to an actual class on this OS. "
+                + "SwiftUI may have renamed/removed CGDrawingLayer in this iOS version — "
+        )
     }
 }
