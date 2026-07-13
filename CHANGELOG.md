@@ -1,3 +1,12 @@
+## [1.5.2](https://github.com/mixpanel/mixpanel-ios-session-replay-package/tree/1.5.2) (2026-07-13)
+
+### Fixes
+
+- decode SwiftUI private class name at runtime to avoid App Store rejection (#41) ([#41](https://github.com/mixpanel/mixpanel-ios-session-replay-package/pull/41))
+- inconsistent sdkconfig handling in ios remotesettingsmode (#38) ([#38](https://github.com/mixpanel/mixpanel-ios-session-replay-package/pull/38))
+
+[Full Changelog](https://github.com/mixpanel/mixpanel-ios-session-replay-package/compare/1.5.1...1.5.2)
+
 ## [1.5.1](https://github.com/mixpanel/mixpanel-ios-session-replay-package/tree/1.5.1) (2026-06-09)
 
 ### Features
