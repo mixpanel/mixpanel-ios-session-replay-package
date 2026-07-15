@@ -107,7 +107,7 @@ class FlushRequest {
             APIConstants.maxRetryBackoff)
     }
 
-    private func requestNotAllowed() -> Bool {
+    func requestNotAllowed() -> Bool {
         let currentTime = Date().timeIntervalSince1970
         let timeRemaining = networkRequestsAllowedAfterTime - currentTime
 

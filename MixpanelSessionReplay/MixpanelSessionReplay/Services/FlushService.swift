@@ -86,6 +86,12 @@ class FlushService {
 
     private func flushBatch(forAll: Bool) {
         repeat {
+            // Check if we're in exponential backoff before attempting to flush
+            if flushRequest.requestNotAllowed() {
+                Logger.info(message: "In exponential backoff, stopping flush batch")
+                break
+            }
+
             let events = eventService.dequeueEvents(ReplaySettings.queueBatchSize)
             guard !events.isEmpty else {
                 return
