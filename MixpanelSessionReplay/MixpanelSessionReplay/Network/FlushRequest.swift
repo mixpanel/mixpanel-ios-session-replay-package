@@ -30,11 +30,6 @@ class FlushRequest {
     }
 
     func sendRequest(payloadInfo: PayloadInfo) -> Bool {
-        if requestNotAllowed() {
-            Logger.warn(message: "Request not allowed due to exponential backoff. Will retry later.")
-            return false
-        }
-
         guard let requestJSONString = MPSessionReplayEncoder.jsonPayload(payloadInfo: payloadInfo)
         else {
             return false
