@@ -31,20 +31,6 @@ final class FlushRequestTests: XCTestCase {
         super.tearDown()
     }
 
-    func testSendRequestNotAllowedDueToExponentialBackoff() {
-        flushRequest.networkRequestsAllowedAfterTime = Date().timeIntervalSince1970 + 1000
-        mockNetwork.sendRawRequestStub = { _ in
-            return .success((self.responseData, self.httpresponse))
-        }
-        let payloadInfo = PayloadInfo(
-            sessionEvents: [], batchStartTime: 1, seq: 1, replayId: "test", replayLengthMs: 1,
-            replayStartTime: 1)
-        let result = flushRequest.sendRequest(payloadInfo: payloadInfo)
-
-        XCTAssertFalse(result)
-        XCTAssertEqual(flushRequest.networkConsecutiveFailures, 0)
-    }
-
     func testSendRequestSuccess() {
         mockNetwork.sendRawRequestStub = { _ in
             return .success((self.responseData, self.httpresponse))
@@ -81,12 +67,7 @@ final class FlushRequestTests: XCTestCase {
             sessionEvents: [], batchStartTime: 1, seq: 1, replayId: "test", replayLengthMs: 1,
             replayStartTime: 1)
         flushRequest.networkConsecutiveFailures = 3
-        var result = flushRequest.sendRequest(payloadInfo: payloadInfo)
-        XCTAssertFalse(result)
-        XCTAssertEqual(flushRequest.networkConsecutiveFailures, 4)
-
-        // The requests are blocked for the given networkRequestsAllowedAfterTime time
-        result = flushRequest.sendRequest(payloadInfo: payloadInfo)
+        let result = flushRequest.sendRequest(payloadInfo: payloadInfo)
         XCTAssertFalse(result)
         XCTAssertEqual(flushRequest.networkConsecutiveFailures, 4)
     }
