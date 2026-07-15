@@ -88,7 +88,6 @@ class FlushService {
         repeat {
             // Check if we're in exponential backoff before attempting to flush
             if flushRequest.requestNotAllowed() {
-                Logger.info(message: "In exponential backoff, stopping flush batch")
                 break
             }
 
