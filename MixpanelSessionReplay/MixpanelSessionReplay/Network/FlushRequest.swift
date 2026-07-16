@@ -30,11 +30,6 @@ class FlushRequest {
     }
 
     func sendRequest(payloadInfo: PayloadInfo) -> Bool {
-        if requestNotAllowed() {
-            Logger.warn(message: "Request not allowed due to exponential backoff. Will retry later.")
-            return false
-        }
-
         guard let requestJSONString = MPSessionReplayEncoder.jsonPayload(payloadInfo: payloadInfo)
         else {
             return false
@@ -107,7 +102,7 @@ class FlushRequest {
             APIConstants.maxRetryBackoff)
     }
 
-    private func requestNotAllowed() -> Bool {
+    func requestNotAllowed() -> Bool {
         let currentTime = Date().timeIntervalSince1970
         let timeRemaining = networkRequestsAllowedAfterTime - currentTime
 
