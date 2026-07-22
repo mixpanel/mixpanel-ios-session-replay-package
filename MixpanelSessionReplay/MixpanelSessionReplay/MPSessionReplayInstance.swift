@@ -59,6 +59,12 @@ open class MPSessionReplayInstance: MPSessionReplaying {
             }
         }
 
+        // Wire up wireframes if opted in
+        if let wireframesOptions = config.wireframesOptions {
+            ScreenRecorder.shared.wireframeEmitter = WireframeEmitter(options: wireframesOptions)
+            SensitiveViewManager.shared.wireframeCollectionEnabled = true
+        }
+
         // This will not trigger the didSet of autoMaskedViews, so we need to call the update method here to make sure the masking is updated according to the config during initialization.
         self.autoMaskedViews = config.autoMaskedViews
         updateSensitiveViewMasking(config.autoMaskedViews)
@@ -145,6 +151,10 @@ open class MPSessionReplayInstance: MPSessionReplaying {
 
         // Clean up mask regions listener (safe to set to nil even if not set)
         SensitiveViewManager.shared.maskRegionsListener = nil
+
+        // Tear down wireframe capture (safe to run when never enabled)
+        ScreenRecorder.shared.wireframeEmitter = nil
+        SensitiveViewManager.shared.wireframeCollectionEnabled = false
     }
 
     @objc func appDidEnterBackground() {

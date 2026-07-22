@@ -10,6 +10,11 @@ import Foundation
 protocol EventListener: AnyObject {
     func receivedTouchEvent(_ rawEvent: RawTouchEvent)
     func receivedScreenshotEvent(_ rawEvent: RawScreenshotEvent)
+    func receivedCustomEvent(_ event: SessionEvent)
+}
+
+extension EventListener {
+    func receivedCustomEvent(_ event: SessionEvent) {}
 }
 
 class EventHandler: EventListener {
@@ -56,6 +61,12 @@ class EventHandler: EventListener {
             {
                 self.eventService?.enqueueEvent(event)
             }
+        }
+    }
+
+    func receivedCustomEvent(_ event: SessionEvent) {
+        eventSerialQueue.async {
+            self.eventService?.enqueueEvent(event)
         }
     }
 }

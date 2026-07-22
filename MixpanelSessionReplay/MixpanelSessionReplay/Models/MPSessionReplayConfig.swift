@@ -166,6 +166,22 @@ public struct MPSessionReplayConfig: Codable {
     /// - SeeAlso: ``DebugOptions``, ``DebugOverlayColors``
     public var debugOptions: DebugOptions?
 
+    /// Enables wireframe capture: a per-frame structured list of visible UI
+    /// elements (role, text, bounds) shipped as an rrweb Custom event alongside
+    /// the screenshot stream.
+    ///
+    /// - When `nil` (the default), no wireframe events are emitted and the SDK
+    ///   behaves exactly as it did before wireframes were introduced.
+    /// - When non-nil, wireframes are captured on every screenshot pass. The
+    ///   same masking guarantees the screenshot honors are enforced on the
+    ///   wireframe (view-level, geometric leak-prevention, and content rules).
+    ///
+    /// - Default: `nil`
+    /// - Note: Not persisted through `Codable` — the field is skipped by JSON
+    ///   encoding/decoding because it holds a closure and `NSRegularExpression`.
+    /// - SeeAlso: ``MPWireframesOptions``, ``MPSensitiveRule``
+    public var wireframesOptions: MPWireframesOptions?
+
     /// Specifies the data residency base URL for sending session replay data.
     ///
     /// Use the predefined data residency constants:
@@ -201,6 +217,7 @@ public struct MPSessionReplayConfig: Codable {
     ///   - flushInterval: Specifies the flush interval in seconds.
     ///   - enableSessionReplayOniOS26AndLater: Forces Session Replay to be enabled on iOS 26 and later.
     ///   - debugOptions: Debug feature configuration. When not nil, enables debug features (debug builds only).
+    ///   - wireframesOptions: Wireframe capture configuration. When not nil, enables wireframe emission.
     ///   - serverURL: The data residency base URL. Use `DataResidency.us` (default), `DataResidency.eu`, `DataResidency.in`, or a custom URL.
     public init(
         wifiOnly: Bool = true,
@@ -212,6 +229,7 @@ public struct MPSessionReplayConfig: Codable {
         flushInterval: TimeInterval = 10,
         enableSessionReplayOniOS26AndLater: Bool = false,
         debugOptions: DebugOptions? = nil,
+        wireframesOptions: MPWireframesOptions? = nil,
         serverURL: String = DataResidency.us
     ) {
         self.wifiOnly = wifiOnly
@@ -223,7 +241,24 @@ public struct MPSessionReplayConfig: Codable {
         self.flushInterval = flushInterval
         self.enableSessionReplayOniOS26AndLater = enableSessionReplayOniOS26AndLater
         self.debugOptions = debugOptions
+        self.wireframesOptions = wireframesOptions
         self.serverURL = getTrimmedServerURL(urlString: serverURL)
+    }
+
+    // `wireframesOptions` is deliberately excluded from Codable — it holds a
+    // closure and `NSRegularExpression`, neither of which are Codable. Callers
+    // set it programmatically after decoding.
+    enum CodingKeys: String, CodingKey {
+        case wifiOnly
+        case autoMaskedViews
+        case autoStartRecording
+        case recordingSessionsPercent
+        case remoteSettingsMode
+        case enableLogging
+        case flushInterval
+        case enableSessionReplayOniOS26AndLater
+        case debugOptions
+        case serverURL
     }
 
     /// Validates the serverURL and logs errors if invalid

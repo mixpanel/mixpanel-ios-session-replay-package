@@ -78,6 +78,14 @@
 		86E80E452C1BC51000515FD6 /* PrintLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E80E442C1BC51000515FD6 /* PrintLogging.swift */; };
 		86E80E482C20EBCE00515FD6 /* View+SensitiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E80E472C20EBCE00515FD6 /* View+SensitiveView.swift */; };
 		86E80E502C25008200515FD6 /* SensitiveViewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E80E4F2C25008200515FD6 /* SensitiveViewManager.swift */; };
+		AB00000000000000000000F2 /* MPWireframesOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F1 /* MPWireframesOptions.swift */; };
+		AB00000000000000000000F4 /* MPWireframeDebug.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F3 /* MPWireframeDebug.swift */; };
+		AB00000000000000000000F6 /* WireframeElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F5 /* WireframeElement.swift */; };
+		AB00000000000000000000F8 /* WireframePayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F7 /* WireframePayload.swift */; };
+		AB00000000000000000000FA /* WireframeEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F9 /* WireframeEmitter.swift */; };
+		AB00000000000000000000FC /* SwiftUITextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000FB /* SwiftUITextExtractor.swift */; };
+		AB0000000000000000000101 /* WireframeEmitterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000100 /* WireframeEmitterTests.swift */; };
+		AB0000000000000000000103 /* SensitiveViewManagerWireframeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000102 /* SensitiveViewManagerWireframeTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -164,6 +172,14 @@
 		86E80E442C1BC51000515FD6 /* PrintLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintLogging.swift; sourceTree = "<group>"; };
 		86E80E472C20EBCE00515FD6 /* View+SensitiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+SensitiveView.swift"; sourceTree = "<group>"; };
 		86E80E4F2C25008200515FD6 /* SensitiveViewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveViewManager.swift; sourceTree = "<group>"; };
+		AB00000000000000000000F1 /* MPWireframesOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPWireframesOptions.swift; sourceTree = "<group>"; };
+		AB00000000000000000000F3 /* MPWireframeDebug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPWireframeDebug.swift; sourceTree = "<group>"; };
+		AB00000000000000000000F5 /* WireframeElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeElement.swift; sourceTree = "<group>"; };
+		AB00000000000000000000F7 /* WireframePayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframePayload.swift; sourceTree = "<group>"; };
+		AB00000000000000000000F9 /* WireframeEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeEmitter.swift; sourceTree = "<group>"; };
+		AB00000000000000000000FB /* SwiftUITextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUITextExtractor.swift; sourceTree = "<group>"; };
+		AB0000000000000000000100 /* WireframeEmitterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeEmitterTests.swift; sourceTree = "<group>"; };
+		AB0000000000000000000102 /* SensitiveViewManagerWireframeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveViewManagerWireframeTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -310,9 +326,22 @@
 				8650D2E52C13BC39008903B1 /* MPSessionReplayModels.swift */,
 				861224F62C17CF7200ACF6BF /* ReplayJSONTemplate.swift */,
 				17BB0FF52C408FC4005FBFB0 /* MPSessionReplayConfig.swift */,
+				AB00000000000000000000F1 /* MPWireframesOptions.swift */,
 				864DFFF02C3EE3CA003B258E /* RawEvent.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		AB00000000000000000000FD /* Wireframe */ = {
+			isa = PBXGroup;
+			children = (
+				AB00000000000000000000F3 /* MPWireframeDebug.swift */,
+				AB00000000000000000000F5 /* WireframeElement.swift */,
+				AB00000000000000000000F7 /* WireframePayload.swift */,
+				AB00000000000000000000F9 /* WireframeEmitter.swift */,
+				AB00000000000000000000FB /* SwiftUITextExtractor.swift */,
+			);
+			path = Wireframe;
 			sourceTree = "<group>";
 		};
 		861224F52C17C87300ACF6BF /* Utils */ = {
@@ -353,6 +382,7 @@
 				167A788A2D6F729F00298D2C /* Utils */,
 				167A78892D6F728000298D2C /* Services */,
 				167A78882D6F726F00298D2C /* Network */,
+				AB0000000000000000000104 /* Wireframe */,
 				167A788E2D70AF6800298D2C /* MPSessionReplayInstanceTests.swift */,
 				16178FBD2F64841700E022F2 /* MPSessionReplayAutoMaskedViewsTests.swift */,
 				164C4AAC2F33144100230843 /* MPSessionReplayTests.swift */,
@@ -360,6 +390,15 @@
 				167A78952D7626E100298D2C /* BaseTests.swift */,
 			);
 			path = MixpanelSessionReplayTests;
+			sourceTree = "<group>";
+		};
+		AB0000000000000000000104 /* Wireframe */ = {
+			isa = PBXGroup;
+			children = (
+				AB0000000000000000000100 /* WireframeEmitterTests.swift */,
+				AB0000000000000000000102 /* SensitiveViewManagerWireframeTests.swift */,
+			);
+			path = Wireframe;
 			sourceTree = "<group>";
 		};
 		8650D2B62C13B041008903B1 = {
@@ -395,6 +434,7 @@
 				86E80E4E2C24EFDA00515FD6 /* SensitiveViews */,
 				8674BEDA2C34728F007EDB1F /* Tracking */,
 				861224F12C17C7AB00ACF6BF /* Models */,
+				AB00000000000000000000FD /* Wireframe */,
 				861224EF2C17C76500ACF6BF /* Logging */,
 				861224EA2C17A2C300ACF6BF /* MPSessionReplayInstance.swift */,
 				16C9EFC22D4AAD840005ED7E /* MPSessionReplay.swift */,
@@ -590,6 +630,12 @@
 				86E80E482C20EBCE00515FD6 /* View+SensitiveView.swift in Sources */,
 				8628FB562C38B56B0023984E /* NetworkMonitor.swift in Sources */,
 				16991D0A2DDE580100E43ED4 /* ThreadUtils.swift in Sources */,
+				AB00000000000000000000F2 /* MPWireframesOptions.swift in Sources */,
+				AB00000000000000000000F4 /* MPWireframeDebug.swift in Sources */,
+				AB00000000000000000000F6 /* WireframeElement.swift in Sources */,
+				AB00000000000000000000F8 /* WireframePayload.swift in Sources */,
+				AB00000000000000000000FA /* WireframeEmitter.swift in Sources */,
+				AB00000000000000000000FC /* SwiftUITextExtractor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -622,6 +668,8 @@
 				864DFFFE2C41F2BF003B258E /* EventServiceTests.swift in Sources */,
 				167A78A02D776C1100298D2C /* HashableRectTests.swift in Sources */,
 				16178FBE2F64841700E022F2 /* MPSessionReplayAutoMaskedViewsTests.swift in Sources */,
+				AB0000000000000000000101 /* WireframeEmitterTests.swift in Sources */,
+				AB0000000000000000000103 /* SensitiveViewManagerWireframeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

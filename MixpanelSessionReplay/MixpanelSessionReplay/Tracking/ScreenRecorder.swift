@@ -10,6 +10,10 @@ import UIKit
 class ScreenRecorder {
     static let shared = ScreenRecorder()
 
+    /// Present when wireframes are enabled. Emits an rrweb Custom event with
+    /// the current wireframe elements alongside each screenshot capture.
+    var wireframeEmitter: WireframeEmitter?
+
     var mainScreenRendererFormat: UIGraphicsImageRendererFormat
     var presentedScreenRendererFormat: UIGraphicsImageRendererFormat
 
@@ -140,7 +144,11 @@ class ScreenRecorder {
             return nil
         }
 
-        return renderer.image { context in
+        let emitter = wireframeEmitter
+        var wireframes: [WireframeElement] = []
+        var sensitiveFrames: [HashableRect: MaskDecision] = [:]
+
+        let image = renderer.image { context in
             context.cgContext.interpolationQuality = .none
 
             if isPresented {
@@ -153,7 +161,10 @@ class ScreenRecorder {
                 context.cgContext.fill(viewBounds)
             }
 
-            let sensitiveFrames = SensitiveViewManager.shared.getSensitiveFrames(in: view, window: window)
+            let (frames, elements) = SensitiveViewManager.shared.collectFramesAndWireframes(
+                in: view, window: window)
+            sensitiveFrames = frames
+            wireframes = elements
 
             view.drawHierarchy(in: viewBounds, afterScreenUpdates: false)
 
@@ -163,6 +174,15 @@ class ScreenRecorder {
                 context.cgContext.fill(hashableRect.cgRect)
             }
         }
+
+        if let emitter, !wireframes.isEmpty {
+            emitter.emit(
+                elements: wireframes,
+                viewport: (Int(window.bounds.width), Int(window.bounds.height)),
+                maskBounds: Set(sensitiveFrames.keys))
+        }
+
+        return image
     }
 
     func captureScreenshot() -> Data? {

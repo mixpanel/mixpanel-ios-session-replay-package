@@ -102,6 +102,11 @@ class SensitiveViewManager {
     var maskAllWebViews: Bool = true
     var maskAllMapViews: Bool = true
 
+    /// When true, `collectFramesAndWireframes(in:window:)` returns a populated
+    /// wireframe element list. When false, wireframe collection is a no-op
+    /// (the existing masking pass runs unchanged).
+    var wireframeCollectionEnabled: Bool = false
+
     var sensitiveClasses: [AnyClass] = []
 
     private(set) var knownSensitiveViews: WeakViewsMap!
@@ -331,15 +336,29 @@ class SensitiveViewManager {
     ///   - window: The window providing coordinate space for frame conversion
     /// - Returns: Set of rectangles in window coordinates representing sensitive content to mask
     func getSensitiveFrames(in rootView: UIView, window: UIView) -> [HashableRect: MaskDecision] {
+        return collectFramesAndWireframes(in: rootView, window: window).frames
+    }
+
+    /// Returns both the mask decisions used by the screenshot pass and, when
+    /// `wireframeCollectionEnabled` is true, a list of wireframe elements
+    /// captured in the same walk. When wireframes are disabled the elements
+    /// list is always empty.
+    func collectFramesAndWireframes(in rootView: UIView, window: UIView)
+        -> (frames: [HashableRect: MaskDecision], wireframes: [WireframeElement])
+    {
         var maskDecisions = [HashableRect: MaskDecision]()
         var safeFrames = Set<HashableRect>()
+        let collector: WireframeCollector? =
+            wireframeCollectionEnabled ? WireframeCollector() : nil
 
         // Single unified traversal
         traverseViewAndLayers(
             rootView,
             window: window,
             maskDecisions: &maskDecisions,
-            safeFrames: &safeFrames)
+            safeFrames: &safeFrames,
+            wireframes: collector,
+            insideWireframeLeaf: false)
 
         // Remove regions contained within safe frames, except text inputs which always stay
         if !safeFrames.isEmpty {
@@ -360,7 +379,7 @@ class SensitiveViewManager {
             listener(debugDecisions, window as? UIWindow)
         }
 
-        return maskDecisions
+        return (maskDecisions, collector?.elements ?? [])
     }
 
     /// Adds or updates a mask decision, keeping the higher priority decision.
@@ -391,7 +410,9 @@ class SensitiveViewManager {
         _ view: UIView,
         window: UIView,
         maskDecisions: inout [HashableRect: MaskDecision],
-        safeFrames: inout Set<HashableRect>
+        safeFrames: inout Set<HashableRect>,
+        wireframes: WireframeCollector?,
+        insideWireframeLeaf: Bool
     ) {
         // Skip invisible views
         guard view.isVisible() else { return }
@@ -409,6 +430,14 @@ class SensitiveViewManager {
                 // Text fields are always sensitive and cannot be overridden by safe parents
                 if let hashableRect = hashableFrame(for: view.layer, in: window) {
                     addOrUpdate(&maskDecisions, rect: hashableRect, decision: .textInput)
+                    if let wireframes, !insideWireframeLeaf {
+                        wireframes.elements.append(
+                            WireframeElement.from(
+                                role: .input,
+                                text: nil,
+                                rect: hashableRect.cgRect,
+                                decision: .textEntry))
+                    }
                 }
                 return  // Don't process subviews or sublayers
 
@@ -417,12 +446,42 @@ class SensitiveViewManager {
                 if let hashableRect = hashableFrame(for: view.layer, in: window) {
                     let decision: MaskDecision = (view.mpReplaySensitive == true) ? .mask : .auto
                     addOrUpdate(&maskDecisions, rect: hashableRect, decision: decision)
+                    if let wireframes, !insideWireframeLeaf,
+                        let role = classifyForWireframe(view: view)
+                    {
+                        let wireDecision: MPMaskDecision =
+                            (decision == .mask) ? .explicit : .auto
+                        wireframes.elements.append(
+                            WireframeElement.from(
+                                role: role,
+                                text: nil,
+                                rect: hashableRect.cgRect,
+                                decision: wireDecision))
+                    }
                 }
                 return  // Don't process subviews or sublayers
 
             case .unknown:
                 // View itself is not sensitive/safe, continue checking
                 break
+        }
+
+        // View not sensitive/safe: emit a wireframe element if it maps to a role,
+        // then continue recursion. Once emitted, mark descendants as being inside
+        // a wireframe leaf so a UIButton's inner UILabel doesn't re-emit.
+        var newInsideLeaf = insideWireframeLeaf
+        if let wireframes, !insideWireframeLeaf,
+            let role = classifyForWireframe(view: view),
+            let hashableRect = hashableFrame(for: view.layer, in: window)
+        {
+            let text = extractWireframeText(view: view, role: role)
+            wireframes.elements.append(
+                WireframeElement.from(
+                    role: role,
+                    text: text,
+                    rect: hashableRect.cgRect,
+                    decision: .none))
+            newInsideLeaf = true
         }
 
         // MARK: - Check Layer subtree for iOS 26+ SwiftUI content
@@ -436,7 +495,9 @@ class SensitiveViewManager {
                         sublayer,
                         window: window,
                         maskDecisions: &maskDecisions,
-                        safeFrames: &safeFrames)
+                        safeFrames: &safeFrames,
+                        wireframes: wireframes,
+                        insideWireframeLeaf: newInsideLeaf)
                 }
             }
         }
@@ -447,7 +508,9 @@ class SensitiveViewManager {
                 subview,
                 window: window,
                 maskDecisions: &maskDecisions,
-                safeFrames: &safeFrames)
+                safeFrames: &safeFrames,
+                wireframes: wireframes,
+                insideWireframeLeaf: newInsideLeaf)
         }
     }
 
@@ -460,7 +523,9 @@ class SensitiveViewManager {
         _ layer: CALayer,
         window: UIView,
         maskDecisions: inout [HashableRect: MaskDecision],
-        safeFrames: inout Set<HashableRect>
+        safeFrames: inout Set<HashableRect>,
+        wireframes: WireframeCollector?,
+        insideWireframeLeaf: Bool
     ) {
 
         // Skip this layer if it's not visible
@@ -468,20 +533,42 @@ class SensitiveViewManager {
             return
         }
 
-        var isSensitive = false
+        let isText = isTextLayer(layer)
+        let isImage = isImageLayer(layer)
+        let masked = (maskAllText && isText) || (maskAllImages && isImage)
 
-        // Check if this is a text-rendering layer (iOS 26 SwiftUI Text)
-        if maskAllText, isTextLayer(layer) {
-            isSensitive = true
-        } else if maskAllImages, isImageLayer(layer) {  // Check if this is an image-rendering layer (iOS 26 SwiftUI Image)
-            isSensitive = true
-        }
-
-        if isSensitive {
+        if masked {
             if let frame = hashableFrame(for: layer, in: window) {
                 addOrUpdate(&maskDecisions, rect: frame, decision: .auto)
+                if let wireframes, !insideWireframeLeaf {
+                    let role: WireframeRole = isText ? .text : .image
+                    wireframes.elements.append(
+                        WireframeElement.from(
+                            role: role,
+                            text: nil,
+                            rect: frame.cgRect,
+                            decision: .auto))
+                }
             }
             return
+        }
+
+        // Unmasked text/image layer: emit as a wireframe element (with text
+        // extracted from the drawing layer when possible) and mark descendants
+        // as inside a leaf so nested runs don't double-emit.
+        var newInsideLeaf = insideWireframeLeaf
+        if let wireframes, !insideWireframeLeaf, isText || isImage,
+            let frame = hashableFrame(for: layer, in: window)
+        {
+            let role: WireframeRole = isText ? .text : .image
+            let text = isText ? SwiftUITextExtractor.shared.extractText(from: layer) : nil
+            wireframes.elements.append(
+                WireframeElement.from(
+                    role: role,
+                    text: text,
+                    rect: frame.cgRect,
+                    decision: .none))
+            newInsideLeaf = true
         }
 
         // Recurse into sublayers
@@ -490,7 +577,56 @@ class SensitiveViewManager {
                 sublayer,
                 window: window,
                 maskDecisions: &maskDecisions,
-                safeFrames: &safeFrames)
+                safeFrames: &safeFrames,
+                wireframes: wireframes,
+                insideWireframeLeaf: newInsideLeaf)
+        }
+    }
+
+    // MARK: - Wireframe classification + text extraction
+
+    /// Map a UIView to a wireframe role. `nil` for views we do not emit
+    /// (containers, layout wrappers, MKMapView, etc.).
+    func classifyForWireframe(view: UIView) -> WireframeRole? {
+        // Order matters: UIButton before UILabel (UIButton contains a UILabel
+        // titleLabel; we want the button, not its inner label).
+        if view is UIButton { return .button }
+        if view is UITextField { return .input }
+        if let textView = view as? UITextView { return textView.isEditable ? .input : .text }
+        if view is UILabel { return .text }
+        if view is UIImageView { return .image }
+        if view is WKWebView { return .text }
+        if let swiftUITextFieldClass, view.isKind(of: swiftUITextFieldClass) { return .input }
+        if let swiftUiTextClass, type(of: view) == swiftUiTextClass { return .text }
+        return nil
+    }
+
+    func extractWireframeText(view: UIView, role: WireframeRole) -> String? {
+        switch role {
+            case .input:
+                return nil
+            case .image:
+                let label = view.accessibilityLabel
+                return (label?.isEmpty == false) ? label : nil
+            case .button:
+                if let button = view as? UIButton {
+                    if let title = button.currentTitle, !title.isEmpty { return title }
+                    if let title = button.titleLabel?.text, !title.isEmpty { return title }
+                }
+                let label = view.accessibilityLabel
+                return (label?.isEmpty == false) ? label : nil
+            case .text:
+                if let label = view as? UILabel {
+                    if let text = label.text, !text.isEmpty { return text }
+                }
+                if let textView = view as? UITextView {
+                    if !textView.text.isEmpty { return textView.text }
+                }
+                if let swiftUiTextClass, type(of: view) == swiftUiTextClass {
+                    if let text = SwiftUITextExtractor.shared.extractText(from: view) { return text }
+                }
+                let accessibility = view.accessibilityLabel
+                return (accessibility?.isEmpty == false) ? accessibility : nil
         }
     }
 
