@@ -152,17 +152,6 @@ class SensitiveViewManager {
         sensitiveClassViews = WeakViewsMap.weakToWeakObjects()
         sensitiveTextFieldViews = WeakViewsMap.weakToWeakObjects()
         swiftUIiOS26TextLayerClass = ObfuscatedClassLookup.resolveClass(from: swiftUIDrawingLayerCodes)
-
-        // Confirm SwiftUI's internal text-carrying classes still expose an
-        // allowlisted, object-typed ivar. If not, the wireframe ivar-read
-        // strategy is disabled and text extraction falls back to Mirror +
-        // accessibility only. Prevents object_getIvar from ever running
-        // against a layout it doesn't understand.
-        let ivarProbeClasses: [AnyClass] = [
-            swiftUIiOS26TextLayerClass,
-            swiftUiTextClass,
-        ].compactMap { $0 }
-        SwiftUITextExtractor.shared.probe(classes: ivarProbeClasses)
     }
 
     static func reset() {
@@ -626,10 +615,9 @@ class SensitiveViewManager {
         //
         // Text is intentionally left `nil`. SwiftUI does not expose its rendered
         // Text content reliably — it lives on `_UIHostingView._rootView`, not the
-        // leaf drawing layer the walk reaches — so any extraction here is
-        // best-effort and flaky across iOS versions. We ship the shell now and
-        // will revisit text extraction (accessibility labels first) separately.
-        // See SwiftUITextExtractor for the deferred strategies.
+        // leaf drawing layer the walk reaches. We deliberately do not read it via
+        // private reflection; SwiftUI text ships as a role + bounds shell, and
+        // developers supply readable text with `.mpReplay(wireframeText:)`.
         var newInsideLeaf = insideWireframeLeaf
         if let wireframes, !insideWireframeLeaf, isText || isImage,
             let frame = hashableFrame(for: layer, in: window)
@@ -698,9 +686,10 @@ class SensitiveViewManager {
                 // SwiftUI text (iOS <=18 `SwiftUI.CGDrawingView`): emit the
                 // role + bounds shell with no text. SwiftUI doesn't expose its
                 // rendered Text reliably (it lives on `_UIHostingView._rootView`,
-                // not this leaf render view), so we ship the shell now and defer
-                // text extraction — including the accessibility fallback below,
-                // which is skipped here on purpose. See SwiftUITextExtractor.
+                // not this leaf render view), and we deliberately do not read it
+                // via private reflection. The accessibility fallback below is
+                // skipped on purpose; developers label these with
+                // `.mpReplay(wireframeText:)`.
                 if let swiftUiTextClass, type(of: view) == swiftUiTextClass {
                     return nil
                 }

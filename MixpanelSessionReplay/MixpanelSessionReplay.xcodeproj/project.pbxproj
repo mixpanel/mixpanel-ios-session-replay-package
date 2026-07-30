@@ -84,10 +84,8 @@
 		AB00000000000000000000F6 /* WireframeElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F5 /* WireframeElement.swift */; };
 		AB00000000000000000000F8 /* WireframePayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F7 /* WireframePayload.swift */; };
 		AB00000000000000000000FA /* WireframeEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F9 /* WireframeEmitter.swift */; };
-		AB00000000000000000000FC /* SwiftUITextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000FB /* SwiftUITextExtractor.swift */; };
 		AB0000000000000000000101 /* WireframeEmitterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000100 /* WireframeEmitterTests.swift */; };
 		AB0000000000000000000103 /* SensitiveViewManagerWireframeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000102 /* SensitiveViewManagerWireframeTests.swift */; };
-		AB0000000000000000000201 /* SwiftUITextExtractorProbeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000200 /* SwiftUITextExtractorProbeTests.swift */; };
 		AB0000000000000000000301 /* SwiftUIExtractionLabTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000300 /* SwiftUIExtractionLabTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -181,10 +179,8 @@
 		AB00000000000000000000F5 /* WireframeElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeElement.swift; sourceTree = "<group>"; };
 		AB00000000000000000000F7 /* WireframePayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframePayload.swift; sourceTree = "<group>"; };
 		AB00000000000000000000F9 /* WireframeEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeEmitter.swift; sourceTree = "<group>"; };
-		AB00000000000000000000FB /* SwiftUITextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUITextExtractor.swift; sourceTree = "<group>"; };
 		AB0000000000000000000100 /* WireframeEmitterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeEmitterTests.swift; sourceTree = "<group>"; };
 		AB0000000000000000000102 /* SensitiveViewManagerWireframeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveViewManagerWireframeTests.swift; sourceTree = "<group>"; };
-		AB0000000000000000000200 /* SwiftUITextExtractorProbeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUITextExtractorProbeTests.swift; sourceTree = "<group>"; };
 		AB0000000000000000000300 /* SwiftUIExtractionLabTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIExtractionLabTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -345,7 +341,6 @@
 				AB00000000000000000000F5 /* WireframeElement.swift */,
 				AB00000000000000000000F7 /* WireframePayload.swift */,
 				AB00000000000000000000F9 /* WireframeEmitter.swift */,
-				AB00000000000000000000FB /* SwiftUITextExtractor.swift */,
 			);
 			path = Wireframe;
 			sourceTree = "<group>";
@@ -404,7 +399,6 @@
 			children = (
 				AB0000000000000000000100 /* WireframeEmitterTests.swift */,
 				AB0000000000000000000102 /* SensitiveViewManagerWireframeTests.swift */,
-				AB0000000000000000000200 /* SwiftUITextExtractorProbeTests.swift */,
 				AB0000000000000000000300 /* SwiftUIExtractionLabTests.swift */,
 			);
 			path = Wireframe;
@@ -645,7 +639,6 @@
 				AB00000000000000000000F6 /* WireframeElement.swift in Sources */,
 				AB00000000000000000000F8 /* WireframePayload.swift in Sources */,
 				AB00000000000000000000FA /* WireframeEmitter.swift in Sources */,
-				AB00000000000000000000FC /* SwiftUITextExtractor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -680,7 +673,6 @@
 				16178FBE2F64841700E022F2 /* MPSessionReplayAutoMaskedViewsTests.swift in Sources */,
 				AB0000000000000000000101 /* WireframeEmitterTests.swift in Sources */,
 				AB0000000000000000000103 /* SensitiveViewManagerWireframeTests.swift in Sources */,
-				AB0000000000000000000201 /* SwiftUITextExtractorProbeTests.swift in Sources */,
 				AB0000000000000000000301 /* SwiftUIExtractionLabTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

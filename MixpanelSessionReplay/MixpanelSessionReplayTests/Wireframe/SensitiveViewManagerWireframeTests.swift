@@ -169,8 +169,8 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
   /// `_UIHostingView._rootView`, not the leaf render node the walker reaches
   /// (leaf `SwiftUI.CGDrawingView` on iOS <=18, `CGDrawingLayer` on iOS 26+
   /// carry only Swift-value-typed ivars). So the walker must never surface the
-  /// rendered string, and it must never accidentally leak it either. Text
-  /// extraction is deferred (see SwiftUITextExtractor for the strategy chain).
+  /// rendered string, and it must never accidentally leak it either. Readable
+  /// text for SwiftUI is supplied by the developer via `.mpReplay(wireframeText:)`.
   func test_realSwiftUIText_emitsShellWithoutLeakingText() throws {
     let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 480))
     let host = UIHostingController(rootView: Text("Welcome"))
