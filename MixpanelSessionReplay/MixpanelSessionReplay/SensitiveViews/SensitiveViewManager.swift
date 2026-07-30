@@ -152,6 +152,17 @@ class SensitiveViewManager {
         sensitiveClassViews = WeakViewsMap.weakToWeakObjects()
         sensitiveTextFieldViews = WeakViewsMap.weakToWeakObjects()
         swiftUIiOS26TextLayerClass = ObfuscatedClassLookup.resolveClass(from: swiftUIDrawingLayerCodes)
+
+        // Confirm SwiftUI's internal text-carrying classes still expose an
+        // allowlisted, object-typed ivar. If not, the wireframe ivar-read
+        // strategy is disabled and text extraction falls back to Mirror +
+        // accessibility only. Prevents object_getIvar from ever running
+        // against a layout it doesn't understand.
+        let ivarProbeClasses: [AnyClass] = [
+            swiftUIiOS26TextLayerClass,
+            swiftUiTextClass,
+        ].compactMap { $0 }
+        SwiftUITextExtractor.shared.probe(classes: ivarProbeClasses)
     }
 
     static func reset() {
@@ -470,7 +481,22 @@ class SensitiveViewManager {
         // then continue recursion. Once emitted, mark descendants as being inside
         // a wireframe leaf so a UIButton's inner UILabel doesn't re-emit.
         var newInsideLeaf = insideWireframeLeaf
+        // Customer opt-in: `.mpWireframeText("...")` plants a WireframeTextWrapper
+        // background carrying the visible text. Emit as a role=.text element
+        // and skip the default role classification for this wrapper.
         if let wireframes, !insideWireframeLeaf,
+            view is WireframeTextWrapper,
+            let text = view.mpWireframeText, !text.isEmpty,
+            let hashableRect = hashableFrame(for: view.layer, in: window)
+        {
+            wireframes.elements.append(
+                WireframeElement.from(
+                    role: .text,
+                    text: text,
+                    rect: hashableRect.cgRect,
+                    decision: .none))
+            newInsideLeaf = true
+        } else if let wireframes, !insideWireframeLeaf,
             let role = classifyForWireframe(view: view),
             let hashableRect = hashableFrame(for: view.layer, in: window)
         {

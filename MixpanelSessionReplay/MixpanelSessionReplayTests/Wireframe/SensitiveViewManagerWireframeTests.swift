@@ -5,6 +5,7 @@
 //  Copyright © 2026 Mixpanel. All rights reserved.
 //
 
+import SwiftUI
 import UIKit
 import WebKit
 import XCTest
@@ -157,6 +158,41 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     let webElements = elements.filter { $0.role == .text }
     XCTAssertGreaterThanOrEqual(webElements.count, 1)
     XCTAssertNil(webElements[0].text)
+  }
+
+  /// End-to-end SwiftUI check: real `Text` inside a `UIHostingController`,
+  /// hosted in a real `UIWindow`, laid out through the normal SwiftUI
+  /// rendering path.
+  ///
+  /// Current expected outcome: FAILS on iOS 18–26. Diagnostic dump (removed)
+  /// showed the leaf `SwiftUI.CGDrawingView` (iOS <=18) exposes one
+  /// Swift-value-typed ivar `options`, and `SwiftUI.CGDrawingLayer` (iOS 26+)
+  /// exposes Swift-value-typed `content` and `state` — none of which
+  /// `object_getIvar` can safely read. The visible text is stored higher up
+  /// on `_UIHostingView._rootView` as `Text.storage.anyTextStorage(…)`,
+  /// which the current leaf-node extractor never inspects.
+  ///
+  /// Verify by hand in `SampleApp` before flipping this to a passing test.
+  func test_realSwiftUIText_extractsThroughFullPipeline() throws {
+    try XCTSkipIf(
+      true,
+      "SwiftUI Text extraction not implemented — see SampleApp for interactive verification. "
+        + "Text is stored at _UIHostingView._rootView; extractor is called at the leaf render node."
+    )
+
+    let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 480))
+    let host = UIHostingController(rootView: Text("Welcome"))
+    window.rootViewController = host
+    window.makeKeyAndVisible()
+    host.view.setNeedsLayout()
+    host.view.layoutIfNeeded()
+    RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+
+    let result = manager.collectFramesAndWireframes(in: host.view, window: window)
+    let welcome = result.wireframes.first { $0.text == "Welcome" }
+    XCTAssertNotNil(welcome)
+    XCTAssertEqual(welcome?.role, .text)
+    XCTAssertEqual(welcome?.decision, .none)
   }
 
   func test_boundsAreWindowRelative() {

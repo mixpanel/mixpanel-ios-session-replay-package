@@ -31,7 +31,70 @@ final class SwiftUITextExtractor {
     "_textContent", "textContent",
   ]
 
+  /// Set to `false` by `probe(classes:)` when SwiftUI's internal layout has
+  /// shifted such that none of the passed classes expose an allowlisted,
+  /// object-typed ivar. When `false`, `ivarText(from:)` short-circuits — the
+  /// `Mirror` and accessibility fallbacks still run.
+  private(set) var ivarStrategyEnabled: Bool = true
+
   private init() {}
+
+  /// Walks declared Objective-C ivars on the given classes (and their
+  /// superclasses). If none carry an allowlisted, object-typed ivar, disables
+  /// the ivar extraction strategy so `object_getIvar` is never called against
+  /// a layout it doesn't understand.
+  ///
+  /// Called once from `SensitiveViewManager.init()` with the resolved
+  /// `SwiftUI.CGDrawingView` and `CGDrawingLayer` classes. Safe to call
+  /// again — subsequent calls re-evaluate against the new class list.
+  func probe(classes: [AnyClass]) {
+    guard !classes.isEmpty else {
+      ivarStrategyEnabled = false
+      Logger.warn(
+        message:
+          "Wireframe: SwiftUI text extractor probe received no classes; ivar strategy disabled."
+      )
+      return
+    }
+    for cls in classes {
+      if hasAllowlistedObjectIvar(cls) {
+        ivarStrategyEnabled = true
+        return
+      }
+    }
+    ivarStrategyEnabled = false
+    Logger.warn(
+      message:
+        "Wireframe: SwiftUI internals moved — no allowlisted object-typed ivar found on probed classes; ivar strategy disabled."
+    )
+  }
+
+  private func hasAllowlistedObjectIvar(_ cls: AnyClass) -> Bool {
+    var current: AnyClass? = cls
+    while let c = current {
+      var count: UInt32 = 0
+      if let list = class_copyIvarList(c, &count) {
+        defer { free(list) }
+        for i in 0..<Int(count) {
+          let ivar = list[i]
+          guard let namePtr = ivar_getName(ivar) else { continue }
+          let name = String(cString: namePtr)
+          guard SwiftUITextExtractor.textIvarAllowlist.contains(name) else { continue }
+          if isObjectTypeEncoding(ivar) { return true }
+        }
+      }
+      current = class_getSuperclass(c)
+    }
+    return false
+  }
+
+  /// True when the ivar stores an Objective-C object (`@`, `@"NSString"`, …).
+  /// False for value types (`i`, `f`, `{…}`, etc.), which `object_getIvar`
+  /// would misinterpret as a pointer.
+  private func isObjectTypeEncoding(_ ivar: Ivar) -> Bool {
+    guard let encPtr = ivar_getTypeEncoding(ivar) else { return false }
+    return String(cString: encPtr).hasPrefix("@")
+  }
 
   /// Extract text from a `SwiftUI.CGDrawingView` (UIView).
   /// Returns `nil` if no strategy succeeded or the extracted text is empty.
@@ -68,6 +131,7 @@ final class SwiftUITextExtractor {
   }
 
   private func ivarText(from object: AnyObject) -> String? {
+    guard ivarStrategyEnabled else { return nil }
     var cls: AnyClass? = type(of: object)
     while let current = cls {
       var count: UInt32 = 0
@@ -82,6 +146,9 @@ final class SwiftUITextExtractor {
         guard let cNamePtr = ivar_getName(ivar) else { continue }
         let name = String(cString: cNamePtr)
         guard SwiftUITextExtractor.textIvarAllowlist.contains(name) else { continue }
+        // Never call object_getIvar on a non-object ivar — the runtime would
+        // read raw bytes at the ivar offset and hand them back as an `id`.
+        guard isObjectTypeEncoding(ivar) else { continue }
         if let text = readStringIvar(from: object, ivar: ivar) {
           return text
         }

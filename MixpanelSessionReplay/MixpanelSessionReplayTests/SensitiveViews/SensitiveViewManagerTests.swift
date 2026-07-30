@@ -537,4 +537,33 @@ class SensitiveViewManagerTests: BaseTests {
                 + "SwiftUI may have renamed/removed CGDrawingLayer in this iOS version — "
         )
     }
+
+    /// Real-OS canary for the wireframe ivar probe. If Apple renames or
+    /// removes the allowlisted ivars on `CGDrawingLayer` in a future iOS,
+    /// this fails in CI without needing an app-level reproduction.
+    /// Text extraction then falls back to Mirror/accessibility only.
+    func test_swiftUIDrawingLayer_stillExposesAllowlistedIvar_onCurrentOS() throws {
+        try XCTSkipUnless(
+            {
+                if #available(iOS 26.0, *) { return true }
+                return false
+            }(),
+            "CGDrawingLayer only exists on iOS 26+"
+        )
+
+        let cls = try XCTUnwrap(
+            ObfuscatedClassLookup.resolveClass(from: manager.swiftUIDrawingLayerCodes),
+            "CGDrawingLayer no longer resolves; class-existence canary should also be failing."
+        )
+
+        SwiftUITextExtractor.shared.probe(classes: [cls])
+
+        XCTAssertTrue(
+            SwiftUITextExtractor.shared.ivarStrategyEnabled,
+            "SwiftUI.CGDrawingLayer no longer exposes an allowlisted object-typed ivar on iOS "
+                + "\(UIDevice.current.systemVersion). SwiftUI internals shifted; wireframe text "
+                + "extraction will fall back to Mirror/accessibility only. Re-derive the ivar "
+                + "allowlist in SwiftUITextExtractor for this iOS version."
+        )
+    }
 }

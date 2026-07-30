@@ -77,6 +77,7 @@
 		86E80E3F2C1BA6F100515FD6 /* DeviceInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E80E3E2C1BA6F100515FD6 /* DeviceInfo.swift */; };
 		86E80E452C1BC51000515FD6 /* PrintLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E80E442C1BC51000515FD6 /* PrintLogging.swift */; };
 		86E80E482C20EBCE00515FD6 /* View+SensitiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E80E472C20EBCE00515FD6 /* View+SensitiveView.swift */; };
+		AB0000000000000000000401 /* View+WireframeText.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000400 /* View+WireframeText.swift */; };
 		86E80E502C25008200515FD6 /* SensitiveViewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E80E4F2C25008200515FD6 /* SensitiveViewManager.swift */; };
 		AB00000000000000000000F2 /* MPWireframesOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F1 /* MPWireframesOptions.swift */; };
 		AB00000000000000000000F4 /* MPWireframeDebug.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F3 /* MPWireframeDebug.swift */; };
@@ -86,6 +87,8 @@
 		AB00000000000000000000FC /* SwiftUITextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000FB /* SwiftUITextExtractor.swift */; };
 		AB0000000000000000000101 /* WireframeEmitterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000100 /* WireframeEmitterTests.swift */; };
 		AB0000000000000000000103 /* SensitiveViewManagerWireframeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000102 /* SensitiveViewManagerWireframeTests.swift */; };
+		AB0000000000000000000201 /* SwiftUITextExtractorProbeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000200 /* SwiftUITextExtractorProbeTests.swift */; };
+		AB0000000000000000000301 /* SwiftUIExtractionLabTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000300 /* SwiftUIExtractionLabTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -171,6 +174,7 @@
 		86E80E3E2C1BA6F100515FD6 /* DeviceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfo.swift; sourceTree = "<group>"; };
 		86E80E442C1BC51000515FD6 /* PrintLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintLogging.swift; sourceTree = "<group>"; };
 		86E80E472C20EBCE00515FD6 /* View+SensitiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+SensitiveView.swift"; sourceTree = "<group>"; };
+		AB0000000000000000000400 /* View+WireframeText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+WireframeText.swift"; sourceTree = "<group>"; };
 		86E80E4F2C25008200515FD6 /* SensitiveViewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveViewManager.swift; sourceTree = "<group>"; };
 		AB00000000000000000000F1 /* MPWireframesOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPWireframesOptions.swift; sourceTree = "<group>"; };
 		AB00000000000000000000F3 /* MPWireframeDebug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPWireframeDebug.swift; sourceTree = "<group>"; };
@@ -180,6 +184,8 @@
 		AB00000000000000000000FB /* SwiftUITextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUITextExtractor.swift; sourceTree = "<group>"; };
 		AB0000000000000000000100 /* WireframeEmitterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeEmitterTests.swift; sourceTree = "<group>"; };
 		AB0000000000000000000102 /* SensitiveViewManagerWireframeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveViewManagerWireframeTests.swift; sourceTree = "<group>"; };
+		AB0000000000000000000200 /* SwiftUITextExtractorProbeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUITextExtractorProbeTests.swift; sourceTree = "<group>"; };
+		AB0000000000000000000300 /* SwiftUIExtractionLabTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIExtractionLabTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -366,6 +372,7 @@
 			isa = PBXGroup;
 			children = (
 				86E80E472C20EBCE00515FD6 /* View+SensitiveView.swift */,
+				AB0000000000000000000400 /* View+WireframeText.swift */,
 				8628FB4F2C34B8E70023984E /* UIApplication+firstKeyWindow.swift */,
 				8628FB512C3686D40023984E /* Data+Compression.swift */,
 			);
@@ -397,6 +404,8 @@
 			children = (
 				AB0000000000000000000100 /* WireframeEmitterTests.swift */,
 				AB0000000000000000000102 /* SensitiveViewManagerWireframeTests.swift */,
+				AB0000000000000000000200 /* SwiftUITextExtractorProbeTests.swift */,
+				AB0000000000000000000300 /* SwiftUIExtractionLabTests.swift */,
 			);
 			path = Wireframe;
 			sourceTree = "<group>";
@@ -628,6 +637,7 @@
 				8650D2F32C13BCB4008903B1 /* Constants.swift in Sources */,
 				17F94D442E2C7641007E7579 /* SettingsResponse.swift in Sources */,
 				86E80E482C20EBCE00515FD6 /* View+SensitiveView.swift in Sources */,
+				AB0000000000000000000401 /* View+WireframeText.swift in Sources */,
 				8628FB562C38B56B0023984E /* NetworkMonitor.swift in Sources */,
 				16991D0A2DDE580100E43ED4 /* ThreadUtils.swift in Sources */,
 				AB00000000000000000000F2 /* MPWireframesOptions.swift in Sources */,
@@ -670,6 +680,8 @@
 				16178FBE2F64841700E022F2 /* MPSessionReplayAutoMaskedViewsTests.swift in Sources */,
 				AB0000000000000000000101 /* WireframeEmitterTests.swift in Sources */,
 				AB0000000000000000000103 /* SensitiveViewManagerWireframeTests.swift in Sources */,
+				AB0000000000000000000201 /* SwiftUITextExtractorProbeTests.swift in Sources */,
+				AB0000000000000000000301 /* SwiftUIExtractionLabTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
