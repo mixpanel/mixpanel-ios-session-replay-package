@@ -27,12 +27,19 @@ struct WireframeElement: Hashable {
   var w: Int
   var h: Int
   var decision: MPMaskDecision
+  /// True when `text` was explicitly declared by the customer via
+  /// `.mpReplay(wireframeText:)` rather than scraped from a rendered view.
+  /// Declared text is authored and trusted, so it is exempt from the geometric
+  /// leak-prevention strip (Layer 2) — including its own sensitive mask region.
+  /// Configured sensitive rules (Layer 3) still apply as a safety net.
+  var declared: Bool
 
   static func from(
     role: WireframeRole,
     text: String?,
     rect: CGRect,
-    decision: MPMaskDecision
+    decision: MPMaskDecision,
+    declared: Bool = false
   ) -> WireframeElement {
     WireframeElement(
       role: role,
@@ -41,7 +48,8 @@ struct WireframeElement: Hashable {
       y: Int(rect.origin.y.rounded()),
       w: Int(rect.size.width.rounded()),
       h: Int(rect.size.height.rounded()),
-      decision: decision
+      decision: decision,
+      declared: declared
     )
   }
 }

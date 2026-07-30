@@ -111,6 +111,42 @@ final class WireframeEmitterTests: XCTestCase {
     XCTAssertEqual(customPayload(from: event).elements[0].text, "safe")
   }
 
+  // MARK: - Declared text (customer-authored via .mpReplay(wireframeText:))
+
+  func testDeclared_survivesGeometricStrip_evenWhenMaskIntersects() throws {
+    // Customer-authored text is intentionally sent even over its own mask
+    // region — the geometric strip must not null it.
+    let emitter = WireframeEmitter(options: MPWireframesOptions())
+    let element = WireframeElement.from(
+      role: .text, text: "monthly spend",
+      rect: CGRect(x: 10, y: 10, width: 50, height: 20),
+      decision: .none, declared: true)
+
+    emitter.emit(
+      elements: [element], viewport: (100, 100),
+      maskBounds: [HashableRect(CGRect(x: 0, y: 0, width: 100, height: 100))])
+    let event = try waitForFirstPublishedEvent()
+
+    XCTAssertEqual(customPayload(from: event).elements[0].text, "monthly spend")
+  }
+
+  func testDeclared_stillScrubbedByRules() throws {
+    // Geometric strip is bypassed for declared text, but sensitive rules remain
+    // a safety net.
+    let rules: [MPSensitiveRule] = [.strip(text: "password")]
+    let emitter = WireframeEmitter(
+      options: MPWireframesOptions(sensitiveRules: rules))
+    let element = WireframeElement.from(
+      role: .text, text: "your password here",
+      rect: CGRect(x: 0, y: 0, width: 100, height: 20),
+      decision: .none, declared: true)
+
+    emitter.emit(elements: [element], viewport: (100, 100), maskBounds: [])
+    let event = try waitForFirstPublishedEvent()
+
+    XCTAssertNil(customPayload(from: event).elements[0].text)
+  }
+
   // MARK: - Layer 3 rules
 
   func testStripRule_shortCircuits_preemptingLaterRedact() throws {

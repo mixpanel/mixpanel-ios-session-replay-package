@@ -390,7 +390,31 @@ class SensitiveViewManager {
             listener(debugDecisions, window as? UIWindow)
         }
 
-        return (maskDecisions, collector?.elements ?? [])
+        return (maskDecisions, dedupedWireframes(collector?.elements ?? []))
+    }
+
+    /// Drops the empty SwiftUI text shell that overlaps a customer-declared
+    /// `.mpReplay(text:)` element. The declaration is planted as a `.background`,
+    /// which is a *sibling* of SwiftUI's drawing view — not a descendant — so
+    /// `insideWireframeLeaf` cannot suppress it, and both emit a `.text` element
+    /// at the same bounds (one with the declared text, one empty). Keep the
+    /// text-bearing element; drop the empty, unmasked shell. Masked shells
+    /// (decision != .none) are never dropped — safety is preserved.
+    private func dedupedWireframes(_ elements: [WireframeElement]) -> [WireframeElement] {
+        let declaredTextBounds = Set(
+            elements
+                .filter { $0.role == .text && $0.text != nil }
+                .map { HashableRect(CGRect(x: $0.x, y: $0.y, width: $0.w, height: $0.h)) }
+        )
+        guard !declaredTextBounds.isEmpty else { return elements }
+
+        return elements.filter { element in
+            guard element.role == .text, element.text == nil, element.decision == .none
+            else { return true }
+            let bounds = HashableRect(
+                CGRect(x: element.x, y: element.y, width: element.w, height: element.h))
+            return !declaredTextBounds.contains(bounds)
+        }
     }
 
     /// Adds or updates a mask decision, keeping the higher priority decision.
@@ -427,6 +451,38 @@ class SensitiveViewManager {
     ) {
         // Skip invisible views
         guard view.isVisible() else { return }
+
+        // MARK: - Mixpanel opt-in wrapper (`.mpReplay(sensitive:wireframeText:)`)
+        // A single MPReplayWrapper background carries both the sensitivity flag
+        // and any customer-declared wireframe text. Its two concerns are
+        // orthogonal: `sensitive` covers the view with an opaque mask rectangle,
+        // while `wireframeText` is authored (not scraped) and is emitted even
+        // when the view is sensitive. The wrapper is an empty background view, so
+        // we fully resolve it here and stop.
+        if view is MPReplayWrapper {
+            if let hashableRect = hashableFrame(for: view.layer, in: window) {
+                switch view.mpReplaySensitive {
+                case .some(true):
+                    addOrUpdate(&maskDecisions, rect: hashableRect, decision: .mask)
+                case .some(false):
+                    safeFrames.insert(hashableRect)
+                case .none:
+                    break
+                }
+                if let wireframes, !insideWireframeLeaf,
+                    let text = view.mpWireframeText, !text.isEmpty
+                {
+                    wireframes.elements.append(
+                        WireframeElement.from(
+                            role: .text,
+                            text: text,
+                            rect: hashableRect.cgRect,
+                            decision: .none,
+                            declared: true))
+                }
+            }
+            return
+        }
 
         // MARK: - Check UIView level first (UIKit + legacy SwiftUI)
         switch isSensitiveView(view: view) {
@@ -481,22 +537,7 @@ class SensitiveViewManager {
         // then continue recursion. Once emitted, mark descendants as being inside
         // a wireframe leaf so a UIButton's inner UILabel doesn't re-emit.
         var newInsideLeaf = insideWireframeLeaf
-        // Customer opt-in: `.mpWireframeText("...")` plants a WireframeTextWrapper
-        // background carrying the visible text. Emit as a role=.text element
-        // and skip the default role classification for this wrapper.
         if let wireframes, !insideWireframeLeaf,
-            view is WireframeTextWrapper,
-            let text = view.mpWireframeText, !text.isEmpty,
-            let hashableRect = hashableFrame(for: view.layer, in: window)
-        {
-            wireframes.elements.append(
-                WireframeElement.from(
-                    role: .text,
-                    text: text,
-                    rect: hashableRect.cgRect,
-                    decision: .none))
-            newInsideLeaf = true
-        } else if let wireframes, !insideWireframeLeaf,
             let role = classifyForWireframe(view: view),
             let hashableRect = hashableFrame(for: view.layer, in: window)
         {

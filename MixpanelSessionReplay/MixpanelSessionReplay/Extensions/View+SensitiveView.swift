@@ -47,38 +47,16 @@ extension UIView: SensitiveView {
     }
 }
 
-struct SensitiveViewWrapperRepresentable: UIViewRepresentable {
-    let onCreate: (SensitiveViewWrapper) -> Void
-
-    func makeUIView(context: Context) -> SensitiveViewWrapper {
-        let wrapper = SensitiveViewWrapper()
-        onCreate(wrapper)
-        return wrapper
-    }
-
-    func updateUIView(_ uiView: SensitiveViewWrapper, context: Context) {}
-}
-
-struct SensitiveModifier: ViewModifier {
-    let isSensitive: Bool
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                SensitiveViewWrapperRepresentable { wrapper in
-                    wrapper.mpReplaySensitive = self.isSensitive
-                }
-            )
-    }
-}
-
 extension View {
+    /// Marks a SwiftUI view as sensitive (masked) or explicitly safe.
+    ///
+    /// Retained for source compatibility. New code should prefer the unified
+    /// `.mpReplay(sensitive:text:)`, which is the single entry point for all
+    /// Mixpanel SwiftUI replay annotations. This forwards to it.
     public func mpReplaySensitive(_ isSensitive: Bool) -> some View {
-        self.modifier(SensitiveModifier(isSensitive: isSensitive))
+        self.mpReplay(sensitive: isSensitive)
     }
 }
-
-class SensitiveViewWrapper: UIView {}
 
 private var mpReplaySensitiveKey: UInt8 = 0
 

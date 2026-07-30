@@ -192,6 +192,90 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     }
   }
 
+  // MARK: - Unified `.mpReplay(sensitive:text:)` opt-in (MPReplayWrapper)
+
+  /// `.mpReplay(wireframeText:)` plants an MPReplayWrapper carrying the declared
+  /// text. The walker emits it as a `.text` element marked `declared`.
+  func test_mpReplayWrapper_withText_emitsDeclaredText() {
+    let root = UIView(frame: window.bounds)
+    let wrapper = MPReplayWrapper(frame: CGRect(x: 5, y: 6, width: 120, height: 40))
+    wrapper.mpWireframeText = "Welcome"
+    root.addSubview(wrapper)
+    window.addSubview(root)
+
+    let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+    let texts = elements.filter { $0.role == .text }
+    XCTAssertEqual(texts.count, 1)
+    XCTAssertEqual(texts[0].text, "Welcome")
+    XCTAssertEqual(texts[0].decision, .none)
+    XCTAssertTrue(texts[0].declared)
+    XCTAssertEqual(texts[0].w, 120)
+    XCTAssertEqual(texts[0].h, 40)
+  }
+
+  /// `.mpReplay(sensitive: true, wireframeText:)` is orthogonal: the region is
+  /// masked (opaque rectangle) AND the customer-declared text is still emitted,
+  /// because it is authored rather than scraped. The `declared` flag lets it
+  /// survive the geometric strip against its own mask region downstream.
+  func test_mpReplayWrapper_sensitiveWithText_masksAndEmitsDeclaredText() {
+    let root = UIView(frame: window.bounds)
+    let wrapper = MPReplayWrapper(frame: CGRect(x: 0, y: 0, width: 120, height: 40))
+    wrapper.mpReplaySensitive = true
+    wrapper.mpWireframeText = "monthly spend"
+    root.addSubview(wrapper)
+    window.addSubview(root)
+
+    let result = manager.collectFramesAndWireframes(in: root, window: window)
+    XCTAssertFalse(result.frames.isEmpty, "sensitive wrapper must produce a mask region")
+    let texts = result.wireframes.filter { $0.role == .text }
+    XCTAssertEqual(texts.count, 1)
+    XCTAssertEqual(texts[0].text, "monthly spend")
+    XCTAssertTrue(texts[0].declared)
+  }
+
+  /// The `.mpReplay(text:)` background is a *sibling* of SwiftUI's drawing view,
+  /// so an empty `.text` shell can be emitted at the same bounds. The dedup pass
+  /// must drop that empty shell in favor of the declared-text element.
+  func test_mpReplayWrapper_siblingEmptyTextShell_isDeduped() {
+    let bounds = CGRect(x: 10, y: 10, width: 100, height: 30)
+    let root = UIView(frame: window.bounds)
+    // Empty-text label stands in for SwiftUI's textless drawing-view shell.
+    let shell = UILabel(frame: bounds)
+    shell.text = nil
+    let wrapper = MPReplayWrapper(frame: bounds)
+    wrapper.mpWireframeText = "Hello"
+    root.addSubview(shell)
+    root.addSubview(wrapper)
+    window.addSubview(root)
+
+    let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+    let texts = elements.filter { $0.role == .text }
+    XCTAssertEqual(texts.count, 1, "empty sibling shell should be deduped away")
+    XCTAssertEqual(texts[0].text, "Hello")
+  }
+
+  /// Dedup must not touch a *masked* empty shell that happens to share bounds —
+  /// safety takes precedence over collapsing.
+  func test_mpReplayWrapper_dedupPreservesMaskedShell() {
+    manager.maskAllText = true
+    let bounds = CGRect(x: 10, y: 10, width: 100, height: 30)
+    let root = UIView(frame: window.bounds)
+    let masked = UILabel(frame: bounds)
+    masked.text = "auto-masked"
+    let wrapper = MPReplayWrapper(frame: bounds)
+    wrapper.mpWireframeText = "Hello"
+    root.addSubview(masked)
+    root.addSubview(wrapper)
+    window.addSubview(root)
+
+    let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+    let texts = elements.filter { $0.role == .text }
+    // Declared text element + the masked (.auto, nil text) shell both survive.
+    XCTAssertEqual(texts.count, 2)
+    XCTAssertTrue(texts.contains { $0.text == "Hello" && $0.decision == .none })
+    XCTAssertTrue(texts.contains { $0.text == nil && $0.decision == .auto })
+  }
+
   func test_boundsAreWindowRelative() {
     let root = UIView(frame: CGRect(x: 50, y: 100, width: 400, height: 400))
     let label = UILabel(frame: CGRect(x: 10, y: 20, width: 100, height: 30))

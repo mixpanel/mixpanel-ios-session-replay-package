@@ -136,8 +136,14 @@ final class WireframeEmitter {
       return element
     }
 
-    if let geometric = applyGeometricStrip(element, maskBounds: maskBounds) {
-      return geometric
+    // Customer-declared text (`.mpReplay(wireframeText:)`) is authored, not
+    // scraped, and is intentionally sent even when the view is masked. Skip the
+    // geometric strip — otherwise the view's own mask region would null it —
+    // but still run the configured sensitive rules below as a safety net.
+    if !element.declared {
+      if let geometric = applyGeometricStrip(element, maskBounds: maskBounds) {
+        return geometric
+      }
     }
 
     return applyRules(element, text: originalText)
