@@ -215,6 +215,55 @@ final class WireframeEmitterTests: XCTestCase {
     XCTAssertEqual(out?.prefix(60), Substring(String(repeating: "a", count: 60)))
   }
 
+  // MARK: - Text cleaning (glyph / blank nulling)
+
+  func testIconGlyphOnlyText_isNulled_shellKept() throws {
+    // A bare private-use-area codepoint (icon font glyph) is not human-readable.
+    let emitter = WireframeEmitter(options: MPWireframesOptions())
+    let element = WireframeElement.from(
+      role: .button, text: "\u{E800}",
+      rect: CGRect(x: 0, y: 0, width: 44, height: 44),
+      decision: .none)
+
+    emitter.emit(elements: [element], viewport: (100, 100), maskBounds: [])
+    let event = try waitForFirstPublishedEvent()
+
+    let e = customPayload(from: event).elements[0]
+    XCTAssertEqual(e.role, "button", "shell is kept")
+    XCTAssertNil(e.text, "bare icon glyph is nulled")
+    XCTAssertEqual(e.bounds, [0, 0, 44, 44])
+  }
+
+  func testGlyphWithReadableText_isPreserved() throws {
+    // Glyph + real text → still human-readable, keep it.
+    let emitter = WireframeEmitter(options: MPWireframesOptions())
+    let element = WireframeElement.from(
+      role: .button, text: "\u{E800} Save",
+      rect: CGRect(x: 0, y: 0, width: 80, height: 44),
+      decision: .none)
+
+    emitter.emit(elements: [element], viewport: (100, 100), maskBounds: [])
+    let event = try waitForFirstPublishedEvent()
+
+    XCTAssertEqual(customPayload(from: event).elements[0].text, "\u{E800} Save")
+  }
+
+  func testWhitespaceOnlyText_isNulled_shellKept() throws {
+    let emitter = WireframeEmitter(options: MPWireframesOptions())
+    let element = WireframeElement.from(
+      role: .text, text: "   \n\t ",
+      rect: CGRect(x: 5, y: 5, width: 30, height: 12),
+      decision: .none)
+
+    emitter.emit(elements: [element], viewport: (100, 100), maskBounds: [])
+    let event = try waitForFirstPublishedEvent()
+
+    let e = customPayload(from: event).elements[0]
+    XCTAssertEqual(e.role, "text", "shell is kept")
+    XCTAssertNil(e.text, "whitespace-only text is nulled")
+    XCTAssertEqual(e.bounds, [5, 5, 30, 12])
+  }
+
   // MARK: - Dedup
 
   func testDedup_identicalInput_suppressesSecondEmit() throws {

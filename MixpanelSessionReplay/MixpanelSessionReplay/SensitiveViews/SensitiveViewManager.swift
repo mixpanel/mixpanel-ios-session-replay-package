@@ -579,19 +579,25 @@ class SensitiveViewManager {
             return
         }
 
-        // Unmasked text/image layer: emit as a wireframe element (with text
-        // extracted from the drawing layer when possible) and mark descendants
-        // as inside a leaf so nested runs don't double-emit.
+        // Unmasked text/image layer (iOS 26+ SwiftUI rendered to CGDrawingLayer):
+        // emit the role + bounds shell and mark descendants as inside a leaf so
+        // nested runs don't double-emit.
+        //
+        // Text is intentionally left `nil`. SwiftUI does not expose its rendered
+        // Text content reliably — it lives on `_UIHostingView._rootView`, not the
+        // leaf drawing layer the walk reaches — so any extraction here is
+        // best-effort and flaky across iOS versions. We ship the shell now and
+        // will revisit text extraction (accessibility labels first) separately.
+        // See SwiftUITextExtractor for the deferred strategies.
         var newInsideLeaf = insideWireframeLeaf
         if let wireframes, !insideWireframeLeaf, isText || isImage,
             let frame = hashableFrame(for: layer, in: window)
         {
             let role: WireframeRole = isText ? .text : .image
-            let text = isText ? SwiftUITextExtractor.shared.extractText(from: layer) : nil
             wireframes.elements.append(
                 WireframeElement.from(
                     role: role,
-                    text: text,
+                    text: nil,
                     rect: frame.cgRect,
                     decision: .none))
             newInsideLeaf = true
@@ -648,8 +654,14 @@ class SensitiveViewManager {
                 if let textView = view as? UITextView {
                     if !textView.text.isEmpty { return textView.text }
                 }
+                // SwiftUI text (iOS <=18 `SwiftUI.CGDrawingView`): emit the
+                // role + bounds shell with no text. SwiftUI doesn't expose its
+                // rendered Text reliably (it lives on `_UIHostingView._rootView`,
+                // not this leaf render view), so we ship the shell now and defer
+                // text extraction — including the accessibility fallback below,
+                // which is skipped here on purpose. See SwiftUITextExtractor.
                 if let swiftUiTextClass, type(of: view) == swiftUiTextClass {
-                    if let text = SwiftUITextExtractor.shared.extractText(from: view) { return text }
+                    return nil
                 }
                 let accessibility = view.accessibilityLabel
                 return (accessibility?.isEmpty == false) ? accessibility : nil

@@ -88,7 +88,7 @@ final class WireframeEmitter {
       elements: processed.map { element in
         WireframeElementJson(
           role: element.role.wireName,
-          text: element.text.flatMap(truncateForWire),
+          text: cleanTextForWire(element.text).flatMap(truncateForWire),
           bounds: [element.x, element.y, element.w, element.h]
         )
       }
@@ -113,7 +113,7 @@ final class WireframeEmitter {
         elements: processed.map { element in
           MPWireframeDebugSnapshot.DebugElement(
             role: element.role.wireName,
-            text: element.text.flatMap(truncateForWire),
+            text: cleanTextForWire(element.text).flatMap(truncateForWire),
             bounds: [element.x, element.y, element.w, element.h],
             maskDecision: element.decision
           )
@@ -215,6 +215,30 @@ final class WireframeEmitter {
     let range = NSRange(location: 0, length: mutable.length)
     regex.replaceMatches(in: mutable, options: [], range: range, withTemplate: escaped)
     return mutable as String
+  }
+
+  /// Normalize an unmasked element's text for the wire *without dropping the
+  /// element*: blank/whitespace-only text and bare icon-font glyphs become
+  /// `nil`, but the role + bounds shell is always kept (Wireframe Capture
+  /// Contract). Masked elements already carry `nil` text and pass through.
+  /// Mirrors Flutter's `_cleanText` and the Android equivalent so all three
+  /// platforms null the same content.
+  private func cleanTextForWire(_ text: String?) -> String? {
+    guard let text else { return nil }
+    if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return nil }
+    if !WireframeEmitter.isHumanReadable(text) { return nil }
+    return text
+  }
+
+  /// True if `text` contains at least one character outside the Unicode
+  /// private-use area (U+E000–U+F8FF), where icon fonts place their glyphs.
+  /// A string that fails this check is a bare icon glyph, not human-readable
+  /// content. Matches Flutter's `wireframeTextIsHumanReadable`.
+  static func isHumanReadable(_ text: String) -> Bool {
+    for scalar in text.unicodeScalars {
+      if scalar.value < 0xE000 || scalar.value > 0xF8FF { return true }
+    }
+    return false
   }
 
   private func truncateForWire(_ text: String) -> String? {
