@@ -135,10 +135,6 @@ struct MPSessionReplayAPI {
     }
 }
 
-struct TimingAdjustment {
-    static let touchAdjustment = -600
-}
-
 struct ReplaySettings {
     static let recordInterval: Int64 = 500  // milliseconds
     static let flushInterval: TimeInterval = 10
