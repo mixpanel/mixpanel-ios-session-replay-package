@@ -55,6 +55,46 @@ final class WireframeEmitterTests: XCTestCase {
     XCTAssertEqual(custom.payload.elements[0].bounds, [24, 120, 400, 40])
   }
 
+  // MARK: - Capture timestamp
+
+  /// The wireframe and the screenshot describing the same frame must carry the
+  /// same timestamp. Reading the clock inside `emit` instead dated the wireframe
+  /// to whenever rendering finished, so the pair drifted apart by the render
+  /// duration — invisible on device, and it desynchronizes the summarizer from
+  /// the frame it is describing. Matches Android's `capturedAtMs` and Flutter's
+  /// `captureTimestamp`.
+  func testEmit_stampsTheEventWithTheCaptureInstant() throws {
+    let emitter = WireframeEmitter(options: MPWireframesOptions())
+    let element = WireframeElement.from(
+      role: .text, text: "Welcome",
+      rect: CGRect(x: 0, y: 0, width: 10, height: 10),
+      decision: .none)
+
+    emitter.emit(
+      elements: [element], viewport: (100, 100), maskBounds: [], capturedAtMs: 1_700_000_000_123)
+    let event = try waitForFirstPublishedEvent()
+
+    XCTAssertEqual(event.timestamp, 1_700_000_000_123)
+  }
+
+  /// Omitting `capturedAtMs` still stamps a sane "now", so non-capture callers
+  /// (and the debug emitter) don't have to invent one.
+  func testEmit_defaultsToNowWhenNoCaptureInstantIsGiven() throws {
+    let emitter = WireframeEmitter(options: MPWireframesOptions())
+    let element = WireframeElement.from(
+      role: .text, text: "Welcome",
+      rect: CGRect(x: 0, y: 0, width: 10, height: 10),
+      decision: .none)
+
+    let before = TimestampUtils.timestamp()
+    emitter.emit(elements: [element], viewport: (100, 100), maskBounds: [])
+    let event = try waitForFirstPublishedEvent()
+    let after = TimestampUtils.timestamp()
+
+    XCTAssertGreaterThanOrEqual(event.timestamp, before)
+    XCTAssertLessThanOrEqual(event.timestamp, after)
+  }
+
   // MARK: - Layer 1 precedence
 
   func testLayer1DecisionRespected_rulesAndGeometricSkipped() throws {

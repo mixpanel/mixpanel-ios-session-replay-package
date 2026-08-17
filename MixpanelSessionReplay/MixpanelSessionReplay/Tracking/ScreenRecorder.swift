@@ -126,7 +126,12 @@ class ScreenRecorder {
         return (view, viewBounds, res.isPresented)
     }
 
-    func renderViewHierarchyAsImage(window: UIWindow) -> UIImage? {
+    /// - Parameter capturedAtMs: Wall-clock instant this frame is being captured for.
+    ///   Threaded through to the wireframe emitter so the `mp_wireframe` event and the
+    ///   screenshot event that describe the same frame carry the same timestamp.
+    func renderViewHierarchyAsImage(
+        window: UIWindow, capturedAtMs: Int64 = TimestampUtils.timestamp()
+    ) -> UIImage? {
         let (view, viewBounds, isPresented) = getTopViewFor(window: window)
 
         guard let renderer = getRenderer(isPresented: isPresented, size: window.bounds.size) else {
@@ -179,16 +184,17 @@ class ScreenRecorder {
             emitter.emit(
                 elements: wireframes,
                 viewport: (Int(window.bounds.width), Int(window.bounds.height)),
-                maskBounds: Set(sensitiveFrames.keys))
+                maskBounds: Set(sensitiveFrames.keys),
+                capturedAtMs: capturedAtMs)
         }
 
         return image
     }
 
-    func captureScreenshot() -> Data? {
+    func captureScreenshot(capturedAtMs: Int64 = TimestampUtils.timestamp()) -> Data? {
         guard let currentWindow = ViewUtils.getCurrentWindow() else { return nil }
 
-        if let image = renderViewHierarchyAsImage(window: currentWindow) {
+        if let image = renderViewHierarchyAsImage(window: currentWindow, capturedAtMs: capturedAtMs) {
             if let compressedData = image.jpegData(compressionQuality: ImageSettings.jpegCompressionRate) {
                 return compressedData
             }

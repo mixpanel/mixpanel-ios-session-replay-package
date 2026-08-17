@@ -329,7 +329,11 @@ open class MPSessionReplayInstance: MPSessionReplaying {
             MPSessionReplayInstance.recordWorkItem?.cancel()
             MPSessionReplayInstance.recordWorkItem = DispatchWorkItem { [weak self] in
                 let startTime = TimestampUtils.timestamp()
-                if let screenshot = ScreenRecorder.shared.captureScreenshot() {
+                // Stamp the wireframe with the same instant the screenshot event gets, so
+                // the pair describes one moment. On a touch-triggered capture that instant
+                // is the tap's own timestamp, which back-dates both events to the tap
+                // rather than to the pixels — the ordering the summarizer keys off.
+                if let screenshot = ScreenRecorder.shared.captureScreenshot(capturedAtMs: timestamp) {
                     let endTime = TimestampUtils.timestamp()
                     Logger.debug(message: "Time taken to take screenshot - \(endTime - startTime)")
                     // Additional recording check to skip processing screenshot that accidentally got captured due to async processing

@@ -53,18 +53,25 @@ final class WireframeEmitter {
 
   /// Hop off the main thread and run Layers 2+3, dedup, serialize, and
   /// publish. Safe to call from any thread. Returns immediately.
+  ///
+  /// - Parameter capturedAtMs: Wall-clock instant the frame this wireframe
+  ///   describes was captured. Callers in the capture path must pass the same
+  ///   value the screenshot event is stamped with, so the pair describes one
+  ///   moment; reading the clock here instead would date the wireframe to
+  ///   whenever rendering happened to finish. Matches Android's
+  ///   `WireframeEmitter.emit(capturedAtMs)` and Flutter's `captureTimestamp`.
   func emit(
     elements: [WireframeElement],
     viewport: (width: Int, height: Int),
-    maskBounds: Set<HashableRect>
+    maskBounds: Set<HashableRect>,
+    capturedAtMs: Int64 = TimestampUtils.timestamp()
   ) {
-    let timestamp = TimestampUtils.timestamp()
     workQueue.async { [weak self] in
       self?.processAndPublish(
         elements: elements,
         viewport: viewport,
         maskBounds: maskBounds,
-        timestamp: timestamp
+        timestamp: capturedAtMs
       )
     }
   }

@@ -201,4 +201,54 @@ class ScreenRecorderTests: XCTestCase {
         let result = recorder.captureScreenshot()
         XCTAssertNil(result, "Should return nil if no window is available")
     }
+
+    // MARK: - Wireframe / screenshot timestamp agreement
+
+    /// The render path must hand the wireframe emitter the same capture instant the
+    /// screenshot event is stamped with. Before this was threaded through, the emitter
+    /// read the clock itself *after* rendering finished, so the two events describing
+    /// one frame drifted apart by the render duration. Android threads `capturedAtMs`
+    /// and Flutter threads `captureTimestamp` for the same reason.
+    func testRenderViewHierarchyAsImage_stampsWireframeWithTheCaptureInstant() throws {
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let label = UILabel(frame: CGRect(x: 10, y: 10, width: 100, height: 20))
+        label.text = "Welcome"
+        window.addSubview(label)
+        window.isHidden = false
+
+        EventPublisher.shared.resetSubscribers()
+        var published: [SessionEvent] = []
+        let subscriber = CapturingCustomEventSubscriber { published.append($0) }
+        EventPublisher.shared.subscribe(subscriber)
+
+        SensitiveViewManager.reset()
+        SensitiveViewManager.shared.wireframeCollectionEnabled = true
+        recorder.wireframeEmitter = WireframeEmitter(options: MPWireframesOptions())
+        defer {
+            recorder.wireframeEmitter = nil
+            SensitiveViewManager.reset()
+            EventPublisher.shared.resetSubscribers()
+        }
+
+        let capturedAt: Int64 = 1_700_000_000_123
+        XCTAssertNotNil(recorder.renderViewHierarchyAsImage(window: window, capturedAtMs: capturedAt))
+
+        let deadline = Date().addingTimeInterval(2)
+        while published.isEmpty && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.01))
+        }
+
+        let event = try XCTUnwrap(published.first, "expected an mp_wireframe event")
+        XCTAssertEqual(
+            event.timestamp, capturedAt,
+            "wireframe must carry the capture instant, not the time rendering finished")
+    }
+}
+
+private final class CapturingCustomEventSubscriber: EventListener {
+    let onCustom: (SessionEvent) -> Void
+    init(onCustom: @escaping (SessionEvent) -> Void) { self.onCustom = onCustom }
+    func receivedTouchEvent(_ rawEvent: RawTouchEvent) {}
+    func receivedScreenshotEvent(_ rawEvent: RawScreenshotEvent) {}
+    func receivedCustomEvent(_ event: SessionEvent) { onCustom(event) }
 }
