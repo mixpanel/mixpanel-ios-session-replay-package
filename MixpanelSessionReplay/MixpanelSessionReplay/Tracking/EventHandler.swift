@@ -34,19 +34,44 @@ class EventHandler: EventListener {
 
     func receivedTouchEvent(_ rawEvent: RawTouchEvent) {
         eventSerialQueue.async {
-            let touchEvent = SessionEvent(
-                type: EventType.incrementalSnapshot,
-                data: .detailedData(
-                    EventDataDetail(
-                        source: IncrementalSource.touchInteraction,
-                        type: TouchInteraction.start,
-                        id: PayloadObjectID.mainSnapshot,
-                        x: Int(rawEvent.start.x),
-                        y: Int(rawEvent.start.y)
+            let touchEvent: SessionEvent
+            switch rawEvent {
+                case .interaction(let type, let point, let timestamp):
+                    touchEvent = SessionEvent(
+                        type: EventType.incrementalSnapshot,
+                        data: .detailedData(
+                            EventDataDetail(
+                                source: IncrementalSource.mouseInteraction,
+                                type: type,
+                                id: PayloadObjectID.mainSnapshot,
+                                x: Int(point.x),
+                                y: Int(point.y)
+                            )
+                        ),
+                        timestamp: timestamp
                     )
-                ),
-                timestamp: rawEvent.timestamp
-            )
+                case .move(let samples):
+                    let batchTimestamp = rawEvent.timestamp
+                    touchEvent = SessionEvent(
+                        type: EventType.incrementalSnapshot,
+                        data: .positionData(
+                            SessionPositionData(
+                                source: IncrementalSource.touchMove,
+                                positions: samples.map { sample in
+                                    SessionPosition(
+                                        x: Double(sample.point.x),
+                                        y: Double(sample.point.y),
+                                        id: PayloadObjectID.mainSnapshot,
+                                        // rrweb replays a sample at `event.timestamp + timeOffset`,
+                                        // so offsets are <= 0 against the batch's final sample.
+                                        timeOffset: Int(sample.timestamp - batchTimestamp)
+                                    )
+                                }
+                            )
+                        ),
+                        timestamp: batchTimestamp
+                    )
+            }
             self.eventService?.enqueueEvent(touchEvent)
         }
     }

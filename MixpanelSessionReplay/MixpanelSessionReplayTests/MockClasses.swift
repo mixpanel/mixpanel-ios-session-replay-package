@@ -52,6 +52,16 @@ class MockEventService: EventService {
     var clearEventsCalled = false
     var enqueueEventCalled = false
 
+    /// Every event handed to `enqueueEvent`, in order. Guarded because `EventHandler`
+    /// enqueues from its own serial queue.
+    private let capturedEventsLock = NSLock()
+    private var _capturedEvents: [SessionEvent] = []
+    var capturedEvents: [SessionEvent] {
+        capturedEventsLock.lock()
+        defer { capturedEventsLock.unlock() }
+        return _capturedEvents
+    }
+
     // Optional expectation for async testing
     var enqueueEventExpectation: XCTestExpectation?
 
@@ -61,6 +71,9 @@ class MockEventService: EventService {
 
     override func enqueueEvent(_ event: SessionEvent) {
         enqueueEventCalled = true
+        capturedEventsLock.lock()
+        _capturedEvents.append(event)
+        capturedEventsLock.unlock()
 
         // Fulfill expectation if set (then clear to prevent multiple fulfillments)
         if let expectation = enqueueEventExpectation {

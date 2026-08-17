@@ -61,15 +61,34 @@ struct EventType {
     static let plugin = 6
 }
 
+/// `data.source` of an rrweb incremental snapshot. Values are rrweb's, not ours —
+/// `1` is MouseMove, which we never emit; touch drags are `6`.
 struct IncrementalSource {
     static let mutation = 0
-    static let touchMove = 1
-    static let touchInteraction = 2
+    static let mouseInteraction = 2
+    static let touchMove = 6
 }
 
-struct TouchInteraction {
-    static let start = 7
-    static let swipeDistanceThreshold = 10.0
+/// `data.type` of a `IncrementalSource.mouseInteraction` snapshot. Touch gestures map onto
+/// TOUCH_START / TOUCH_END / TOUCH_CANCEL; the drag path between them ships separately as
+/// `IncrementalSource.touchMove` positions.
+struct MouseInteraction {
+    static let touchStart = 7
+    static let touchEnd = 9
+    static let touchCancel = 10
+}
+
+/// Sampling budget for `IncrementalSource.touchMove` batches, mirroring rrweb-web's
+/// `sampling.mousemove` (50ms between samples) and its 500ms emit throttle.
+struct TouchSampling {
+    /// Minimum gap between two sampled `.moved` points.
+    static let moveSampleIntervalMs: Int64 = 50
+
+    /// Batch is emitted once it spans this much time.
+    static let moveBatchIntervalMs: Int64 = 500
+
+    /// Hard cap on a single batch, so a stuck gesture can't grow the queue without bound.
+    static let maxPositionsPerBatch = 100
 }
 
 struct PayloadObjectID {
