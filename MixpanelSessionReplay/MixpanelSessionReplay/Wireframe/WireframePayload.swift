@@ -16,7 +16,8 @@ struct WireframePayload: Codable, Equatable {
 struct WireframeElementJson: Codable, Equatable {
   /// "text" | "button" | "input" | "image"
   let role: String
-  /// Truncated to 60 chars + "…" at emit time; `nil` for masked or empty.
+  /// Capped at 50 characters *including* a trailing "…" at emit time; `nil`
+  /// for masked or empty.
   let text: String?
   /// `[x, y, w, h]` in window-relative pixels.
   let bounds: [Int]

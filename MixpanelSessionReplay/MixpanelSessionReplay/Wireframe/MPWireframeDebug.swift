@@ -11,31 +11,41 @@ import Foundation
 ///
 /// Reported through ``MPWireframeDebugSnapshot`` for local inspection only.
 ///
+/// Raw values are the `SCREAMING_SNAKE_CASE` names Android and Flutter report
+/// in their debug snapshots, so the same decision reads identically on every
+/// platform.
+///
 /// ⚠️ Not a stable contract — case names and semantics may change.
 public enum MPMaskDecision: String, Codable {
   /// Text emitted as-is.
-  case none
+  case none = "NONE"
+  /// Developer-supplied `.mpReplay(wireframeText:)`. Emitted verbatim, even on
+  /// a masked or editable view, because the text is authored rather than
+  /// scraped from the screen. Exempt from the Layer 2 geometric strip; Layer 3
+  /// sensitive rules still run over it, so an element that started as
+  /// ``declared`` can still end up ``ruleStrip`` or ``ruleRedact``.
+  case declared = "DECLARED"
   /// Explicitly marked sensitive by the app
   /// (`addSensitiveClass`, `mpReplaySensitive = true`, or the
-  /// `.mpReplaySensitive(true)` SwiftUI modifier).
-  case explicit
+  /// `.mpReplay(sensitive: true)` SwiftUI modifier).
+  case explicit = "EXPLICIT"
   /// Automatically masked because it matched an `MPAutoMaskedViews` category
   /// (text, image, web, map).
-  case auto
+  case auto = "AUTO"
   /// Text-entry field — always masked, cannot be overridden.
-  case textEntry
+  case textEntry = "TEXT_ENTRY"
   /// Bounds intersected a mask rect the screenshot painted over.
   /// Prevents leaks when a sensitive parent covers a non-sensitive child on
   /// the screenshot but the child's text would otherwise pass through.
-  case geometric
+  case geometric = "GEOMETRIC"
   /// Matched a `.strip` / `.stripRegex` rule; text was dropped.
-  case ruleStrip
+  case ruleStrip = "RULE_STRIP"
   /// Matched a `.redact` / `.redactRegex` rule; text was rewritten.
-  case ruleRedact
+  case ruleRedact = "RULE_REDACT"
 }
 
 /// A per-frame snapshot of the wireframe pass, delivered to
-/// ``MPWireframesOptions/debugEmitter`` for local inspection.
+/// ``DebugOptions/wireframeEmitter`` for local inspection.
 ///
 /// ⚠️ Not a stable contract — the JSON shape and field names may change.
 /// Never sent to Mixpanel.
@@ -49,6 +59,13 @@ public struct MPWireframeDebugSnapshot {
     public let text: String?
     public let bounds: [Int]
     public let maskDecision: MPMaskDecision
+
+    public init(role: String, text: String?, bounds: [Int], maskDecision: MPMaskDecision) {
+      self.role = role
+      self.text = text
+      self.bounds = bounds
+      self.maskDecision = maskDecision
+    }
   }
 
   public init(

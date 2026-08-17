@@ -120,7 +120,7 @@ final class WireframeEmitterTests: XCTestCase {
     let element = WireframeElement.from(
       role: .text, text: "monthly spend",
       rect: CGRect(x: 10, y: 10, width: 50, height: 20),
-      decision: .none, declared: true)
+      decision: .declared)
 
     emitter.emit(
       elements: [element], viewport: (100, 100),
@@ -139,7 +139,7 @@ final class WireframeEmitterTests: XCTestCase {
     let element = WireframeElement.from(
       role: .text, text: "your password here",
       rect: CGRect(x: 0, y: 0, width: 100, height: 20),
-      decision: .none, declared: true)
+      decision: .declared)
 
     emitter.emit(elements: [element], viewport: (100, 100), maskBounds: [])
     let event = try waitForFirstPublishedEvent()
@@ -220,8 +220,8 @@ final class WireframeEmitterTests: XCTestCase {
 
   // MARK: - Truncation
 
-  func testTruncation_boundaryExactly60_preserved() throws {
-    let text = String(repeating: "a", count: 60)
+  func testTruncation_boundaryExactly50_preserved() throws {
+    let text = String(repeating: "a", count: WireframeEmitter.maxTextLength)
     let emitter = WireframeEmitter(options: MPWireframesOptions())
     let element = WireframeElement.from(
       role: .text, text: text,
@@ -234,8 +234,12 @@ final class WireframeEmitterTests: XCTestCase {
     XCTAssertEqual(customPayload(from: event).elements[0].text, text)
   }
 
-  func testTruncation_length61_isCutTo60PlusEllipsis() throws {
-    let text = String(repeating: "a", count: 61)
+  /// The ellipsis is paid for out of the 50-character budget, not added on top
+  /// of it: a truncated value is exactly 50 characters (49 + "…"), never 51.
+  /// Matches Android's `MAX_TEXT_LEN` and Flutter's `maxTextLength`.
+  func testTruncation_length51_isCutTo49PlusEllipsis() throws {
+    let max = WireframeEmitter.maxTextLength
+    let text = String(repeating: "a", count: max + 1)
     let emitter = WireframeEmitter(options: MPWireframesOptions())
     let element = WireframeElement.from(
       role: .text, text: text,
@@ -246,9 +250,9 @@ final class WireframeEmitterTests: XCTestCase {
     let event = try waitForFirstPublishedEvent()
 
     let out = customPayload(from: event).elements[0].text
-    XCTAssertEqual(out?.count, 61)
-    XCTAssertTrue(out?.hasSuffix("…") == true)
-    XCTAssertEqual(out?.prefix(60), Substring(String(repeating: "a", count: 60)))
+    XCTAssertEqual(out?.count, max)
+    XCTAssertTrue(out?.hasSuffix(WireframeEmitter.ellipsis) == true)
+    XCTAssertEqual(out?.prefix(max - 1), Substring(String(repeating: "a", count: max - 1)))
   }
 
   // MARK: - Text cleaning (glyph / blank nulling)
@@ -346,22 +350,14 @@ final class WireframeEmitterTests: XCTestCase {
   func testDebugEmitter_receivesSnapshotWithSameDecisions() throws {
     var received: MPWireframeDebugSnapshot?
     let receivedExp = expectation(description: "debug emitter fires")
-    let emitter = WireframeEmitter(options: MPWireframesOptions(
-      debugEmitter: { snap in
-        received = snap
-        receivedExp.fulfill()
-      }
-    ))
-
     let redactRegex = try NSRegularExpression(pattern: "\\d+")
-    let emitterWithRule = WireframeEmitter(options: MPWireframesOptions(
-      sensitiveRules: [.redactRegex(redactRegex, replacement: "[NUM]")],
+    let emitterWithRule = WireframeEmitter(
+      options: MPWireframesOptions(
+        sensitiveRules: [.redactRegex(redactRegex, replacement: "[NUM]")]),
       debugEmitter: { snap in
         received = snap
         receivedExp.fulfill()
-      }
-    ))
-    _ = emitter  // silence unused
+      })
     let element = WireframeElement.from(
       role: .text, text: "order 123",
       rect: CGRect(x: 0, y: 0, width: 10, height: 10),
@@ -377,12 +373,12 @@ final class WireframeEmitterTests: XCTestCase {
 
   func testDebugEmitter_slowCallback_doesNotBlockWirePublish() throws {
     let releaseDebug = expectation(description: "debug released")
-    let emitter = WireframeEmitter(options: MPWireframesOptions(
+    let emitter = WireframeEmitter(
+      options: MPWireframesOptions(),
       debugEmitter: { _ in
         Thread.sleep(forTimeInterval: 0.3)  // simulates a slow debug callback
         releaseDebug.fulfill()
-      }
-    ))
+      })
     let element = WireframeElement.from(
       role: .text, text: "hi",
       rect: CGRect(x: 0, y: 0, width: 10, height: 10),

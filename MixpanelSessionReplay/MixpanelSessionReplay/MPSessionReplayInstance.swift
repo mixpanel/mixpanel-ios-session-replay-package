@@ -59,9 +59,15 @@ open class MPSessionReplayInstance: MPSessionReplaying {
             }
         }
 
-        // Wire up wireframes if opted in
+        // Wire up wireframes if opted in. `wireframesOptions` is the single
+        // switch that turns capture on; `debugOptions.wireframeEmitter` only
+        // observes it, so passing it without wireframes options is a no-op.
         if let wireframesOptions = config.wireframesOptions {
-            ScreenRecorder.shared.wireframeEmitter = WireframeEmitter(options: wireframesOptions)
+            ScreenRecorder.shared.wireframeEmitter = WireframeEmitter(
+                options: wireframesOptions,
+                debugEmitter: config.debugOptions?.wireframeEmitter)
+            SensitiveViewManager.shared.useAccessibilityLabelFallback =
+                wireframesOptions.useAccessibilityLabelFallback
             SensitiveViewManager.shared.wireframeCollectionEnabled = true
         }
 

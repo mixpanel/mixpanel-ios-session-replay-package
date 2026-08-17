@@ -121,6 +121,126 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     XCTAssertNil(elements[0].text)
   }
 
+  // MARK: - useAccessibilityLabelFallback
+
+  func test_accessibilityFallbackOff_imageShipsAsTextlessShell() {
+    manager.useAccessibilityLabelFallback = false
+    let root = UIView(frame: window.bounds)
+    let iv = UIImageView(frame: CGRect(x: 0, y: 0, width: 64, height: 64))
+    iv.accessibilityLabel = "avatar"
+    root.addSubview(iv)
+    window.addSubview(root)
+
+    let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+    XCTAssertEqual(elements.count, 1, "the role + bounds shell is always kept")
+    XCTAssertEqual(elements[0].role, .image)
+    XCTAssertNil(elements[0].text)
+    XCTAssertEqual(elements[0].decision, .none)
+  }
+
+  func test_accessibilityFallbackOff_buttonKeepsItsOwnTitle() {
+    // Tier 2 (the view's own rendered text) is unaffected by the flag — only
+    // tier 3 is gated.
+    manager.useAccessibilityLabelFallback = false
+    let root = UIView(frame: window.bounds)
+    let button = UIButton(frame: CGRect(x: 0, y: 0, width: 120, height: 44))
+    button.setTitle("Continue", for: .normal)
+    button.accessibilityLabel = "continue button"
+    root.addSubview(button)
+    window.addSubview(root)
+
+    let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+    let buttons = elements.filter { $0.role == .button }
+    XCTAssertEqual(buttons.count, 1)
+    XCTAssertEqual(buttons[0].text, "Continue")
+  }
+
+  func test_accessibilityFallbackOff_declaredTextStillWins() {
+    manager.useAccessibilityLabelFallback = false
+    let root = UIView(frame: window.bounds)
+    let button = UIButton(frame: CGRect(x: 0, y: 0, width: 48, height: 48))
+    button.accessibilityLabel = "settings"
+    button.mpWireframeText = "Open settings"
+    root.addSubview(button)
+    window.addSubview(root)
+
+    let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+    let buttons = elements.filter { $0.role == .button }
+    XCTAssertEqual(buttons.count, 1)
+    XCTAssertEqual(buttons[0].text, "Open settings")
+    XCTAssertEqual(buttons[0].decision, .declared)
+  }
+
+  // MARK: - Declared text on UIKit views (`mpWireframeText`)
+
+  func test_declaredText_onUIKitView_keepsRealRole() {
+    let root = UIView(frame: window.bounds)
+    let button = UIButton(frame: CGRect(x: 0, y: 0, width: 120, height: 44))
+    button.setTitle("Continue", for: .normal)
+    button.mpWireframeText = "checkout action"
+    root.addSubview(button)
+    window.addSubview(root)
+
+    let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+    let buttons = elements.filter { $0.role == .button }
+    XCTAssertEqual(buttons.count, 1)
+    XCTAssertEqual(buttons[0].text, "checkout action", "declared text outranks the title")
+    XCTAssertEqual(buttons[0].decision, .declared)
+  }
+
+  /// An input is always masked, but a declared label names the field. The typed
+  /// value is still never scraped. Matches Android's declared handling for
+  /// `EditText`.
+  func test_declaredText_onTextField_labelsInputWithoutLeakingValue() {
+    let root = UIView(frame: window.bounds)
+    let field = UITextField(frame: CGRect(x: 0, y: 0, width: 200, height: 44))
+    field.text = "4111 1111 1111 1111"
+    field.mpWireframeText = "Card number"
+    root.addSubview(field)
+    window.addSubview(root)
+
+    let result = manager.collectFramesAndWireframes(in: root, window: window)
+    XCTAssertFalse(result.frames.isEmpty, "a text field must still paint a mask region")
+    XCTAssertEqual(result.wireframes.count, 1)
+    XCTAssertEqual(result.wireframes[0].role, .input)
+    XCTAssertEqual(result.wireframes[0].text, "Card number")
+    XCTAssertEqual(result.wireframes[0].decision, .declared)
+  }
+
+  func test_declaredText_onAutoMaskedView_survivesMasking() {
+    manager.maskAllImages = true
+    let root = UIView(frame: window.bounds)
+    let iv = UIImageView(frame: CGRect(x: 0, y: 0, width: 64, height: 64))
+    iv.mpWireframeText = "profile photo"
+    root.addSubview(iv)
+    window.addSubview(root)
+
+    let result = manager.collectFramesAndWireframes(in: root, window: window)
+    XCTAssertFalse(result.frames.isEmpty, "the image must still be masked")
+    XCTAssertEqual(result.wireframes.count, 1)
+    XCTAssertEqual(result.wireframes[0].role, .image)
+    XCTAssertEqual(result.wireframes[0].text, "profile photo")
+    XCTAssertEqual(result.wireframes[0].decision, .declared)
+  }
+
+  /// A declared *container* has no role of its own, so it does not close the
+  /// subtree — its real content is still walked.
+  func test_declaredText_onContainer_doesNotSuppressChildren() {
+    let root = UIView(frame: window.bounds)
+    let container = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 120))
+    container.mpWireframeText = "checkout summary"
+    let label = UILabel(frame: CGRect(x: 10, y: 10, width: 200, height: 30))
+    label.text = "Order total"
+    container.addSubview(label)
+    root.addSubview(container)
+    window.addSubview(root)
+
+    let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+    XCTAssertEqual(elements.count, 2)
+    XCTAssertTrue(elements.contains { $0.text == "checkout summary" && $0.decision == .declared })
+    XCTAssertTrue(elements.contains { $0.text == "Order total" && $0.decision == .none })
+  }
+
   func test_uiimageview_notMasked_emitsAccessibilityLabelAsText() {
     let root = UIView(frame: window.bounds)
     let iv = UIImageView(frame: CGRect(x: 0, y: 0, width: 64, height: 64))
@@ -192,10 +312,38 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     }
   }
 
+  /// End-to-end SwiftUI check of the *real* `.mpReplay(wireframeText:)`
+  /// modifier (not `MPReplayWrapper` planted directly): the modifier must
+  /// install its background wrapper in the live SwiftUI hierarchy so the walker
+  /// surfaces the developer-declared text. Behavioral only — SwiftUI sizes the
+  /// hosted `Text` intrinsically, so exact bounds are not asserted here; the
+  /// deterministic bounds live in `WireframeGoldenTests`.
+  func test_realSwiftUI_mpReplayModifier_emitsDeclaredText() throws {
+    let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 480))
+    let host = UIHostingController(rootView: Text("Welcome").mpReplay(wireframeText: "Welcome"))
+    window.rootViewController = host
+    window.makeKeyAndVisible()
+    host.view.setNeedsLayout()
+    host.view.layoutIfNeeded()
+    RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+
+    let result = manager.collectFramesAndWireframes(in: host.view, window: window)
+    let declared = result.wireframes.filter { $0.isDeclared }
+    XCTAssertEqual(
+      declared.count, 1, "the .mpReplay modifier must plant exactly one declared element")
+    XCTAssertEqual(declared[0].role, .text)
+    XCTAssertEqual(declared[0].text, "Welcome")
+    XCTAssertEqual(declared[0].decision, .declared)
+    // No scraped text should ever appear on the non-declared shells.
+    for element in result.wireframes where !element.isDeclared && element.role == .text {
+      XCTAssertNil(element.text, "SwiftUI text shell must carry no scraped text")
+    }
+  }
+
   // MARK: - Unified `.mpReplay(sensitive:text:)` opt-in (MPReplayWrapper)
 
   /// `.mpReplay(wireframeText:)` plants an MPReplayWrapper carrying the declared
-  /// text. The walker emits it as a `.text` element marked `declared`.
+  /// text. The walker emits it as a `.text` element with decision `.declared`.
   func test_mpReplayWrapper_withText_emitsDeclaredText() {
     let root = UIView(frame: window.bounds)
     let wrapper = MPReplayWrapper(frame: CGRect(x: 5, y: 6, width: 120, height: 40))
@@ -207,16 +355,15 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     let texts = elements.filter { $0.role == .text }
     XCTAssertEqual(texts.count, 1)
     XCTAssertEqual(texts[0].text, "Welcome")
-    XCTAssertEqual(texts[0].decision, .none)
-    XCTAssertTrue(texts[0].declared)
+    XCTAssertEqual(texts[0].decision, .declared)
     XCTAssertEqual(texts[0].w, 120)
     XCTAssertEqual(texts[0].h, 40)
   }
 
   /// `.mpReplay(sensitive: true, wireframeText:)` is orthogonal: the region is
   /// masked (opaque rectangle) AND the customer-declared text is still emitted,
-  /// because it is authored rather than scraped. The `declared` flag lets it
-  /// survive the geometric strip against its own mask region downstream.
+  /// because it is authored rather than scraped. The `.declared` decision lets
+  /// it survive the geometric strip against its own mask region downstream.
   func test_mpReplayWrapper_sensitiveWithText_masksAndEmitsDeclaredText() {
     let root = UIView(frame: window.bounds)
     let wrapper = MPReplayWrapper(frame: CGRect(x: 0, y: 0, width: 120, height: 40))
@@ -230,7 +377,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     let texts = result.wireframes.filter { $0.role == .text }
     XCTAssertEqual(texts.count, 1)
     XCTAssertEqual(texts[0].text, "monthly spend")
-    XCTAssertTrue(texts[0].declared)
+    XCTAssertEqual(texts[0].decision, .declared)
   }
 
   /// The `.mpReplay(text:)` background is a *sibling* of SwiftUI's drawing view,
@@ -272,7 +419,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     let texts = elements.filter { $0.role == .text }
     // Declared text element + the masked (.auto, nil text) shell both survive.
     XCTAssertEqual(texts.count, 2)
-    XCTAssertTrue(texts.contains { $0.text == "Hello" && $0.decision == .none })
+    XCTAssertTrue(texts.contains { $0.text == "Hello" && $0.decision == .declared })
     XCTAssertTrue(texts.contains { $0.text == nil && $0.decision == .auto })
   }
 

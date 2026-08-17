@@ -107,6 +107,12 @@ class SensitiveViewManager {
     /// (the existing masking pass runs unchanged).
     var wireframeCollectionEnabled: Bool = false
 
+    /// Mirrors ``MPWireframesOptions/useAccessibilityLabelFallback``. Only
+    /// consulted by `extractWireframeText`; masking is unaffected. When false,
+    /// an element with no rendered text of its own ships as a textless
+    /// `role + bounds` shell rather than borrowing its `accessibilityLabel`.
+    var useAccessibilityLabelFallback: Bool = true
+
     var sensitiveClasses: [AnyClass] = []
 
     private(set) var knownSensitiveViews: WeakViewsMap!
@@ -383,16 +389,17 @@ class SensitiveViewManager {
     }
 
     /// Drops the empty SwiftUI text shell that overlaps a customer-declared
-    /// `.mpReplay(text:)` element. The declaration is planted as a `.background`,
-    /// which is a *sibling* of SwiftUI's drawing view — not a descendant — so
-    /// `insideWireframeLeaf` cannot suppress it, and both emit a `.text` element
-    /// at the same bounds (one with the declared text, one empty). Keep the
-    /// text-bearing element; drop the empty, unmasked shell. Masked shells
-    /// (decision != .none) are never dropped — safety is preserved.
+    /// `.mpReplay(wireframeText:)` element. The declaration is planted as a
+    /// `.background`, which is a *sibling* of SwiftUI's drawing view — not a
+    /// descendant — so `insideWireframeLeaf` cannot suppress it, and both emit a
+    /// `.text` element at the same bounds (one with the declared text, one
+    /// empty). Keep the text-bearing element; drop the empty, unmasked shell.
+    /// Masked shells (decision != .none) are never dropped — safety is
+    /// preserved.
     private func dedupedWireframes(_ elements: [WireframeElement]) -> [WireframeElement] {
         let declaredTextBounds = Set(
             elements
-                .filter { $0.role == .text && $0.text != nil }
+                .filter { $0.role == .text && $0.decision == .declared }
                 .map { HashableRect(CGRect(x: $0.x, y: $0.y, width: $0.w, height: $0.h)) }
         )
         guard !declaredTextBounds.isEmpty else { return elements }
@@ -451,27 +458,37 @@ class SensitiveViewManager {
         if view is MPReplayWrapper {
             if let hashableRect = hashableFrame(for: view.layer, in: window) {
                 switch view.mpReplaySensitive {
-                case .some(true):
-                    addOrUpdate(&maskDecisions, rect: hashableRect, decision: .mask)
-                case .some(false):
-                    safeFrames.insert(hashableRect)
-                case .none:
-                    break
+                    case .some(true):
+                        addOrUpdate(&maskDecisions, rect: hashableRect, decision: .mask)
+                    case .some(false):
+                        safeFrames.insert(hashableRect)
+                    case .none:
+                        break
                 }
                 if let wireframes, !insideWireframeLeaf,
-                    let text = view.mpWireframeText, !text.isEmpty
+                    let text = declaredWireframeText(for: view)
                 {
+                    // Role `.text`: the wrapper is a sibling background of the
+                    // SwiftUI content, so there is no view to infer a role from.
+                    // The contract's fallback for an unknowable role is `text`.
                     wireframes.elements.append(
                         WireframeElement.from(
                             role: .text,
                             text: text,
                             rect: hashableRect.cgRect,
-                            decision: .none,
-                            declared: true))
+                            decision: .declared))
                 }
             }
             return
         }
+
+        // Developer-declared text (`.mpReplay(wireframeText:)` / `mpWireframeText`).
+        // Authored rather than scraped, so it is emitted with the view's real role
+        // even when the view is masked — masking hides the pixels while the
+        // declared text still describes the view for the AI summary. Resolved once
+        // here so every branch below can substitute it (Layer 3).
+        let declaredText: String? =
+            (wireframes != nil && !insideWireframeLeaf) ? declaredWireframeText(for: view) : nil
 
         // MARK: - Check UIView level first (UIKit + legacy SwiftUI)
         switch isSensitiveView(view: view) {
@@ -479,20 +496,30 @@ class SensitiveViewManager {
                 // View is explicitly marked as safe - capture frame and stop traversal
                 if let hashableRect = hashableFrame(for: view.layer, in: window) {
                     safeFrames.insert(hashableRect)
+                    if let wireframes, let declaredText {
+                        wireframes.elements.append(
+                            WireframeElement.from(
+                                role: classifyForWireframe(view: view) ?? .text,
+                                text: declaredText,
+                                rect: hashableRect.cgRect,
+                                decision: .declared))
+                    }
                 }
                 return  // Don't process subviews or sublayers
 
             case .sensitiveTextField:
-                // Text fields are always sensitive and cannot be overridden by safe parents
+                // Text fields are always sensitive and cannot be overridden by safe parents.
+                // Declared text labels the field ("Card number"); the value the user typed
+                // is still never emitted.
                 if let hashableRect = hashableFrame(for: view.layer, in: window) {
                     addOrUpdate(&maskDecisions, rect: hashableRect, decision: .textInput)
                     if let wireframes, !insideWireframeLeaf {
                         wireframes.elements.append(
                             WireframeElement.from(
                                 role: .input,
-                                text: nil,
+                                text: declaredText,
                                 rect: hashableRect.cgRect,
-                                decision: .textEntry))
+                                decision: declaredText != nil ? .declared : .textEntry))
                     }
                 }
                 return  // Don't process subviews or sublayers
@@ -502,9 +529,17 @@ class SensitiveViewManager {
                 if let hashableRect = hashableFrame(for: view.layer, in: window) {
                     let decision: MaskDecision = (view.mpReplaySensitive == true) ? .mask : .auto
                     addOrUpdate(&maskDecisions, rect: hashableRect, decision: decision)
-                    if let wireframes, !insideWireframeLeaf,
-                        let role = classifyForWireframe(view: view)
-                    {
+                    let role = classifyForWireframe(view: view)
+                    if let wireframes, !insideWireframeLeaf, let declaredText {
+                        // Emitted even for views that map to no role (fall back to
+                        // `.text`) — the developer explicitly opted the view in.
+                        wireframes.elements.append(
+                            WireframeElement.from(
+                                role: role ?? .text,
+                                text: declaredText,
+                                rect: hashableRect.cgRect,
+                                decision: .declared))
+                    } else if let wireframes, !insideWireframeLeaf, let role {
                         let wireDecision: MPMaskDecision =
                             (decision == .mask) ? .explicit : .auto
                         wireframes.elements.append(
@@ -522,22 +557,28 @@ class SensitiveViewManager {
                 break
         }
 
-        // View not sensitive/safe: emit a wireframe element if it maps to a role,
-        // then continue recursion. Once emitted, mark descendants as being inside
-        // a wireframe leaf so a UIButton's inner UILabel doesn't re-emit.
+        // View not sensitive/safe: emit a wireframe element if it maps to a role
+        // or carries declared text, then continue recursion. Once a role-bearing
+        // leaf is emitted, mark descendants as being inside a wireframe leaf so a
+        // UIButton's inner UILabel doesn't re-emit. A declared *container* (no
+        // role of its own) does not close the subtree — its children are still
+        // real content worth capturing.
         var newInsideLeaf = insideWireframeLeaf
-        if let wireframes, !insideWireframeLeaf,
-            let role = classifyForWireframe(view: view),
-            let hashableRect = hashableFrame(for: view.layer, in: window)
-        {
-            let text = extractWireframeText(view: view, role: role)
-            wireframes.elements.append(
-                WireframeElement.from(
-                    role: role,
-                    text: text,
-                    rect: hashableRect.cgRect,
-                    decision: .none))
-            newInsideLeaf = true
+        if let wireframes, !insideWireframeLeaf {
+            let role = classifyForWireframe(view: view)
+            if role != nil || declaredText != nil,
+                let hashableRect = hashableFrame(for: view.layer, in: window)
+            {
+                let text =
+                    declaredText ?? role.flatMap { extractWireframeText(view: view, role: $0) }
+                wireframes.elements.append(
+                    WireframeElement.from(
+                        role: role ?? .text,
+                        text: text,
+                        rect: hashableRect.cgRect,
+                        decision: declaredText != nil ? .declared : .none))
+                newInsideLeaf = role != nil
+            }
         }
 
         // MARK: - Check Layer subtree for iOS 26+ SwiftUI content
@@ -662,20 +703,34 @@ class SensitiveViewManager {
         return nil
     }
 
+    /// Tier 1 of the text precedence chain: text the developer declared with
+    /// `.mpReplay(wireframeText:)` (SwiftUI) or by setting `mpWireframeText`
+    /// directly (UIKit).
+    ///
+    /// Never gated by ``useAccessibilityLabelFallback`` — that flag governs only
+    /// the accessibility-label tier — and never suppressed by masking: it is
+    /// authored copy, not scraped pixels.
+    func declaredWireframeText(for view: UIView) -> String? {
+        guard let declared = view.mpWireframeText, !declared.isEmpty else { return nil }
+        return declared
+    }
+
+    /// Tiers 2 and 3 of the text precedence chain: the view's own rendered text,
+    /// then — only when ``useAccessibilityLabelFallback`` is on — its
+    /// `accessibilityLabel`. Tier 1 (declared text) is resolved by the caller,
+    /// which never reaches this method when declared text is present.
     func extractWireframeText(view: UIView, role: WireframeRole) -> String? {
         switch role {
             case .input:
                 return nil
             case .image:
-                let label = view.accessibilityLabel
-                return (label?.isEmpty == false) ? label : nil
+                return accessibilityFallback(for: view)
             case .button:
                 if let button = view as? UIButton {
                     if let title = button.currentTitle, !title.isEmpty { return title }
                     if let title = button.titleLabel?.text, !title.isEmpty { return title }
                 }
-                let label = view.accessibilityLabel
-                return (label?.isEmpty == false) ? label : nil
+                return accessibilityFallback(for: view)
             case .text:
                 if let label = view as? UILabel {
                     if let text = label.text, !text.isEmpty { return text }
@@ -693,9 +748,18 @@ class SensitiveViewManager {
                 if let swiftUiTextClass, type(of: view) == swiftUiTextClass {
                     return nil
                 }
-                let accessibility = view.accessibilityLabel
-                return (accessibility?.isEmpty == false) ? accessibility : nil
+                return accessibilityFallback(for: view)
         }
+    }
+
+    /// Last-resort text source, honoring ``useAccessibilityLabelFallback``. An
+    /// accessibility label is not drawn on screen, so a customer who cannot vet
+    /// what their labels hold can switch this tier off and ship bare
+    /// `role + bounds` shells instead.
+    private func accessibilityFallback(for view: UIView) -> String? {
+        guard useAccessibilityLabelFallback else { return nil }
+        let label = view.accessibilityLabel
+        return (label?.isEmpty == false) ? label : nil
     }
 
     func getFrame(for layer: CALayer, in window: UIView) -> CGRect? {

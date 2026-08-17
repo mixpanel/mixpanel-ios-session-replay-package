@@ -134,5 +134,96 @@ The documentation covers:
 
 ---
 
+## Wireframes
+
+Screenshots alone give Mixpanel's AI summaries nothing to read. Wireframes ship a
+lightweight text/structural description of each frame — one `role` + `text` +
+`bounds` entry per on-screen element — alongside the screenshot, so a replay can
+be summarized without image recognition.
+
+Wireframes are **off by default**. Setting `wireframesOptions` turns them on:
+
+```swift
+var config = MPSessionReplayConfig()
+config.wireframesOptions = MPWireframesOptions()
+MPSessionReplay.initialize(token: token, distinctId: distinctId, config: config)
+```
+
+### Masking is always respected
+
+Anything hidden in the recording is textless in the wireframe. A masked element
+still ships as a bare `role` + `bounds` shell, so the layout is described without
+its content. Four layers enforce this:
+
+1. **View-level masking** — auto-masked types, `mpReplaySensitive`, and text
+   fields (always masked, never overridable) emit no text.
+2. **Geometric leak-prevention** — an element whose bounds intersect *any* mask
+   rectangle the screenshot is drawing loses its text, even if the element itself
+   was never marked sensitive.
+3. **Declared text** — `.mpReplay(wireframeText:)` substitutes authored copy.
+4. **Sensitive rules** — your own content rules, run last as a safety net.
+
+```swift
+config.wireframesOptions = MPWireframesOptions(
+    sensitiveRules: [
+        .strip(text: "password"),                                  // drop the text entirely
+        .redact(text: "@example.com", replacement: "[EMAIL]"),     // rewrite in place
+    ]
+)
+```
+
+Rules run in the order you declare them; a matching `strip` short-circuits the
+rest. Element text is capped at 50 characters including the trailing `…`.
+
+### Labeling SwiftUI content
+
+Apple exposes no public API for reading rendered strings out of SwiftUI's drawing
+views, so SwiftUI content ships as textless shells unless you label it. Use
+`.mpReplay(wireframeText:)`:
+
+```swift
+Text("Welcome back").mpReplay(wireframeText: "Welcome back")
+Button("Continue") { … }.mpReplay(wireframeText: "Continue")
+Image("avatar").mpReplay(sensitive: true, wireframeText: "profile photo")
+```
+
+Declared text is **authored by you, not scraped**, so it is sent even when the
+view is masked — masking hides the pixels while the label still describes the
+view. Make sure the string you declare is not itself sensitive; if it could be,
+omit it. UIKit views can be labeled the same way by setting `mpWireframeText`
+directly.
+
+### Accessibility label fallback
+
+An element with no text of its own falls back to its `accessibilityLabel`. This
+is on by default: for icons and image buttons the label is usually the only
+description of what the element is for, and without it they ship as bare
+`role` + `bounds` shells. It is only ever the third tier of the chain —
+declared text, then the element's own rendered text, then the label.
+
+An accessibility label is not drawn on screen, so unlike visible text you cannot
+confirm what it contains by watching the replay. If your labels might hold
+anything you would not want sent, turn the fallback off:
+
+```swift
+config.wireframesOptions = MPWireframesOptions(useAccessibilityLabelFallback: false)
+```
+
+This changes what an element *says*, never which pixels are masked.
+
+### Checking what you're sending
+
+`DebugOptions.wireframeEmitter` hands you each wireframe as it is captured —
+exactly the elements sent to Mixpanel, plus the reason each one's text was kept
+or removed. It *observes* capture; it does not enable it.
+
+```swift
+config.debugOptions = DebugOptions(
+    wireframeEmitter: { snapshot in print(snapshot.toJson()) }
+)
+```
+
+---
+
 Have any questions? Reach out to Mixpanel [Support](https://help.mixpanel.com/hc/en-us/requests/new) to speak to someone smart, quickly.
 

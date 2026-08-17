@@ -14,7 +14,17 @@ import Foundation
 /// to the session replay stream.
 final class WireframeEmitter {
   static let tag = "mp_wireframe"
-  static let maxTextLength = 60
+
+  /// Maximum characters on the wire for an element's text, **including** the
+  /// ellipsis appended when it is cut. Matches Android's `MAX_TEXT_LEN`,
+  /// Flutter's `WireframeConstants.maxTextLength`, and the service's
+  /// `MAX_ELEMENT_TEXT` budget.
+  static let maxTextLength = 50
+
+  /// Appended when text is truncated. Paid for out of ``maxTextLength``, not
+  /// added on top of it — so a truncated value is exactly `maxTextLength`
+  /// characters, never one more.
+  static let ellipsis = "…"
 
   private let sensitiveRules: [MPSensitiveRule]
   private let debugEmitter: ((MPWireframeDebugSnapshot) -> Void)?
@@ -28,9 +38,17 @@ final class WireframeEmitter {
   private var lastElementsHash: Int?
   private var lastMaskHash: Int?
 
-  init(options: MPWireframesOptions) {
+  /// - Parameters:
+  ///   - options: The wireframe capture options. `wireframesOptions` is the
+  ///     single switch that turns capture on.
+  ///   - debugEmitter: `DebugOptions.wireframeEmitter`. Only *observes* the
+  ///     capture this emitter performs — passing it alone never starts one.
+  init(
+    options: MPWireframesOptions,
+    debugEmitter: ((MPWireframeDebugSnapshot) -> Void)? = nil
+  ) {
     self.sensitiveRules = Array(options.sensitiveRules)
-    self.debugEmitter = options.debugEmitter
+    self.debugEmitter = debugEmitter
   }
 
   /// Hop off the main thread and run Layers 2+3, dedup, serialize, and
@@ -60,6 +78,27 @@ final class WireframeEmitter {
     }
   }
 
+  #if DEBUG
+    /// Test-only seam. Runs Layers 2+3 (geometric leak-prevention + sensitive
+    /// rules) and applies the same wire text cleaning + truncation that
+    /// `processAndPublish` ships, returning the final elements with `decision`
+    /// preserved. Lets golden tests assert the *whole* pipeline — including
+    /// **why** an element's text was dropped — rather than only the stripped
+    /// wire DTO, which carries no decision. Never called in production;
+    /// synchronous and side-effect-free (no publish, no dedup mutation).
+    /// Mirrors Android's `WireframeEmitter.processForTesting(elements:maskBounds:)`.
+    func processedElementsForTesting(
+      elements: [WireframeElement],
+      maskBounds: Set<HashableRect>
+    ) -> [WireframeElement] {
+      elements.map { element in
+        var processed = applyMaskingPipeline(element, maskBounds: maskBounds)
+        processed.text = wireText(for: processed)
+        return processed
+      }
+    }
+  #endif
+
   // MARK: - Private
 
   private func processAndPublish(
@@ -88,7 +127,7 @@ final class WireframeEmitter {
       elements: processed.map { element in
         WireframeElementJson(
           role: element.role.wireName,
-          text: cleanTextForWire(element.text).flatMap(truncateForWire),
+          text: wireText(for: element),
           bounds: [element.x, element.y, element.w, element.h]
         )
       }
@@ -113,7 +152,7 @@ final class WireframeEmitter {
         elements: processed.map { element in
           MPWireframeDebugSnapshot.DebugElement(
             role: element.role.wireName,
-            text: cleanTextForWire(element.text).flatMap(truncateForWire),
+            text: wireText(for: element),
             bounds: [element.x, element.y, element.w, element.h],
             maskDecision: element.decision
           )
@@ -129,7 +168,10 @@ final class WireframeEmitter {
     _ element: WireframeElement,
     maskBounds: Set<HashableRect>
   ) -> WireframeElement {
-    guard element.decision == .none else {
+    // Layer 1 already decided — trust it. `.declared` is the one decision that
+    // continues through the pipeline: Layer 3 substituted the text, but the
+    // sensitive rules still run over it.
+    guard element.decision == .none || element.decision == .declared else {
       return element
     }
     guard let originalText = element.text, !originalText.isEmpty else {
@@ -140,7 +182,7 @@ final class WireframeEmitter {
     // scraped, and is intentionally sent even when the view is masked. Skip the
     // geometric strip — otherwise the view's own mask region would null it —
     // but still run the configured sensitive rules below as a safety net.
-    if !element.declared {
+    if !element.isDeclared {
       if let geometric = applyGeometricStrip(element, maskBounds: maskBounds) {
         return geometric
       }
@@ -223,6 +265,17 @@ final class WireframeEmitter {
     return mutable as String
   }
 
+  /// Final text an element ships with: normalization then truncation.
+  ///
+  /// Declared text skips normalization — it is authored by the developer, not
+  /// scraped, so it is taken verbatim rather than second-guessed for blankness
+  /// or glyph content. It is still truncated. Mirrors Flutter's
+  /// `_cleanText` / `_truncate` ordering.
+  private func wireText(for element: WireframeElement) -> String? {
+    let cleaned = element.isDeclared ? element.text : cleanTextForWire(element.text)
+    return cleaned.flatMap(truncateForWire)
+  }
+
   /// Normalize an unmasked element's text for the wire *without dropping the
   /// element*: blank/whitespace-only text and bare icon-font glyphs become
   /// `nil`, but the role + bounds shell is always kept (Wireframe Capture
@@ -247,11 +300,16 @@ final class WireframeEmitter {
     return false
   }
 
+  /// Caps text at ``maxTextLength`` characters *including* the ellipsis, so the
+  /// wire value never exceeds the ERD's 50-character limit. The ellipsis is
+  /// kept — it tells the summarizer the label was cut rather than ending
+  /// mid-word — but it is paid for out of the budget, not added on top of it.
+  /// Matches Android's `truncate` and Flutter's `_truncate`.
   private func truncateForWire(_ text: String) -> String? {
     guard !text.isEmpty else { return nil }
     if text.count <= WireframeEmitter.maxTextLength { return text }
-    let idx = text.index(text.startIndex, offsetBy: WireframeEmitter.maxTextLength)
-    return String(text[..<idx]) + "…"
+    let idx = text.index(text.startIndex, offsetBy: WireframeEmitter.maxTextLength - 1)
+    return String(text[..<idx]) + WireframeEmitter.ellipsis
   }
 
   private func hashElements(_ elements: [WireframeElement]) -> Int {

@@ -19,6 +19,15 @@ enum WireframeRole: String, Hashable {
 
 /// Layer-1 output of the wireframe walker. Layers 2 and 3 mutate `text` and
 /// `decision` before serialization.
+///
+/// ``MPMaskDecision/declared`` marks text the customer authored via
+/// `.mpReplay(wireframeText:)` rather than text scraped from a rendered view.
+/// Declared text is authored and trusted, so it is exempt from the geometric
+/// leak-prevention strip (Layer 2) — including its own sensitive mask region.
+/// Configured sensitive rules (Layer 3) still apply as a safety net, and may
+/// replace the decision with ``MPMaskDecision/ruleStrip`` /
+/// ``MPMaskDecision/ruleRedact``. Mirrors Android's `MaskDecision.DECLARED`
+/// and Flutter's `MaskDecision.declared`.
 struct WireframeElement: Hashable {
   var role: WireframeRole
   var text: String?
@@ -27,19 +36,16 @@ struct WireframeElement: Hashable {
   var w: Int
   var h: Int
   var decision: MPMaskDecision
-  /// True when `text` was explicitly declared by the customer via
-  /// `.mpReplay(wireframeText:)` rather than scraped from a rendered view.
-  /// Declared text is authored and trusted, so it is exempt from the geometric
-  /// leak-prevention strip (Layer 2) — including its own sensitive mask region.
-  /// Configured sensitive rules (Layer 3) still apply as a safety net.
-  var declared: Bool
+
+  /// True when this element's text was authored by the customer rather than
+  /// scraped from the view.
+  var isDeclared: Bool { decision == .declared }
 
   static func from(
     role: WireframeRole,
     text: String?,
     rect: CGRect,
-    decision: MPMaskDecision,
-    declared: Bool = false
+    decision: MPMaskDecision
   ) -> WireframeElement {
     WireframeElement(
       role: role,
@@ -48,8 +54,7 @@ struct WireframeElement: Hashable {
       y: Int(rect.origin.y.rounded()),
       w: Int(rect.size.width.rounded()),
       h: Int(rect.size.height.rounded()),
-      decision: decision,
-      declared: declared
+      decision: decision
     )
   }
 }

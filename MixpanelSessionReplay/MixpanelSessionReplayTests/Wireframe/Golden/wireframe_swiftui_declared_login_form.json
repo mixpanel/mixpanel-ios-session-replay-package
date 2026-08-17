@@ -1,0 +1,52 @@
+{
+  "viewport": [
+    320,
+    480
+  ],
+  "elements": [
+    {
+      "role": "text",
+      "text": "Sign in",
+      "bounds": [
+        60,
+        40,
+        200,
+        40
+      ],
+      "maskDecision": "DECLARED"
+    },
+    {
+      "role": "text",
+      "text": "Email",
+      "bounds": [
+        30,
+        108,
+        260,
+        44
+      ],
+      "maskDecision": "DECLARED"
+    },
+    {
+      "role": "text",
+      "text": "Password",
+      "bounds": [
+        30,
+        168,
+        260,
+        44
+      ],
+      "maskDecision": "DECLARED"
+    },
+    {
+      "role": "text",
+      "text": "Log in",
+      "bounds": [
+        60,
+        238,
+        200,
+        44
+      ],
+      "maskDecision": "DECLARED"
+    }
+  ]
+}
