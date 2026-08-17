@@ -180,7 +180,12 @@ class ScreenRecorder {
             }
         }
 
-        if let emitter, !wireframes.isEmpty {
+        // Emitted whenever collection is on, including for a frame that produced no
+        // elements. An empty `elements` array is meaningful — it says the frame was
+        // described and had nothing readable on it, which is different from no
+        // wireframe at all. Suppressing it would leave a screenshot the summarizer
+        // can't distinguish from one we simply failed to describe. Matches Android.
+        if let emitter {
             emitter.emit(
                 elements: wireframes,
                 viewport: (Int(window.bounds.width), Int(window.bounds.height)),

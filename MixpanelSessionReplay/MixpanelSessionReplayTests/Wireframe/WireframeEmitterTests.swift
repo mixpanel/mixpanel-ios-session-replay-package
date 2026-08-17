@@ -55,6 +55,23 @@ final class WireframeEmitterTests: XCTestCase {
     XCTAssertEqual(custom.payload.elements[0].bounds, [24, 120, 400, 40])
   }
 
+  /// An element-less frame is still a description of that frame, and ships as a
+  /// payload with an empty `elements` array rather than as nothing at all. The
+  /// viewport is the point: it tells the summarizer the screen was walked and
+  /// held nothing readable, which no absent event can say. Matches Android,
+  /// which has no element-count guard anywhere in its emit path.
+  func testEmit_publishesAPayloadWithNoElements() throws {
+    let emitter = WireframeEmitter(options: MPWireframesOptions())
+
+    emitter.emit(elements: [], viewport: (1080, 1920), maskBounds: [])
+    let event = try waitForFirstPublishedEvent()
+
+    XCTAssertEqual(event.type, EventType.custom)
+    let payload = customPayload(from: event)
+    XCTAssertEqual(payload.viewport, [1080, 1920])
+    XCTAssertTrue(payload.elements.isEmpty)
+  }
+
   // MARK: - Capture timestamp
 
   /// The wireframe and the screenshot describing the same frame must carry the

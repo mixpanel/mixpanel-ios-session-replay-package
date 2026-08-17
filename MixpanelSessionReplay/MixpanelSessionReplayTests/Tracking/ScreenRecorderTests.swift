@@ -243,6 +243,49 @@ class ScreenRecorderTests: XCTestCase {
             event.timestamp, capturedAt,
             "wireframe must carry the capture instant, not the time rendering finished")
     }
+
+    // MARK: - Empty wireframes
+
+    /// A frame that yields no elements still ships an `mp_wireframe` event with an empty
+    /// `elements` array. "Described, nothing readable" is a different fact from "never
+    /// described" — suppressing the event would leave the summarizer unable to tell a
+    /// blank screen from a frame we failed to walk. Android emits it too; iOS used to
+    /// gate the emit on `!wireframes.isEmpty`.
+    func testRenderViewHierarchyAsImage_emitsWireframeForAFrameWithNoElements() throws {
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        // No labels, no controls — nothing the walker can turn into an element.
+        window.addSubview(UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200)))
+        window.isHidden = false
+
+        EventPublisher.shared.resetSubscribers()
+        var published: [SessionEvent] = []
+        let subscriber = CapturingCustomEventSubscriber { published.append($0) }
+        EventPublisher.shared.subscribe(subscriber)
+
+        SensitiveViewManager.reset()
+        SensitiveViewManager.shared.wireframeCollectionEnabled = true
+        recorder.wireframeEmitter = WireframeEmitter(options: MPWireframesOptions())
+        defer {
+            recorder.wireframeEmitter = nil
+            SensitiveViewManager.reset()
+            EventPublisher.shared.resetSubscribers()
+        }
+
+        XCTAssertNotNil(recorder.renderViewHierarchyAsImage(window: window))
+
+        let deadline = Date().addingTimeInterval(2)
+        while published.isEmpty && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.01))
+        }
+
+        let event = try XCTUnwrap(published.first, "an empty frame must still emit mp_wireframe")
+        guard case .customData(let custom) = event.data else {
+            return XCTFail("expected customData")
+        }
+        XCTAssertEqual(custom.tag, WireframeEmitter.tag)
+        XCTAssertTrue(custom.payload.elements.isEmpty, "expected a zero-element payload")
+        XCTAssertEqual(custom.payload.viewport, [200, 200], "viewport still describes the frame")
+    }
 }
 
 private final class CapturingCustomEventSubscriber: EventListener {
