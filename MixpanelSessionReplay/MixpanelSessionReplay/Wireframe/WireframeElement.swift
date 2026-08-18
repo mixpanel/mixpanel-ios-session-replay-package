@@ -17,14 +17,15 @@ enum WireframeRole: String, Hashable {
   var wireName: String { rawValue }
 }
 
-/// Layer-1 output of the wireframe walker. Layers 2 and 3 mutate `text` and
-/// `decision` before serialization.
+/// Output of the wireframe walker, which runs Layer 1 (view-level masking) and
+/// Layer 3 (declared-text substitution). Layers 2 (geometric leak prevention)
+/// and 4 (sensitive rules) mutate `text` and `decision` before serialization.
 ///
 /// ``MPMaskDecision/declared`` marks text the customer authored via
 /// `.mpReplay(wireframeText:)` rather than text scraped from a rendered view.
 /// Declared text is authored and trusted, so it is exempt from the geometric
 /// leak-prevention strip (Layer 2) — including its own sensitive mask region.
-/// Configured sensitive rules (Layer 3) still apply as a safety net, and may
+/// Configured sensitive rules (Layer 4) still apply as a safety net, and may
 /// replace the decision with ``MPMaskDecision/ruleStrip`` /
 /// ``MPMaskDecision/ruleRedact``. Mirrors Android's `MaskDecision.DECLARED`
 /// and Flutter's `MaskDecision.declared`.

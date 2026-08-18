@@ -9,6 +9,24 @@ jobs:
     runs-on: macos-26
     permissions:
       contents: read
+    strategy:
+      # Run every destination even when one fails, so a wireframe layout golden
+      # that only moved on one device is reported alongside the others rather
+      # than masking them.
+      fail-fast: false
+      matrix:
+        # Wireframe layout goldens are recorded per destination, under
+        # MixpanelSessionReplayTests/Wireframe/Golden/Layout/<key>/, where the key
+        # is derived from OS version + logical screen size + scale. Adding a
+        # destination here means recording its directory (run the suite once; a
+        # missing golden is written and passes). Removing one means deleting its
+        # directory. iPad is deliberately included: it is the only @2x coverage,
+        # and text measures 1pt differently at @2x than @3x.
+        destination:
+          - 'name=iPhone 17,OS=26.2'
+          - 'name=iPhone 17 Pro Max,OS=26.2'
+          - 'name=iPad (A16),OS=26.2'
+    name: Test (${{ matrix.destination }})
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
     - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90  # v1
@@ -18,4 +36,15 @@ jobs:
       working-directory: MixpanelSessionReplay
       run: |
         set -o pipefail
-        xcodebuild -scheme MixpanelSessionReplay -derivedDataPath Build/ -destination "name=iPhone 17,OS=26.2" -configuration Debug ONLY_ACTIVE_ARCH=NO ENABLE_TESTABILITY=YES -enableCodeCoverage YES clean build test | xcpretty -c;
+        xcodebuild -scheme MixpanelSessionReplay -derivedDataPath Build/ -destination "${{ matrix.destination }}" -configuration Debug ONLY_ACTIVE_ARCH=NO ENABLE_TESTABILITY=YES -enableCodeCoverage YES clean build test | xcpretty -c;
+    - name: Fail if a layout golden was recorded rather than compared
+      # A missing golden is written and the test passes, which is right locally
+      # but would let an unreviewed golden slip through CI. Anything new here
+      # means this destination had no recorded goldens.
+      run: |
+        if [ -n "$(git status --porcelain MixpanelSessionReplay/MixpanelSessionReplayTests/Wireframe/Golden)" ]; then
+          echo "::error::Wireframe goldens were created or modified during the test run:"
+          git status --porcelain MixpanelSessionReplay/MixpanelSessionReplayTests/Wireframe/Golden
+          echo "Record them locally and commit them."
+          exit 1
+        fi

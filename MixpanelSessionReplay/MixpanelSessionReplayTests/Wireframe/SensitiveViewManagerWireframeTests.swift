@@ -438,4 +438,173 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     XCTAssertEqual(elements[0].w, 100)
     XCTAssertEqual(elements[0].h, 30)
   }
+
+  // MARK: - addSensitiveClass reports EXPLICIT, masks the same pixels
+
+  /// `addSensitiveClass` reporting EXPLICIT rather than AUTO changes the label on
+  /// the decision, not the masking. Pins that by masking the same view two ways —
+  /// once by class registration, once by auto-detection — and asserting the mask
+  /// rects come out identical. The painter fills every rect in the set without
+  /// reading its decision, so equal rects means equal pixels.
+  func testRegisteredClass_reportsExplicitButMasksIdentically() {
+    func maskRects(registerClass: Bool) -> Set<HashableRect> {
+      SensitiveViewManager.reset()
+      let mgr = SensitiveViewManager.shared
+      mgr.wireframeCollectionEnabled = true
+      mgr.maskAllText = !registerClass
+      mgr.maskAllImages = false
+      mgr.maskAllWebViews = false
+      mgr.maskAllMapViews = false
+      if registerClass { mgr.addSensitiveClass(CardNumberLabelProbe.self) }
+
+      let win = UIView(frame: CGRect(x: 0, y: 0, width: 500, height: 800))
+      let root = UIView(frame: win.bounds)
+      let card = CardNumberLabelProbe(frame: CGRect(x: 16, y: 24, width: 240, height: 64))
+      card.text = "4111 1111 1111 1111"
+      root.addSubview(card)
+      win.addSubview(root)
+      return Set(mgr.collectFramesAndWireframes(in: root, window: win).frames.keys)
+    }
+
+    let viaClass = maskRects(registerClass: true)
+    let viaAuto = maskRects(registerClass: false)
+
+    XCTAssertFalse(viaClass.isEmpty, "a registered class must still mask")
+    XCTAssertEqual(viaClass, viaAuto, "the decision label changes; the masked pixels do not")
+  }
+
+  /// The reported decision itself: EXPLICIT for a registered class, AUTO for a
+  /// type match. Same taxonomy Android uses.
+  func testRegisteredClass_wireDecisionIsExplicitNotAuto() {
+    manager.addSensitiveClass(CardNumberLabelProbe.self)
+    let root = UIView(frame: window.bounds)
+    let card = CardNumberLabelProbe(frame: CGRect(x: 16, y: 24, width: 240, height: 64))
+    card.text = "4111 1111 1111 1111"
+    root.addSubview(card)
+    window.addSubview(root)
+
+    let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+    XCTAssertEqual(elements.count, 1)
+    XCTAssertEqual(elements[0].decision, .explicit)
+    XCTAssertNil(elements[0].text)
+  }
+
+  // MARK: - Unmasked subtrees are described, not masked
+
+  /// Builds a container marked `mpReplaySensitive = false` holding content that
+  /// auto-masking would otherwise hide, an always-masked text field, and an
+  /// explicitly re-masked label — plus an ordinary sibling *outside* the
+  /// container, so the mask set is non-empty and a walk that perturbed it would
+  /// be caught rather than passing vacuously.
+  private func makeUnmaskedSubtree() -> UIView {
+    let root = UIView(frame: window.bounds)
+    let container = UIView(frame: CGRect(x: 10, y: 20, width: 300, height: 200))
+    container.mpReplaySensitive = false
+
+    let label = UILabel(frame: CGRect(x: 10, y: 10, width: 240, height: 30))
+    label.text = "vouched content"
+
+    let field = UITextField(frame: CGRect(x: 10, y: 50, width: 240, height: 44))
+    field.text = "secret"
+
+    let reMasked = UILabel(frame: CGRect(x: 10, y: 110, width: 240, height: 30))
+    reMasked.text = "still private"
+    reMasked.mpReplaySensitive = true
+
+    container.addSubview(label)
+    container.addSubview(field)
+    container.addSubview(reMasked)
+    root.addSubview(container)
+
+    let outside = UILabel(frame: CGRect(x: 10, y: 300, width: 240, height: 30))
+    outside.text = "ordinary masked content"
+    root.addSubview(outside)
+
+    window.addSubview(root)
+    return root
+  }
+
+  /// The guarantee that lets the walk descend into an unmasked subtree at all:
+  /// turning wireframe collection on must not move a single pixel. The mask
+  /// frames drive the screenshot, so they have to come out identical whether or
+  /// not the wireframe walk ran.
+  func testUnmaskSubtree_maskDecisionsUnchanged() {
+    manager.maskAllText = true
+
+    manager.wireframeCollectionEnabled = false
+    let withoutWireframes = manager.collectFramesAndWireframes(
+      in: makeUnmaskedSubtree(), window: window
+    ).frames
+
+    SensitiveViewManager.reset()
+    manager = SensitiveViewManager.shared
+    manager.maskAllText = true
+    manager.wireframeCollectionEnabled = true
+    window = UIView(frame: CGRect(x: 0, y: 0, width: 500, height: 800))
+    let withWireframes = manager.collectFramesAndWireframes(
+      in: makeUnmaskedSubtree(), window: window
+    ).frames
+
+    XCTAssertFalse(
+      withoutWireframes.isEmpty,
+      "fixture must mask something outside the unmasked subtree, or the check below is vacuous")
+    XCTAssertEqual(
+      withWireframes, withoutWireframes,
+      "descending into an unmasked subtree for wireframes must not change what the screenshot masks"
+    )
+  }
+
+  /// The coverage fix: an explicitly-unmasked container is the content the
+  /// developer positively vouched for, so it is described rather than skipped.
+  func testUnmaskSubtree_emitsChildrenWithText() {
+    manager.maskAllText = true
+    let elements = manager.collectFramesAndWireframes(
+      in: makeUnmaskedSubtree(), window: window
+    ).wireframes
+
+    // The vouched label ships its real text even though maskAllText is on —
+    // an unmask overrides auto-masking for the pixels, so it does here too.
+    XCTAssertTrue(
+      elements.contains {
+        $0.role == .text && $0.text == "vouched content" && $0.decision == .none
+      },
+      "unmasked label should ship its text")
+  }
+
+  /// A nested text field keeps the always-masked guarantee in the wireframe: the
+  /// shell ships so the form's structure is legible, the typed value never does.
+  func testUnmaskSubtree_nestedTextFieldStaysTextless() {
+    let elements = manager.collectFramesAndWireframes(
+      in: makeUnmaskedSubtree(), window: window
+    ).wireframes
+
+    let inputs = elements.filter { $0.role == .input }
+    XCTAssertEqual(inputs.count, 1)
+    XCTAssertNil(inputs[0].text, "a text field's value never ships, safe ancestor or not")
+    XCTAssertEqual(inputs[0].decision, .textEntry)
+    XCTAssertFalse(
+      elements.contains { $0.text == "secret" }, "the typed value must not appear anywhere")
+  }
+
+  /// An unmask overrides *auto* masking, not a developer naming a view. An
+  /// explicit `mpReplaySensitive = true` nested inside still reports a textless
+  /// shell — matching Android, where an explicit mask keeps `shouldMask` set
+  /// under a safe ancestor.
+  func testUnmaskSubtree_nestedExplicitMaskStaysTextless() {
+    let elements = manager.collectFramesAndWireframes(
+      in: makeUnmaskedSubtree(), window: window
+    ).wireframes
+
+    XCTAssertFalse(
+      elements.contains { $0.text == "still private" },
+      "an explicit mask inside an unmask must not have its text scraped")
+    XCTAssertTrue(
+      elements.contains { $0.role == .text && $0.text == nil && $0.decision == .explicit },
+      "it should still ship as a textless shell so the layout survives")
+  }
 }
+
+/// Stand-in for a customer's own view class registered via `addSensitiveClass`.
+/// A `UILabel` subclass so the same view can be masked either by registration or
+/// by `maskAllText`, which is what makes the two paths comparable.
+private final class CardNumberLabelProbe: UILabel {}

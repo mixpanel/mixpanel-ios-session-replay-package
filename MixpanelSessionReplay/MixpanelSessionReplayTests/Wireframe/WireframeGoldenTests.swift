@@ -205,13 +205,16 @@ final class WireframeGoldenTests: XCTestCase {
       golden: "wireframe_input_nested_still_masked.json")
   }
 
-  /// Documents (and guards) a subtle contract: an explicit unmask override
-  /// (`mpReplaySensitive = false`) on a container halts the walk — the whole
-  /// subtree is treated as developer-vouched and emits NO wireframe elements,
-  /// including any nested text field. This is a developer opt-out, not a leak
-  /// (inputs never carry scraped text), but the empty result is intentional and
-  /// worth locking so a future traversal change surfaces in review.
-  func test_golden_unmaskContainerHaltsSubtree() {
+  /// An explicit unmask (`mpReplaySensitive = false`) on a container does not
+  /// stop the walk: the subtree is content the developer positively vouched for,
+  /// so it is exactly the content the summary should hear about. The label ships
+  /// its real text, and the nested text field still ships as a textless
+  /// `textEntry` shell — "always masked" survives a safe ancestor in the
+  /// wireframe, so the typed value never leaves the device either way.
+  ///
+  /// The screenshot for this region is unchanged — see
+  /// `SensitiveViewManagerWireframeTests.testUnmaskSubtree_maskDecisionsUnchanged`.
+  func test_golden_unmaskContainerEmitsSubtree() {
     let container = UIView(frame: CGRect(x: 10, y: 20, width: 300, height: 120))
     container.mpReplaySensitive = false
     let field = UITextField(frame: CGRect(x: 10, y: 10, width: 240, height: 44))
@@ -223,7 +226,83 @@ final class WireframeGoldenTests: XCTestCase {
     root.addSubview(container)
     assertWireframeGolden(
       manager: manager, root: root, window: window,
-      golden: "wireframe_unmask_container_halts_subtree.json")
+      golden: "wireframe_unmask_container_emits_subtree.json")
+  }
+
+  // MARK: - addSensitiveClass (developer opt-in, reports EXPLICIT)
+
+  /// A class the developer registered through `addSensitiveClass` reports
+  /// **EXPLICIT**, not AUTO — per the ERD's Layer 1 table, which groups it with
+  /// `mpReplay(sensitive: true)`. Only the `maskAll*` type matches report AUTO.
+  /// Auto-masking is off here, so the class registration is the only thing
+  /// masking this view. Mirrors Android's
+  /// `golden walker developer registered class reports explicit`.
+  ///
+  /// Both paths mask identically; the decision is reporting only, surfaced
+  /// through the debug emitter and the overlay's red-vs-orange fill.
+  func test_golden_registeredClassReportsExplicit() {
+    manager.addSensitiveClass(CardNumberLabel.self)
+    let card = CardNumberLabel(frame: CGRect(x: 16, y: 24, width: 240, height: 64))
+    card.text = "4111 1111 1111 1111"
+    root.addSubview(card)
+    assertWireframeGolden(
+      manager: manager, root: root, window: window,
+      golden: "wireframe_class_explicit_masked.json")
+  }
+
+  /// The one way a registered class differs from `mpReplaySensitive = true`: an
+  /// unmask still wins over it, so the text survives. Pinned because the
+  /// EXPLICIT label above could otherwise be read as "unconditionally masked".
+  /// Mirrors Android's `golden walker safe view overrides a developer registered
+  /// class`, where `addSafeView` plays the same role.
+  func test_golden_unmaskOverridesRegisteredClass() {
+    manager.addSensitiveClass(CardNumberLabel.self)
+    let card = CardNumberLabel(frame: CGRect(x: 16, y: 24, width: 240, height: 64))
+    card.text = "Card ending 1111"
+    card.mpReplaySensitive = false
+    root.addSubview(card)
+    assertWireframeGolden(
+      manager: manager, root: root, window: window,
+      golden: "wireframe_class_safe_kept.json")
+  }
+
+  /// The reporting fix must not depend on which sensitivity cache the view
+  /// landed in: `isSensitiveView` checks auto-detection *before*
+  /// `sensitiveClasses`, so a registered class that is *also* auto-maskable
+  /// would short-circuit as AUTO if the decision were read off the cache.
+  /// Android tests class membership directly, so the label here reports
+  /// EXPLICIT even with `maskAllText` on.
+  func test_golden_registeredClassBeatsAutoMaskReporting() {
+    manager.maskAllText = true
+    manager.addSensitiveClass(CardNumberLabel.self)
+    let card = CardNumberLabel(frame: CGRect(x: 16, y: 24, width: 240, height: 64))
+    card.text = "4111 1111 1111 1111"
+    root.addSubview(card)
+    assertWireframeGolden(
+      manager: manager, root: root, window: window,
+      golden: "wireframe_class_explicit_beats_auto.json")
+  }
+
+  /// The one thing an unmask does *not* override: an explicit
+  /// `mpReplaySensitive = true` nested inside it. The developer named that view
+  /// specifically, so the wireframe reports a textless `explicit` shell rather
+  /// than scraping its label — the same rule Android applies, where an explicit
+  /// mask keeps `shouldMask` set under a safe ancestor.
+  func test_golden_explicitMaskInsideUnmaskStaysTextless() {
+    manager.maskAllText = true
+    let container = UIView(frame: CGRect(x: 10, y: 20, width: 300, height: 120))
+    container.mpReplaySensitive = false
+    let shown = UILabel(frame: CGRect(x: 10, y: 10, width: 240, height: 30))
+    shown.text = "vouched content"
+    let hidden = UILabel(frame: CGRect(x: 10, y: 60, width: 240, height: 30))
+    hidden.text = "still private"
+    hidden.mpReplaySensitive = true
+    container.addSubview(shown)
+    container.addSubview(hidden)
+    root.addSubview(container)
+    assertWireframeGolden(
+      manager: manager, root: root, window: window,
+      golden: "wireframe_explicit_mask_inside_unmask.json")
   }
 
   // MARK: - Geometric leak prevention (Layer 2)
@@ -355,9 +434,9 @@ final class WireframeGoldenTests: XCTestCase {
       manager: manager, root: root, window: window, golden: "wireframe_declared_mask_image.json")
   }
 
-  /// Declared text on an explicitly unmasked view. The unmask halts the walk
-  /// (see `test_golden_unmaskContainerHaltsSubtree`), but the developer-vouched
-  /// container's own declared label is still emitted before the walk stops.
+  /// Declared text on an explicitly unmasked view. Declared text outranks the
+  /// view's own visible text, so the wireframe reports the authored
+  /// "marketing headline" rather than the rendered "public headline".
   func test_golden_declaredUnmaskCustom() {
     manager.maskAllText = true
     let label = UILabel(frame: CGRect(x: 20, y: 40, width: 200, height: 30))
@@ -499,3 +578,9 @@ private struct GoldenLoginForm: View {
     .edgesIgnoringSafeArea(.all)
   }
 }
+
+/// Stand-in for a customer's own view class, registered via
+/// `addSensitiveClass`. A `UILabel` subclass so it also classifies as `.text`
+/// and is auto-maskable, which
+/// `test_golden_registeredClassBeatsAutoMaskReporting` depends on.
+private final class CardNumberLabel: UILabel {}

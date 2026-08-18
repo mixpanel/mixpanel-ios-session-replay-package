@@ -1,0 +1,19 @@
+{
+  "viewport": [
+    440,
+    956
+  ],
+  "elements": [
+    {
+      "role": "text",
+      "text": "Not actually sensitive",
+      "bounds": [
+        20,
+        20,
+        162,
+        20
+      ],
+      "maskDecision": "NONE"
+    }
+  ]
+}

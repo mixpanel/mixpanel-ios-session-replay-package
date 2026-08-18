@@ -8,12 +8,16 @@
 import Foundation
 
 /// Wire DTO for the `mp_wireframe` custom event payload.
-struct WireframePayload: Codable, Equatable {
+///
+/// `Hashable` because the emitter dedups on this type: the hash of a finished
+/// payload is the dedup key, so two consecutive frames that would serialize to
+/// the same bytes collapse to one event. See `WireframeEmitter.lastPayloadHash`.
+struct WireframePayload: Codable, Equatable, Hashable {
   let viewport: [Int]?
   let elements: [WireframeElementJson]
 }
 
-struct WireframeElementJson: Codable, Equatable {
+struct WireframeElementJson: Codable, Equatable, Hashable {
   /// "text" | "button" | "input" | "image"
   let role: String
   /// Capped at 50 characters *including* a trailing "…" at emit time; `nil`

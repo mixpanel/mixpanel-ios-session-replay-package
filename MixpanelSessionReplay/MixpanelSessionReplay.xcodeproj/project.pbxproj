@@ -89,6 +89,8 @@
 		AB0000000000000000000103 /* SensitiveViewManagerWireframeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000102 /* SensitiveViewManagerWireframeTests.swift */; };
 		AB0000000000000000000501 /* WireframeGoldenTestUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000500 /* WireframeGoldenTestUtils.swift */; };
 		AB0000000000000000000503 /* WireframeGoldenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000502 /* WireframeGoldenTests.swift */; };
+		AB0000000000000000000511 /* WireframeLayoutGoldenTestUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000510 /* WireframeLayoutGoldenTestUtils.swift */; };
+		AB0000000000000000000513 /* WireframeLayoutGoldenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000512 /* WireframeLayoutGoldenTests.swift */; };
 		AB0000000000000000000301 /* SwiftUIExtractionLabTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000300 /* SwiftUIExtractionLabTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -187,6 +189,8 @@
 		AB0000000000000000000102 /* SensitiveViewManagerWireframeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveViewManagerWireframeTests.swift; sourceTree = "<group>"; };
 		AB0000000000000000000500 /* WireframeGoldenTestUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeGoldenTestUtils.swift; sourceTree = "<group>"; };
 		AB0000000000000000000502 /* WireframeGoldenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeGoldenTests.swift; sourceTree = "<group>"; };
+		AB0000000000000000000510 /* WireframeLayoutGoldenTestUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeLayoutGoldenTestUtils.swift; sourceTree = "<group>"; };
+		AB0000000000000000000512 /* WireframeLayoutGoldenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeLayoutGoldenTests.swift; sourceTree = "<group>"; };
 		AB0000000000000000000300 /* SwiftUIExtractionLabTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIExtractionLabTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -409,6 +413,8 @@
 				AB0000000000000000000300 /* SwiftUIExtractionLabTests.swift */,
 				AB0000000000000000000500 /* WireframeGoldenTestUtils.swift */,
 				AB0000000000000000000502 /* WireframeGoldenTests.swift */,
+				AB0000000000000000000510 /* WireframeLayoutGoldenTestUtils.swift */,
+				AB0000000000000000000512 /* WireframeLayoutGoldenTests.swift */,
 			);
 			path = Wireframe;
 			sourceTree = "<group>";
@@ -685,6 +691,8 @@
 				AB0000000000000000000103 /* SensitiveViewManagerWireframeTests.swift in Sources */,
 				AB0000000000000000000501 /* WireframeGoldenTestUtils.swift in Sources */,
 				AB0000000000000000000503 /* WireframeGoldenTests.swift in Sources */,
+				AB0000000000000000000511 /* WireframeLayoutGoldenTestUtils.swift in Sources */,
+				AB0000000000000000000513 /* WireframeLayoutGoldenTests.swift in Sources */,
 				AB0000000000000000000301 /* SwiftUIExtractionLabTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

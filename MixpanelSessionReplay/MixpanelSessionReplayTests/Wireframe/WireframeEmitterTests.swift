@@ -375,16 +375,32 @@ final class WireframeEmitterTests: XCTestCase {
 
     publishedEvents.removeAll()
     emitter.emit(elements: [element], viewport: (100, 100), maskBounds: [])
-    // give the work queue a chance to run
-    let exp = expectation(description: "quiet")
-    DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 0.2) {
-      exp.fulfill()
-    }
-    wait(for: [exp], timeout: 1.0)
-    XCTAssertEqual(publishedEvents.count, 0, "identical emit should be deduped")
+    assertNoPublishedEvent("identical emit should be deduped")
   }
 
-  func testDedup_changingMaskBoundsReEmits() throws {
+  func testDedup_maskBoundsThatStartStrippingTextReEmits() throws {
+    let emitter = WireframeEmitter(options: MPWireframesOptions())
+    let element = WireframeElement.from(
+      role: .text, text: "hi",
+      rect: CGRect(x: 0, y: 0, width: 10, height: 10),
+      decision: .none)
+
+    emitter.emit(elements: [element], viewport: (100, 100), maskBounds: [])
+    let first = try waitForFirstPublishedEvent()
+    XCTAssertEqual(customPayload(from: first).elements[0].text, "hi")
+
+    publishedEvents.removeAll()
+    emitter.emit(
+      elements: [element], viewport: (100, 100),
+      maskBounds: [HashableRect(CGRect(x: 0, y: 0, width: 10, height: 10))])
+    let second = try waitForFirstPublishedEvent()
+    XCTAssertNil(customPayload(from: second).elements[0].text)
+  }
+
+  func testDedup_maskBoundsMovingWithoutChangingTheWireIsSuppressed() throws {
+    // Dedup keys off the finished payload, not the mask set. Mask rects are not on the
+    // wire; they matter only through the text they strip, so a mask that misses every
+    // element produces an identical render.
     let emitter = WireframeEmitter(options: MPWireframesOptions())
     let element = WireframeElement.from(
       role: .text, text: "hi",
@@ -398,8 +414,39 @@ final class WireframeEmitterTests: XCTestCase {
     emitter.emit(
       elements: [element], viewport: (100, 100),
       maskBounds: [HashableRect(CGRect(x: 50, y: 50, width: 5, height: 5))])
+    assertNoPublishedEvent()
+  }
+
+  func testDedup_viewportChangeReEmits() throws {
+    // A rotation on a screen whose element list is unchanged still changes the render,
+    // so the viewport is part of the dedup key.
+    let emitter = WireframeEmitter(options: MPWireframesOptions())
+
+    emitter.emit(elements: [], viewport: (100, 200), maskBounds: [])
+    _ = try waitForFirstPublishedEvent()
+
+    publishedEvents.removeAll()
+    emitter.emit(elements: [], viewport: (200, 100), maskBounds: [])
     _ = try waitForFirstPublishedEvent()
     XCTAssertEqual(publishedEvents.count, 1)
+  }
+
+  func testDedup_maskDecisionOnlyChangeIsSuppressed() throws {
+    // maskDecision is debug-only metadata; the wire payload never carries it, so two
+    // frames differing only there render the same.
+    let emitter = WireframeEmitter(options: MPWireframesOptions())
+    let rect = CGRect(x: 0, y: 0, width: 10, height: 10)
+
+    emitter.emit(
+      elements: [WireframeElement.from(role: .text, text: nil, rect: rect, decision: .explicit)],
+      viewport: (100, 100), maskBounds: [])
+    _ = try waitForFirstPublishedEvent()
+
+    publishedEvents.removeAll()
+    emitter.emit(
+      elements: [WireframeElement.from(role: .text, text: nil, rect: rect, decision: .auto)],
+      viewport: (100, 100), maskBounds: [])
+    assertNoPublishedEvent()
   }
 
   // MARK: - Debug emitter
@@ -462,6 +509,21 @@ final class WireframeEmitterTests: XCTestCase {
       RunLoop.current.run(until: Date().addingTimeInterval(0.02))
     }
     return publishedEvents[0]
+  }
+
+  /// Asserts nothing lands on the event stream — i.e. the frame deduped. Emit is
+  /// asynchronous, so this has to wait out the work queue rather than check immediately.
+  private func assertNoPublishedEvent(
+    within delay: TimeInterval = 0.2,
+    _ message: String = "expected the frame to dedup",
+    file: StaticString = #filePath, line: UInt = #line
+  ) {
+    let exp = expectation(description: "quiet")
+    DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + delay) {
+      exp.fulfill()
+    }
+    wait(for: [exp], timeout: delay + 1.0)
+    XCTAssertEqual(publishedEvents.count, 0, message, file: file, line: line)
   }
 
   private func customPayload(from event: SessionEvent) -> WireframePayload {

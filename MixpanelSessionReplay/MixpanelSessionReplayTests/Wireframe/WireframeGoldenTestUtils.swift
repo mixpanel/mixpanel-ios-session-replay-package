@@ -8,7 +8,7 @@
 //  Flutter gold standard (`test/utils/golden_test_utils.dart`). We run the same
 //  production path that ships `mp_wireframe` events —
 //  `SensitiveViewManager.collectFramesAndWireframes(in:window:)` (Layer 1) →
-//  `WireframeEmitter` Layers 2+3 — then serialize the result to a JSON golden.
+//  `WireframeEmitter` Layers 2 and 4 — then serialize the result to a JSON golden.
 //  An accidental text leak or a coordinate regression then surfaces as a
 //  one-line diff in review.
 //

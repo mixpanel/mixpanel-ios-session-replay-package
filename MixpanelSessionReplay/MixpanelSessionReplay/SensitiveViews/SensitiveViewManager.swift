@@ -364,7 +364,8 @@ class SensitiveViewManager {
             maskDecisions: &maskDecisions,
             safeFrames: &safeFrames,
             wireframes: collector,
-            insideWireframeLeaf: false)
+            insideWireframeLeaf: false,
+            insideSafeSubtree: false)
 
         // Remove regions contained within safe frames, except text inputs which always stay
         if !safeFrames.isEmpty {
@@ -426,6 +427,26 @@ class SensitiveViewManager {
         }
     }
 
+    /// Mask-decision write for the wireframe-driven part of the walk: a no-op
+    /// once we are inside an explicitly-unmasked subtree.
+    ///
+    /// The walk continues below an unmask container only to *describe* it (see
+    /// ``traverseViewAndLayers``); the screenshot's behavior for that region was
+    /// settled the moment the container was marked safe. Routing every mask write
+    /// in the traversal through this one guard is what makes "the wireframe sees
+    /// more, the pixels see exactly the same" a property of the code rather than
+    /// a promise — a new mask site added later cannot silently start graying
+    /// pixels inside a region the developer asked to show.
+    private func recordMask(
+        _ decisions: inout [HashableRect: MaskDecision],
+        rect: HashableRect,
+        decision: MaskDecision,
+        insideSafeSubtree: Bool
+    ) {
+        guard !insideSafeSubtree else { return }
+        addOrUpdate(&decisions, rect: rect, decision: decision)
+    }
+
     /// Unified traversal that handles both UIView hierarchy and CALayer hierarchy in a single pass
     ///
     /// This method efficiently combines:
@@ -437,13 +458,20 @@ class SensitiveViewManager {
     /// 2. If not handled at view level, check the view's layer subtree for iOS 26+ SwiftUI content
     /// 3. Recurse into subviews
     ///
+    /// - Parameter insideSafeSubtree: True once an ancestor was explicitly
+    ///   unmasked (`mpReplaySensitive == false`). The walk keeps going so the
+    ///   wireframe can describe content the developer deliberately chose to show,
+    ///   but every mask write below is suppressed (see ``recordMask``) so the
+    ///   screenshot for that region is byte-identical to what it was when the
+    ///   walk stopped at the container.
     private func traverseViewAndLayers(
         _ view: UIView,
         window: UIView,
         maskDecisions: inout [HashableRect: MaskDecision],
         safeFrames: inout Set<HashableRect>,
         wireframes: WireframeCollector?,
-        insideWireframeLeaf: Bool
+        insideWireframeLeaf: Bool,
+        insideSafeSubtree: Bool
     ) {
         // Skip invisible views
         guard view.isVisible() else { return }
@@ -459,9 +487,11 @@ class SensitiveViewManager {
             if let hashableRect = hashableFrame(for: view.layer, in: window) {
                 switch view.mpReplaySensitive {
                     case .some(true):
-                        addOrUpdate(&maskDecisions, rect: hashableRect, decision: .mask)
+                        recordMask(
+                            &maskDecisions, rect: hashableRect, decision: .mask,
+                            insideSafeSubtree: insideSafeSubtree)
                     case .some(false):
-                        safeFrames.insert(hashableRect)
+                        if !insideSafeSubtree { safeFrames.insert(hashableRect) }
                     case .none:
                         break
                 }
@@ -490,29 +520,47 @@ class SensitiveViewManager {
         let declaredText: String? =
             (wireframes != nil && !insideWireframeLeaf) ? declaredWireframeText(for: view) : nil
 
+        // Set once a `.safe` ancestor is crossed; every mask write below is gated
+        // on it. Shadows the parameter deliberately so nothing further down can
+        // read the pre-unmask value by accident.
+        var insideSafeSubtree = insideSafeSubtree
+
         // MARK: - Check UIView level first (UIKit + legacy SwiftUI)
         switch isSensitiveView(view: view) {
             case .safe:
-                // View is explicitly marked as safe - capture frame and stop traversal
-                if let hashableRect = hashableFrame(for: view.layer, in: window) {
+                // View is explicitly marked as safe — record the frame that
+                // exempts this region from masking.
+                if let hashableRect = hashableFrame(for: view.layer, in: window),
+                    !insideSafeSubtree
+                {
                     safeFrames.insert(hashableRect)
-                    if let wireframes, let declaredText {
-                        wireframes.elements.append(
-                            WireframeElement.from(
-                                role: classifyForWireframe(view: view) ?? .text,
-                                text: declaredText,
-                                rect: hashableRect.cgRect,
-                                decision: .declared))
-                    }
                 }
-                return  // Don't process subviews or sublayers
+
+                // An unmask is a statement about *pixels*: "this region is fine
+                // to show." It was never a reason to stop describing the region,
+                // yet stopping here is exactly what made an explicitly-shown
+                // subtree emit zero wireframe elements — the one content the
+                // developer positively vouched for was the one content the AI
+                // summary never heard about. So with wireframes on we fall
+                // through: this view and its children are described like any
+                // other visible content.
+                //
+                // The screenshot is untouched. Everything below runs with
+                // `insideSafeSubtree`, which suppresses every mask write, so this
+                // region grays exactly the same pixels it did when the walk
+                // stopped at the container. With wireframes off there is nothing
+                // to gain by descending, so the original early exit stands.
+                guard wireframes != nil else { return }
+                insideSafeSubtree = true
 
             case .sensitiveTextField:
                 // Text fields are always sensitive and cannot be overridden by safe parents.
                 // Declared text labels the field ("Card number"); the value the user typed
                 // is still never emitted.
                 if let hashableRect = hashableFrame(for: view.layer, in: window) {
-                    addOrUpdate(&maskDecisions, rect: hashableRect, decision: .textInput)
+                    recordMask(
+                        &maskDecisions, rect: hashableRect, decision: .textInput,
+                        insideSafeSubtree: insideSafeSubtree)
                     if let wireframes, !insideWireframeLeaf {
                         wireframes.elements.append(
                             WireframeElement.from(
@@ -525,10 +573,46 @@ class SensitiveViewManager {
                 return  // Don't process subviews or sublayers
 
             case .sensitive:
-                // Determine if this is an auto-detected or manually marked sensitive view
+                // Auto-masking is precisely what an unmask overrides, so inside a
+                // safe subtree an auto-detected view is ordinary visible content:
+                // its pixels ship unmasked, and the wireframe describes it with
+                // its real text like any other element. Matches Android, where
+                // `shouldMask` clears for a class-sensitive view under a safe
+                // ancestor. An *explicit* `mpReplaySensitive = true` nested inside
+                // still falls through to the masked handling below — the developer
+                // asked for that one by name.
+                if insideSafeSubtree, view.mpReplaySensitive != true {
+                    break
+                }
+
+                // Determine if this is an auto-detected or manually marked sensitive view.
+                //
+                // A class registered via `addSensitiveClass` counts as *manually
+                // marked*, reporting `.mask` (wire `EXPLICIT`) rather than `.auto`:
+                // per the ERD's Layer 1 table it is a developer opt-in, alongside
+                // `mpReplay(sensitive: true)`. Only the `maskAllText`/`maskAllImages`/
+                // `maskAllWebViews`/`maskAllMapViews` type matches are `AUTO`.
+                // Matches Android's `isViewClassCustomerSensitive` branch.
+                //
+                // Reporting only — the pixels are identical either way, since the
+                // painter fills every rect in the mask set without reading its
+                // decision, and the safe-frame filter singles out `.textInput`
+                // alone. What changes is the wireframe's `maskDecision` and the
+                // debug overlay's fill, which now paints a registered class red
+                // (mask) rather than orange (auto). One taxonomy, two consumers.
+                //
+                // Tested by class membership rather than by which cache the view
+                // landed in: `isSensitiveView` checks auto-detection *before*
+                // `sensitiveClasses`, so a `UILabel` that is also a registered
+                // class never reaches the class branch and would otherwise report
+                // `AUTO`. Android tests the class directly, so we do too.
                 if let hashableRect = hashableFrame(for: view.layer, in: window) {
-                    let decision: MaskDecision = (view.mpReplaySensitive == true) ? .mask : .auto
-                    addOrUpdate(&maskDecisions, rect: hashableRect, decision: decision)
+                    let isCustomerClass = sensitiveClasses.contains { view.isKind(of: $0) }
+                    let decision: MaskDecision =
+                        (view.mpReplaySensitive == true || isCustomerClass) ? .mask : .auto
+                    recordMask(
+                        &maskDecisions, rect: hashableRect, decision: decision,
+                        insideSafeSubtree: insideSafeSubtree)
                     let role = classifyForWireframe(view: view)
                     if let wireframes, !insideWireframeLeaf, let declaredText {
                         // Emitted even for views that map to no role (fall back to
@@ -594,7 +678,8 @@ class SensitiveViewManager {
                         maskDecisions: &maskDecisions,
                         safeFrames: &safeFrames,
                         wireframes: wireframes,
-                        insideWireframeLeaf: newInsideLeaf)
+                        insideWireframeLeaf: newInsideLeaf,
+                        insideSafeSubtree: insideSafeSubtree)
                 }
             }
         }
@@ -607,7 +692,8 @@ class SensitiveViewManager {
                 maskDecisions: &maskDecisions,
                 safeFrames: &safeFrames,
                 wireframes: wireframes,
-                insideWireframeLeaf: newInsideLeaf)
+                insideWireframeLeaf: newInsideLeaf,
+                insideSafeSubtree: insideSafeSubtree)
         }
     }
 
@@ -622,7 +708,8 @@ class SensitiveViewManager {
         maskDecisions: inout [HashableRect: MaskDecision],
         safeFrames: inout Set<HashableRect>,
         wireframes: WireframeCollector?,
-        insideWireframeLeaf: Bool
+        insideWireframeLeaf: Bool,
+        insideSafeSubtree: Bool
     ) {
 
         // Skip this layer if it's not visible
@@ -630,13 +717,44 @@ class SensitiveViewManager {
             return
         }
 
+        // Skip a layer that is some view's *backing* layer — that view is reached by
+        // the subview recursion, classified there, and its own sublayers walked from
+        // there, so descending here as well double-counts it.
+        //
+        // This is what made a laid-out UIButton emit phantom textless `text` shells
+        // beside its real `button` element: `button.layer.sublayers` contains
+        // `titleLabel.layer`, whose delegate is a `UIButtonLabel`, and `isTextLayer`
+        // treats that as text. Worse, because the layer walk descends the *whole*
+        // layer subtree from every view, an ancestor reached the title layer before
+        // the button was ever classified, so `insideWireframeLeaf` was still false
+        // and could not suppress it.
+        //
+        // The identity check matters and a plain `delegate is UIView` would be wrong.
+        // A standalone `CALayer` may carry a `UIView` delegate that is *not* in the
+        // view hierarchy — the shape iOS 26 SwiftUI produces, and what
+        // `testGetSensitiveFrames_WithLayerHierarchy` pins. The view walk can never
+        // reach that view, so the layer walk must still handle it. Only a layer that
+        // *is* `delegate.layer` is genuinely covered elsewhere.
+        //
+        // Masking is unaffected either way: the view walk auto-masks any `UILabel`
+        // (which `UIButtonLabel` is) when `maskAllText` is on.
+        if let delegateView = layer.delegate as? UIView, delegateView.layer === layer {
+            return
+        }
+
         let isText = isTextLayer(layer)
         let isImage = isImageLayer(layer)
-        let masked = (maskAllText && isText) || (maskAllImages && isImage)
+        // Auto-masking is what an unmask overrides, so inside a safe subtree these
+        // layers are shown and described as ordinary content — same rule the view
+        // walk applies to an auto-detected `UILabel`/`UIImageView`.
+        let masked =
+            !insideSafeSubtree && ((maskAllText && isText) || (maskAllImages && isImage))
 
         if masked {
             if let frame = hashableFrame(for: layer, in: window) {
-                addOrUpdate(&maskDecisions, rect: frame, decision: .auto)
+                recordMask(
+                    &maskDecisions, rect: frame, decision: .auto,
+                    insideSafeSubtree: insideSafeSubtree)
                 if let wireframes, !insideWireframeLeaf {
                     let role: WireframeRole = isText ? .text : .image
                     wireframes.elements.append(
@@ -681,7 +799,8 @@ class SensitiveViewManager {
                 maskDecisions: &maskDecisions,
                 safeFrames: &safeFrames,
                 wireframes: wireframes,
-                insideWireframeLeaf: newInsideLeaf)
+                insideWireframeLeaf: newInsideLeaf,
+                insideSafeSubtree: insideSafeSubtree)
         }
     }
 

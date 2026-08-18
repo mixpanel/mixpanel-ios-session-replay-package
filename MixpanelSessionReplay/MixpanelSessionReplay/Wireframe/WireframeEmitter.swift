@@ -35,8 +35,26 @@ final class WireframeEmitter {
     label: "com.mixpanel.session.replay.wireframe.debug", qos: .utility)
 
   private let hashLock = ReadWriteLock(label: "com.mixpanel.session.replay.wireframe.hash")
-  private var lastElementsHash: Int?
-  private var lastMaskHash: Int?
+
+  /// Hash of the last published ``WireframePayload`` — i.e. of exactly the bytes
+  /// that went on the wire, after geometric masking, sensitive rules,
+  /// glyph/blank normalization, and truncation.
+  ///
+  /// Hashing the *finished* payload rather than the raw walker output is
+  /// deliberate. The ERD defines dedup as "identical renders collapse to one",
+  /// and only the payload determines the render. Raw elements are a strictly
+  /// worse key: text that differs upstream but processes to the same wire value
+  /// — a masked field being typed into, a value the same redact rule rewrites
+  /// each frame — re-emits a byte-identical event on every capture, which is
+  /// exactly the churn dedup exists to kill. Raw elements also miss truncation,
+  /// which happens at serialization here.
+  ///
+  /// This subsumes the old separate mask-bounds hash. Mask rects are not on the
+  /// wire; they matter only through the text they strip, which is already baked
+  /// into the payload. A mask that moves without changing any element's text
+  /// produces an identical render and should dedup. Matches Android's
+  /// `lastPayloadHash` and Flutter's `_lastPayloadHash`.
+  private var lastPayloadHash: Int?
 
   /// - Parameters:
   ///   - options: The wireframe capture options. `wireframesOptions` is the
@@ -51,7 +69,7 @@ final class WireframeEmitter {
     self.debugEmitter = debugEmitter
   }
 
-  /// Hop off the main thread and run Layers 2+3, dedup, serialize, and
+  /// Hop off the main thread and run Layers 2 and 4, dedup, serialize, and
   /// publish. Safe to call from any thread. Returns immediately.
   ///
   /// - Parameter capturedAtMs: Wall-clock instant the frame this wireframe
@@ -80,13 +98,12 @@ final class WireframeEmitter {
   /// Useful when tearing down or switching sessions.
   func resetDedup() {
     hashLock.write {
-      self.lastElementsHash = nil
-      self.lastMaskHash = nil
+      self.lastPayloadHash = nil
     }
   }
 
   #if DEBUG
-    /// Test-only seam. Runs Layers 2+3 (geometric leak-prevention + sensitive
+    /// Test-only seam. Runs Layers 2 and 4 (geometric leak-prevention + sensitive
     /// rules) and applies the same wire text cleaning + truncation that
     /// `processAndPublish` ships, returning the final elements with `decision`
     /// preserved. Lets golden tests assert the *whole* pipeline — including
@@ -114,17 +131,10 @@ final class WireframeEmitter {
     maskBounds: Set<HashableRect>,
     timestamp: Int64
   ) {
-    let elementsHash = hashElements(elements)
-    let maskHash = maskBounds.hashValue
-
-    var shouldPublish = true
-    hashLock.read {
-      if self.lastElementsHash == elementsHash && self.lastMaskHash == maskHash {
-        shouldPublish = false
-      }
-    }
-    guard shouldPublish else { return }
-
+    // Process first, dedup on the result. A deduped frame costs one pipeline
+    // pass — rect intersection and regex over a few hundred elements, on a
+    // utility queue — which is negligible next to the JPEG compression running
+    // alongside it, and buys a key that reflects what actually ships.
     let processed = elements.map { element in
       applyMaskingPipeline(element, maskBounds: maskBounds)
     }
@@ -140,6 +150,15 @@ final class WireframeEmitter {
       }
     )
 
+    let payloadHash = payload.hashValue
+    var shouldPublish = true
+    hashLock.read {
+      if self.lastPayloadHash == payloadHash {
+        shouldPublish = false
+      }
+    }
+    guard shouldPublish else { return }
+
     let sessionEvent = SessionEvent(
       type: EventType.custom,
       data: .customData(SessionCustomEventData(tag: WireframeEmitter.tag, payload: payload)),
@@ -148,8 +167,7 @@ final class WireframeEmitter {
     EventPublisher.shared.publishCustomEvent(sessionEvent)
 
     hashLock.write {
-      self.lastElementsHash = elementsHash
-      self.lastMaskHash = maskHash
+      self.lastPayloadHash = payloadHash
     }
 
     if let debugEmitter {
@@ -317,13 +335,5 @@ final class WireframeEmitter {
     if text.count <= WireframeEmitter.maxTextLength { return text }
     let idx = text.index(text.startIndex, offsetBy: WireframeEmitter.maxTextLength - 1)
     return String(text[..<idx]) + WireframeEmitter.ellipsis
-  }
-
-  private func hashElements(_ elements: [WireframeElement]) -> Int {
-    var hasher = Hasher()
-    for element in elements {
-      hasher.combine(element)
-    }
-    return hasher.finalize()
   }
 }
