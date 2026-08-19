@@ -486,13 +486,26 @@ class SensitiveViewManager {
     /// more, the pixels see exactly the same" a property of the code rather than
     /// a promise — a new mask site added later cannot silently start graying
     /// pixels inside a region the developer asked to show.
+    /// - Parameters:
+    ///   - insideSafeSubtree: an unmask is in force above this rect. It overrides
+    ///     *auto*-masking, which is what it is for, but never an explicit developer
+    ///     decision (`.mask`) or a text input (`.textInput`) — those are recorded
+    ///     anyway. Without that exception an unmask around a login form showed the
+    ///     typed characters in the replay, and an explicitly masked view nested under
+    ///     an unmask shipped its pixels, both of which Android and Flutter gray.
+    ///   - suppressed: already inside a masked region, whose rect covers this one.
+    ///     Recording again would only add redundant rects, so nothing is written —
+    ///     this is how the walk descends into a masked subtree to *describe* it
+    ///     without changing which pixels ship.
     private func recordMask(
         _ decisions: inout [HashableRect: MaskDecision],
         rect: HashableRect,
         decision: MaskDecision,
-        insideSafeSubtree: Bool
+        insideSafeSubtree: Bool,
+        suppressed: Bool = false
     ) {
-        guard !insideSafeSubtree else { return }
+        guard !suppressed else { return }
+        guard !insideSafeSubtree || decision == .mask || decision == .textInput else { return }
         addOrUpdate(&decisions, rect: rect, decision: decision)
     }
 
@@ -544,7 +557,7 @@ class SensitiveViewManager {
                     case .some(true):
                         recordMask(
                             &maskDecisions, rect: hashableRect, decision: .mask,
-                            insideSafeSubtree: insideSafeSubtree || insideMaskedSubtree)
+                            insideSafeSubtree: insideSafeSubtree, suppressed: insideMaskedSubtree)
                     case .some(false):
                         if !insideSafeSubtree && !insideMaskedSubtree {
                             if !insideMaskedSubtree { safeFrames.insert(hashableRect) }
@@ -602,12 +615,18 @@ class SensitiveViewManager {
                 // through: this view and its children are described like any
                 // other visible content.
                 //
-                // The screenshot is untouched. Everything below runs with
-                // `insideSafeSubtree`, which suppresses every mask write, so this
-                // region grays exactly the same pixels it did when the walk
-                // stopped at the container. With wireframes off there is nothing
-                // to gain by descending, so the original early exit stands.
-                guard wireframes != nil else { return }
+                // Everything below runs with `insideSafeSubtree`, which suppresses
+                // *auto* mask writes — the thing an unmask exists to override — while
+                // still recording an explicit `.mask` or a `.textInput` nested inside,
+                // which an unmask was never meant to override.
+                //
+                // The walk descends whether or not wireframes are being collected.
+                // It used to return early when they were off, which was fine while a
+                // safe subtree could not produce masks at all; now that it can, that
+                // shortcut would make masking depend on whether wireframes are enabled
+                // — turning them on would gray pixels that were previously shipped.
+                // `SensitiveViewManagerWireframeTests.testUnmaskSubtree_maskDecisionsUnchanged`
+                // is the guard on exactly that.
                 insideSafeSubtree = true
 
             case .sensitiveTextField:
@@ -669,7 +688,7 @@ class SensitiveViewManager {
                         (view.mpReplaySensitive == true || isCustomerClass) ? .mask : .auto
                     recordMask(
                         &maskDecisions, rect: hashableRect, decision: decision,
-                        insideSafeSubtree: insideSafeSubtree || insideMaskedSubtree)
+                        insideSafeSubtree: insideSafeSubtree, suppressed: insideMaskedSubtree)
                     let role = classifyForWireframe(view: view)
                     if let wireframes, !insideWireframeLeaf, let declaredText {
                         // Emitted even for views that map to no role (fall back to
@@ -768,7 +787,8 @@ class SensitiveViewManager {
                         safeFrames: &safeFrames,
                         wireframes: wireframes,
                         insideWireframeLeaf: newInsideLeaf,
-                        insideSafeSubtree: insideSafeSubtree || insideMaskedSubtree)
+                        insideSafeSubtree: insideSafeSubtree,
+                        insideMaskedSubtree: insideMaskedSubtree)
                 }
             }
         }
@@ -799,7 +819,8 @@ class SensitiveViewManager {
         safeFrames: inout Set<HashableRect>,
         wireframes: WireframeCollector?,
         insideWireframeLeaf: Bool,
-        insideSafeSubtree: Bool
+        insideSafeSubtree: Bool,
+        insideMaskedSubtree: Bool = false
     ) {
 
         // Skip this layer if it's not visible
@@ -890,7 +911,8 @@ class SensitiveViewManager {
                 safeFrames: &safeFrames,
                 wireframes: wireframes,
                 insideWireframeLeaf: newInsideLeaf,
-                insideSafeSubtree: insideSafeSubtree)
+                insideSafeSubtree: insideSafeSubtree,
+                insideMaskedSubtree: insideMaskedSubtree)
         }
     }
 
