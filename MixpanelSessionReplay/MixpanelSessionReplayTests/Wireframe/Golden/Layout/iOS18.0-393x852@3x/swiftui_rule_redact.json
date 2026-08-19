@@ -1,0 +1,19 @@
+{
+  "viewport": [
+    393,
+    852
+  ],
+  "elements": [
+    {
+      "role": "text",
+      "text": "email: [EMAIL]",
+      "bounds": [
+        20,
+        79,
+        9,
+        20
+      ],
+      "maskDecision": "RULE_REDACT"
+    }
+  ]
+}

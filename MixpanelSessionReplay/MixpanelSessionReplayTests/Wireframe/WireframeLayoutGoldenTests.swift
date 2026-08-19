@@ -21,6 +21,7 @@
 //  setting.
 //
 
+import SwiftUI
 import UIKit
 import XCTest
 
@@ -129,6 +130,12 @@ final class WireframeLayoutGoldenTests: XCTestCase {
         assertWireframeLayoutGolden(
             manager: manager, root: root, window: window, rules: rules,
             useAccessibilityLabelFallback: useAccessibilityLabelFallback, golden: name)
+        // Recorded for both toolkits so the suites stay symmetric. It matters most on
+        // the SwiftUI side, where nil text makes masking invisible in the element
+        // golden, but it is real coverage here too.
+        assertWireframeMaskGolden(
+            manager: manager, root: root, window: window,
+            golden: name.replacingOccurrences(of: ".json", with: ".masks.json"))
     }
 
     // MARK: - Text mask decisions

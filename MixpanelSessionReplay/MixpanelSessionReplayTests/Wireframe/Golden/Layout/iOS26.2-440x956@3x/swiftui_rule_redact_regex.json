@@ -1,0 +1,19 @@
+{
+  "viewport": [
+    440,
+    956
+  ],
+  "elements": [
+    {
+      "role": "text",
+      "text": "SSN: [SSN]",
+      "bounds": [
+        20,
+        82,
+        9,
+        20
+      ],
+      "maskDecision": "RULE_REDACT"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "viewport": [
+    440,
+    956
+  ],
+  "elements": [
+    {
+      "role": "text",
+      "text": null,
+      "bounds": [
+        20,
+        82,
+        63,
+        20
+      ],
+      "maskDecision": "NONE"
+    },
+    {
+      "role": "text",
+      "text": "payment form",
+      "bounds": [
+        20,
+        82,
+        260,
+        53
+      ],
+      "maskDecision": "DECLARED"
+    },
+    {
+      "role": "input",
+      "text": null,
+      "bounds": [
+        20,
+        113,
+        260,
+        22
+      ],
+      "maskDecision": "TEXT_ENTRY"
+    }
+  ]
+}

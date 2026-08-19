@@ -818,6 +818,13 @@ class SensitiveViewManager {
         if view is UIImageView { return .image }
         if view is WKWebView { return .text }
         if let swiftUITextFieldClass, view.isKind(of: swiftUITextFieldClass) { return .input }
+        // A pre-iOS-26 SwiftUI `Image` is identified by its *backing layer* class, not
+        // its view class — the same test `isImage(view:)` already makes for masking.
+        // Without this the two sides disagreed: the image was masked but never
+        // described, so a SwiftUI screen summarized as [text, text] on iOS 18 and
+        // [text, image, text] on iOS 26, where the layer walk classifies it. Masking
+        // was correct throughout; only the wireframe lost the element.
+        if let swiftUIImageLayer, type(of: view.layer) == swiftUIImageLayer { return .image }
         if let swiftUiTextClass, type(of: view) == swiftUiTextClass { return .text }
         return nil
     }

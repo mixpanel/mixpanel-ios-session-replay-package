@@ -1,0 +1,5 @@
+{
+  "maskFrames": [
+    { "bounds": [20, 79, 300, 200], "decision": "mask" }
+  ]
+}
