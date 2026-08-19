@@ -399,7 +399,16 @@ class SensitiveViewManager {
         // MARK: - Check UIView level first (UIKit + legacy SwiftUI)
         switch isSensitiveView(view: view) {
             case .safe:
-                // View is explicitly marked as safe - capture frame and stop traversal
+                // View is explicitly marked as safe - but we still need to mask textfields within it
+                var safeViewStack: [UIView] = [view]
+                while !safeViewStack.isEmpty {
+                    let currentView = safeViewStack.removeLast()
+                    if isTextField(view: currentView), let rect = hashableFrame(for: currentView.layer, in: window) {
+                        addOrUpdate(&maskDecisions, rect: rect, decision: .textInput)
+                    }
+                    safeViewStack.append(contentsOf: currentView.subviews)
+                }
+                // Capture the safe view frame
                 if let hashableRect = hashableFrame(for: view.layer, in: window) {
                     safeFrames.insert(hashableRect)
                 }

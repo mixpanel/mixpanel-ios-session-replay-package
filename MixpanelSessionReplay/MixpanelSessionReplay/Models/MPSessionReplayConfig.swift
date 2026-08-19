@@ -65,7 +65,7 @@ public struct MPSessionReplayConfig: Codable {
     /// Determines whether replay events will only be flushed to the server when the device has a WiFi connection.
     ///
     /// - When set to `true`, replay events will only be flushed to the server when the device has a WiFi connection.
-    ///   If there is no WiFi, flushes are skipped and the events remain in the in-memory queue until WiFi is restored (or until the queue reaches its limit and the oldest events are evicted to make room for newer events).
+    ///   If no WiFi is available, flushes are skipped and the events remain in memory — they will be lost if the app is terminated before WiFi becomes available.
     /// - When set to `false`, replay events will be flushed with any network connection, including cellular.
     /// - Default: `true`
     public var wifiOnly: Bool = true

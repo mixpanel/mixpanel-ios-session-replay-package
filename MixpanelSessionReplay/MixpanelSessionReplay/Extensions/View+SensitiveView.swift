@@ -47,34 +47,53 @@ extension UIView: SensitiveView {
     }
 }
 
-struct SensitiveViewWrapperRepresentable: UIViewRepresentable {
-    let onCreate: (SensitiveViewWrapper) -> Void
-
-    func makeUIView(context: Context) -> SensitiveViewWrapper {
-        let wrapper = SensitiveViewWrapper()
-        onCreate(wrapper)
-        return wrapper
-    }
-
-    func updateUIView(_ uiView: SensitiveViewWrapper, context: Context) {}
-}
-
-struct SensitiveModifier: ViewModifier {
-    let isSensitive: Bool
+struct MixpanelReplaySensitiveModifier: ViewModifier {
+    let isSensitive: Bool?
 
     func body(content: Content) -> some View {
-        content
-            .background(
-                SensitiveViewWrapperRepresentable { wrapper in
-                    wrapper.mpReplaySensitive = self.isSensitive
-                }
-            )
+        MixpanelSensitiveWrapper(isSensitive: isSensitive) {
+            content
+        }
     }
 }
 
+/// Wraps SwiftUI content in a UIHostingController to access the underlying UIView
+/// and mark it as sensitive/non-sensitive for Mixpanel session replay
+struct MixpanelSensitiveWrapper<Content: View>: UIViewControllerRepresentable {
+    /// Sensitivity flag: true = mask view, false = show view, nil = not specified
+    let isSensitive: Bool?
+    /// The SwiftUI content to wrap
+    let content: Content
+
+    init(isSensitive: Bool?, @ViewBuilder content: () -> Content) {
+        self.isSensitive = isSensitive
+        self.content = content()
+    }
+
+    /// Creates the UIHostingController and sets the sensitivity flag on its view
+    func makeUIViewController(context: Context) -> UIHostingController<Content> {
+        let controller = UIHostingController(rootView: content)
+
+        // Set the sensitivity flag on the parent UIView for Mixpanel SDK
+        if let isSensitive = isSensitive {
+            controller.view.mpReplaySensitive = isSensitive
+        }
+
+        return controller
+    }
+
+    /// Updates the sensitivity flag when SwiftUI state changes
+    func updateUIViewController(_ uiViewController: UIHostingController<Content>, context: Context) {
+        if let isSensitive = isSensitive {
+            uiViewController.view.mpReplaySensitive = isSensitive
+        }
+    }
+}
+
+// Extension to make it easy to use
 extension View {
-    public func mpReplaySensitive(_ isSensitive: Bool) -> some View {
-        self.modifier(SensitiveModifier(isSensitive: isSensitive))
+    public func mpReplaySensitive(_ isSensitive: Bool?) -> some View {
+        modifier(MixpanelReplaySensitiveModifier(isSensitive: isSensitive))
     }
 }
 
