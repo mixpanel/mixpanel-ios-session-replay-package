@@ -515,25 +515,44 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
         XCTAssertTrue(result.frames.isEmpty, "nothing is masked when maskAllImages is off")
     }
 
-    /// **Masking gap, found by this suite — pinned, not endorsed.**
+    /// SF Symbols are masked and described like any other image.
     ///
-    /// With `maskAllImages` on, a SwiftUI `Image(systemName:)` produces **no mask
-    /// frame at all** on either side of the iOS 26 fork, so its pixels ship. A real
-    /// bitmap in the same position is masked, and a UIKit `UIImageView` is masked —
-    /// this is specific to SF Symbols, which render as neither a detected image layer
-    /// nor a text layer.
+    /// They were not: SwiftUI renders a symbol into a `ColorShapeLayer` rather than an
+    /// `ImageLayer`, so image detection missed it entirely — `maskAllImages` did not
+    /// gray it and the wireframe did not describe it, while a bitmap `Image(uiImage:)`
+    /// in the same position was handled correctly. Fixed by matching that class in
+    /// `isImageLayer`, `isImage(view:)` and `classifyForWireframe`.
     ///
-    /// Practical exposure is limited: SF Symbols are system glyphs, so an app is
-    /// unlikely to render customer content through one. But a customer who sets
-    /// `maskAllImages` reasonably expects every image grayed.
-    func test_swiftui_sfSymbol_isNotMasked_knownGap() {
+    /// The match is narrow by measurement, not by hope: `Color`, `Rectangle().fill()`,
+    /// `Circle().fill()`, `RoundedRectangle().fill()` and `Capsule().stroke()` all
+    /// render into a plain `CALayer`, and gradients into `GradientLayer`. The
+    /// `shapesAreNotMasked` case below is the guard on that.
+    func test_swiftui_sfSymbolIsMaskedLikeAnyImage() {
         manager.maskAllImages = true
         layoutSwiftUI(Image(systemName: "star.fill").resizable().frame(width: 80, height: 80))
         let result = manager.collectFramesAndWireframes(in: root, window: window)
+        XCTAssertFalse(result.frames.isEmpty, "an SF Symbol must be masked under maskAllImages")
+        XCTAssertEqual(result.wireframes.map(\.role), [.image], "and described as an image")
+        assertGolden("swiftui_sf_symbol_auto_masked.json")
+    }
+
+    /// The counterweight: ordinary SwiftUI shapes and colors must NOT be swept up as
+    /// images by the `ColorShapeLayer` match. Masking a plain `Color` under
+    /// `maskAllImages` would gray ordinary UI chrome.
+    func test_swiftui_shapesAreNotMaskedAsImages() {
+        manager.maskAllImages = true
+        layoutSwiftUI(
+            VStack(alignment: .leading, spacing: 8) {
+                Color.gray.frame(width: 60, height: 60)
+                Rectangle().fill(Color.blue).frame(width: 60, height: 60)
+                Circle().fill(Color.blue).frame(width: 60, height: 60)
+                RoundedRectangle(cornerRadius: 12).fill(Color.blue).frame(width: 60, height: 60)
+            }
+        )
+        let result = manager.collectFramesAndWireframes(in: root, window: window)
         XCTAssertTrue(
             result.frames.isEmpty,
-            "KNOWN GAP: an SF Symbol is currently not masked. If this starts failing the "
-                + "gap is fixed — invert the assertion and re-record the goldens.")
-        XCTAssertTrue(result.wireframes.isEmpty, "and it is not described either")
+            "plain colors and shapes are not images and must not be masked")
+        XCTAssertTrue(result.wireframes.isEmpty, "nor described as image elements")
     }
 }

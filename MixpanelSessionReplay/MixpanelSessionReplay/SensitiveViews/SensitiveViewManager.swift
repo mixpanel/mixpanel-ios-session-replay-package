@@ -123,6 +123,32 @@ class SensitiveViewManager {
     private let swiftUITextFieldClass: AnyClass? = NSClassFromString("SwiftUI.TextEditorTextView")
     private let swiftUIImageLayer: AnyClass? = NSClassFromString("SwiftUI.ImageLayer")
 
+    /// Byte codes for SwiftUI's private mangled `ColorShapeLayer` class name, stored
+    /// the same way as `swiftUIDrawingLayerCodes` so the symbol never appears as plain
+    /// text in the binary's string table. `NSClassFromString("SwiftUI.ColorShapeLayer")`
+    /// does not resolve it — unlike `SwiftUI.ImageLayer`, this one carries a private
+    /// discriminator. The discriminator is stable: identical on iOS 18.0 and 26.2.
+    let swiftUIColorShapeLayerCodes: [UInt8] = [
+        95, 84, 116, 67, 55, 83, 119, 105, 102, 116, 85, 73, 80, 51, 51, 95,
+        69, 49, 57, 70, 52, 57, 48, 68, 50, 53, 68, 53, 69, 48, 69, 67,
+        56, 65, 50, 52, 57, 48, 51, 65, 70, 57, 53, 56, 69, 51, 52, 49,
+        49, 53, 67, 111, 108, 111, 114, 83, 104, 97, 112, 101, 76, 97, 121, 101,
+        114,
+    ]
+
+    /// SwiftUI renders an SF Symbol into a `ColorShapeLayer` rather than an
+    /// `ImageLayer`, so symbols were invisible to image detection: `maskAllImages`
+    /// did not gray them and the wireframe did not describe them, while a bitmap
+    /// `Image(uiImage:)` in the same position was handled correctly.
+    ///
+    /// Matching this class is narrow, not a catch-all for SwiftUI shapes. Measured on
+    /// iOS 18.0 and 26.2: `Color`, `Rectangle().fill()`, `Circle().fill()`,
+    /// `RoundedRectangle().fill()` and `Capsule().stroke()` all render into a plain
+    /// `CALayer` (usually via `backgroundColor`), and a gradient into `GradientLayer`.
+    /// `ColorShapeLayer` was produced only by the symbol — pinned by
+    /// `test_swiftui_shapesAreNotMaskedAsImages`.
+    let swiftUIColorShapeLayer: AnyClass?
+
     // MARK: - Legacy SwiftUI Classes (iOS 18 and earlier)
     private let swiftUiTextClass: AnyClass? = NSClassFromString("SwiftUI.CGDrawingView")
 
@@ -158,6 +184,7 @@ class SensitiveViewManager {
         sensitiveClassViews = WeakViewsMap.weakToWeakObjects()
         sensitiveTextFieldViews = WeakViewsMap.weakToWeakObjects()
         swiftUIiOS26TextLayerClass = ObfuscatedClassLookup.resolveClass(from: swiftUIDrawingLayerCodes)
+        swiftUIColorShapeLayer = ObfuscatedClassLookup.resolveClass(from: swiftUIColorShapeLayerCodes)
     }
 
     static func reset() {
@@ -248,6 +275,11 @@ class SensitiveViewManager {
             return true
         }
 
+        // SF Symbols: rendered as a shape layer, not an image layer.
+        if let swiftUIColorShapeLayer, type(of: view.layer) == swiftUIColorShapeLayer {
+            return true
+        }
+
         return false
     }
 
@@ -295,6 +327,12 @@ class SensitiveViewManager {
         // 1. MOST SPECIFIC: Known SwiftUI class (exact match)
         //    Fast pointer comparison, catches specific iOS <26 SwiftUI case
         if let swiftUIImageLayer, type(of: layer) == swiftUIImageLayer {
+            return true
+        }
+
+        // SF Symbols: rendered as a shape layer, not an image layer. See
+        // `swiftUIColorShapeLayer`.
+        if let swiftUIColorShapeLayer, type(of: layer) == swiftUIColorShapeLayer {
             return true
         }
 
@@ -877,6 +915,9 @@ class SensitiveViewManager {
         // [text, image, text] on iOS 26, where the layer walk classifies it. Masking
         // was correct throughout; only the wireframe lost the element.
         if let swiftUIImageLayer, type(of: view.layer) == swiftUIImageLayer { return .image }
+        if let swiftUIColorShapeLayer, type(of: view.layer) == swiftUIColorShapeLayer {
+            return .image
+        }
         if let swiftUiTextClass, type(of: view) == swiftUiTextClass { return .text }
         return nil
     }
