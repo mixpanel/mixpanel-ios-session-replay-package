@@ -367,10 +367,21 @@ class SensitiveViewManager {
             insideWireframeLeaf: false,
             insideSafeSubtree: false)
 
-        // Remove regions contained within safe frames, except text inputs which always stay
+        // Remove regions contained within safe frames.
+        //
+        // An unmask overrides *auto*-masking — that is what it is for. It does not
+        // override a decision the developer made explicitly, so `.mask` (an explicit
+        // `mpReplaySensitive = true` / `addSensitiveView` / registered class) and
+        // `.textInput` both survive the sweep. Without the `.mask` exemption an inner
+        // unmask could delete an enclosing explicit mask outright and show pixels the
+        // developer asked to hide: `Mask > Unmask > Text` is Flutter fixture 20, where
+        // Flutter and Android keep the mask and strip the text geometrically, and iOS
+        // was dropping it whenever the safe rect happened to contain the mask rect —
+        // which a SwiftUI `VStack` hugging its only child makes trivially true.
         if !safeFrames.isEmpty {
             maskDecisions = maskDecisions.filter { (rect, decision) in
-                decision == .textInput || !safeFrames.contains { $0.contains(rect) }
+                decision == .textInput || decision == .mask
+                    || !safeFrames.contains { $0.contains(rect) }
             }
         }
 
@@ -464,6 +475,11 @@ class SensitiveViewManager {
     ///   but every mask write below is suppressed (see ``recordMask``) so the
     ///   screenshot for that region is byte-identical to what it was when the
     ///   walk stopped at the container.
+    /// - Parameter insideMaskedSubtree: set once an explicitly/auto masked view has
+    ///   been entered. The subtree is traversed purely to *describe* it — every mask
+    ///   and unmask write below is suppressed, so the frame set (and therefore the
+    ///   pixels) is identical to stopping at the mask. The container's rect already
+    ///   covers everything inside it.
     private func traverseViewAndLayers(
         _ view: UIView,
         window: UIView,
@@ -471,7 +487,8 @@ class SensitiveViewManager {
         safeFrames: inout Set<HashableRect>,
         wireframes: WireframeCollector?,
         insideWireframeLeaf: Bool,
-        insideSafeSubtree: Bool
+        insideSafeSubtree: Bool,
+        insideMaskedSubtree: Bool = false
     ) {
         // Skip invisible views
         guard view.isVisible() else { return }
@@ -489,9 +506,11 @@ class SensitiveViewManager {
                     case .some(true):
                         recordMask(
                             &maskDecisions, rect: hashableRect, decision: .mask,
-                            insideSafeSubtree: insideSafeSubtree)
+                            insideSafeSubtree: insideSafeSubtree || insideMaskedSubtree)
                     case .some(false):
-                        if !insideSafeSubtree { safeFrames.insert(hashableRect) }
+                        if !insideSafeSubtree && !insideMaskedSubtree {
+                            if !insideMaskedSubtree { safeFrames.insert(hashableRect) }
+                        }
                     case .none:
                         break
                 }
@@ -612,7 +631,7 @@ class SensitiveViewManager {
                         (view.mpReplaySensitive == true || isCustomerClass) ? .mask : .auto
                     recordMask(
                         &maskDecisions, rect: hashableRect, decision: decision,
-                        insideSafeSubtree: insideSafeSubtree)
+                        insideSafeSubtree: insideSafeSubtree || insideMaskedSubtree)
                     let role = classifyForWireframe(view: view)
                     if let wireframes, !insideWireframeLeaf, let declaredText {
                         // Emitted even for views that map to no role (fall back to
@@ -634,7 +653,39 @@ class SensitiveViewManager {
                                 decision: wireDecision))
                     }
                 }
-                return  // Don't process subviews or sublayers
+                // Describe the masked region's *structure* rather than dropping it.
+                //
+                // Stopping here left a masked container invisible to the summarizer
+                // rather than merely redacted: a masked form emitted nothing at all,
+                // where Android and Flutter emit its children as textless shells
+                // (`GEOMETRIC`, stripped by Layer 2 against the mask rect). Existence
+                // and position are not customer content; the text is what must not
+                // escape, and Layer 2 already guarantees that.
+                //
+                // Masking is deliberately untouched. `insideMaskedSubtree` suppresses
+                // every mask and unmask write below, so the frame set is identical to
+                // stopping here — the container's rect already covers the whole
+                // subtree. Same discipline as the unmask fix: descend to describe,
+                // never to change which pixels ship.
+                //
+                // With wireframe collection off there is nothing to gain, so the
+                // original early exit stands and integrations that never asked for
+                // wireframes pay no traversal cost.
+                guard wireframes != nil else { return }
+                let maskedSubtreeLeaf =
+                    insideWireframeLeaf || classifyForWireframe(view: view) != nil
+                for subview in view.subviews {
+                    traverseViewAndLayers(
+                        subview,
+                        window: window,
+                        maskDecisions: &maskDecisions,
+                        safeFrames: &safeFrames,
+                        wireframes: wireframes,
+                        insideWireframeLeaf: maskedSubtreeLeaf,
+                        insideSafeSubtree: insideSafeSubtree,
+                        insideMaskedSubtree: true)
+                }
+                return
 
             case .unknown:
                 // View itself is not sensitive/safe, continue checking
@@ -679,7 +730,7 @@ class SensitiveViewManager {
                         safeFrames: &safeFrames,
                         wireframes: wireframes,
                         insideWireframeLeaf: newInsideLeaf,
-                        insideSafeSubtree: insideSafeSubtree)
+                        insideSafeSubtree: insideSafeSubtree || insideMaskedSubtree)
                 }
             }
         }
@@ -693,7 +744,8 @@ class SensitiveViewManager {
                 safeFrames: &safeFrames,
                 wireframes: wireframes,
                 insideWireframeLeaf: newInsideLeaf,
-                insideSafeSubtree: insideSafeSubtree)
+                insideSafeSubtree: insideSafeSubtree,
+                insideMaskedSubtree: insideMaskedSubtree)
         }
     }
 

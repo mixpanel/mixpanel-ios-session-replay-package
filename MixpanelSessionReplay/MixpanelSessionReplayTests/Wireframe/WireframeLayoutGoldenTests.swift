@@ -262,19 +262,16 @@ final class WireframeLayoutGoldenTests: XCTestCase {
 
     // MARK: - Nested directives
 
-    /// **Cross-platform divergence, found by this suite — pinned, not endorsed.**
+    /// Content inside an explicitly masked container is still *described* — a textless
+    /// shell with `GEOMETRIC`, matching Android's `nested_unmask_in_mask_geometric`
+    /// and Flutter fixtures 20/21.
     ///
-    /// The golden is **empty**. An explicitly masked view `return`s before its
-    /// subviews (`// Don't process subviews or sublayers`), and a `UIStackView`
-    /// maps to no wireframe role, so nothing inside a masked container is described
-    /// at all. Android and Flutter emit the inner content as a textless shell with
-    /// `GEOMETRIC` — see Android's `nested_unmask_in_mask_geometric` (1 element) and
-    /// Flutter fixtures 20/21.
-    ///
-    /// iOS is the conservative side here, so this is a fidelity gap rather than a
-    /// leak: the AI summary loses the structure of any masked region. It is the
-    /// mirror of the unmask early-return that was already fixed — the mask-side
-    /// early return was left in place.
+    /// The walk used to `return` before a masked view's subviews, so a masked region
+    /// emitted nothing at all: the summary lost the structure entirely rather than
+    /// merely losing the text. It now descends to describe, with every mask and unmask
+    /// write below suppressed, so the pixels are unchanged — the container's rect
+    /// already covers the subtree. Layer 2 does the redaction, stripping the text
+    /// against that rect.
     func test_layout_nestedUnmaskInMaskStripsGeometrically() {
         let inner = label("Inner unmasked")
         inner.mpReplaySensitive = false
@@ -282,7 +279,43 @@ final class WireframeLayoutGoldenTests: XCTestCase {
         masked.axis = .vertical
         masked.mpReplaySensitive = true
         layout([masked])
+        // Through the full pipeline: the walk describes it, Layer 2 redacts it against
+        // the container's mask rect. Asserting on the raw walk would see the text still
+        // present, which is the emitter's job to strip, not the walk's.
+        let collected = manager.collectFramesAndWireframes(in: root, window: window)
+        let processed = WireframeEmitter(options: MPWireframesOptions())
+            .processedElementsForTesting(
+                elements: collected.wireframes, maskBounds: Set(collected.frames.keys))
+        XCTAssertEqual(processed.count, 1, "the masked container's contents are still described")
+        XCTAssertNil(processed.first?.text, "but never with their text")
+        XCTAssertEqual(processed.first?.decision, .geometric, "stripped by the mask's rect")
         assertGolden("layout_nested_unmask_in_mask_geometric.json")
+    }
+
+    /// The case this matters for: a masked form emits its structure, not nothing.
+    ///
+    /// Existence, role and position are not customer content — two textless `input`
+    /// shells beside a `button` still reads as a login form to a summarizer, which is
+    /// the whole point of the wireframe. Only the text must not escape, and Layer 2
+    /// guarantees that against the container's mask rect.
+    func test_layout_maskedContainerStillDescribesItsStructure() {
+        let form = UIStackView(arrangedSubviews: [
+            label("Sign in"),
+            textField("user@example.com"),
+            button(title: "Log in"),
+        ])
+        form.axis = .vertical
+        form.spacing = 8
+        form.alignment = .leading
+        form.mpReplaySensitive = true
+        layout([form])
+
+        let result = manager.collectFramesAndWireframes(in: root, window: window)
+        XCTAssertFalse(result.frames.isEmpty, "the region is still masked")
+        XCTAssertEqual(
+            result.wireframes.map(\.role), [.text, .input, .button],
+            "structure survives inside a mask")
+        assertGolden("layout_masked_container_describes_structure.json")
     }
 
     func test_layout_nestedMaskInUnmaskInnerMaskWins() {

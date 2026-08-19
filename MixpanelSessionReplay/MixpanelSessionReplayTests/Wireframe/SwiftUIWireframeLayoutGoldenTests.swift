@@ -229,28 +229,27 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
     }
 
     /// The degenerate variant: the unmask covers *exactly* the same rect as the mask,
-    /// because a `VStack` hugs its only child. The safe-frame sweep drops a mask that
-    /// a safe frame contains, so the innermost directive wins and the pixels show.
+    /// because a `VStack` hugs its only child. The mask must still stand.
     ///
-    /// This is SwiftUI-specific by construction. `.mpReplay()` plants a background
-    /// *rect* rather than marking an ancestor, so there is no traversal stop — in
-    /// UIKit the mask on an ancestor ends the walk before any inner unmask is seen,
-    /// which is why `layout_nested_unmask_in_mask_geometric` still records its mask.
+    /// This is the case that exposed the bug. `.mpReplay()` plants a background *rect*
+    /// rather than marking an ancestor, so unlike UIKit there is no traversal stop and
+    /// the safe-frame sweep arbitrates — and the sweep used to drop any mask a safe
+    /// frame contained, which coincident rects make trivially true. An inner unmask
+    /// could therefore delete an enclosing explicit mask and show pixels the developer
+    /// asked to hide. `Mask > Unmask > Text` is Flutter fixture 20, where Flutter and
+    /// Android keep the mask and strip the text geometrically.
     ///
-    /// Android and Flutter would keep the mask here and strip the text geometrically.
-    /// Whether "mask a container, unmask exactly its contents" should resolve to shown
-    /// or masked is a genuine question, but it is a contradictory instruction from the
-    /// developer either way, and the realistic non-coincident case above already
-    /// behaves correctly. Recorded so the choice is visible rather than accidental.
-    func test_swiftui_unmaskCoincidentWithMask_innermostWins() {
+    /// Fixed by exempting `.mask` from the sweep alongside `.textInput`: an unmask
+    /// overrides *auto*-masking, never an explicit developer decision.
+    func test_swiftui_unmaskCoincidentWithMask_maskStillWins() {
         layoutSwiftUI(
             VStack { Text("Inner unmasked").mpReplay(sensitive: false) }
                 .mpReplay(sensitive: true)
         )
         let result = manager.collectFramesAndWireframes(in: root, window: window)
-        XCTAssertTrue(
+        XCTAssertFalse(
             result.frames.isEmpty,
-            "an unmask whose rect contains the mask's rect removes it (safe-frame sweep)")
+            "an unmask must not delete an enclosing explicit mask, even at identical bounds")
         assertGolden("swiftui_unmask_coincident_with_mask.json")
     }
 
@@ -267,15 +266,18 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
         assertGolden("swiftui_nested_unmask_under_layout.json")
     }
 
-    /// Empty mask golden here is the **documented, accepted** divergence: an explicit
-    /// mask nested under an unmask keeps showing its pixels on iOS, where Android and
-    /// Flutter gray them (Tyler's call, 2026-08-18 — see the Android `CLAUDE.md`
-    /// table). The wireframe is a textless shell on all three either way.
+    /// An explicit mask nested under an unmask keeps its mask, matching Android and
+    /// Flutter. This previously showed its pixels on iOS — recorded in the Android
+    /// `CLAUDE.md` as an accepted divergence — and is now aligned by the same `.mask`
+    /// exemption in the safe-frame sweep. The wireframe is a textless shell either way.
     func test_swiftui_nestedMaskInUnmask() {
         layoutSwiftUI(
             VStack { Text("Still secret").mpReplay(sensitive: true) }
                 .mpReplay(sensitive: false)
         )
+        XCTAssertFalse(
+            manager.collectFramesAndWireframes(in: root, window: window).frames.isEmpty,
+            "an unmask does not override an explicit mask")
         assertGolden("swiftui_nested_mask_in_unmask.json")
     }
 

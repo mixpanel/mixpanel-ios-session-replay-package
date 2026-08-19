@@ -3,5 +3,17 @@
     402,
     874
   ],
-  "elements": []
+  "elements": [
+    {
+      "role": "text",
+      "text": null,
+      "bounds": [
+        20,
+        20,
+        121,
+        20
+      ],
+      "maskDecision": "GEOMETRIC"
+    }
+  ]
 }

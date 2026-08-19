@@ -1,0 +1,6 @@
+{
+  "maskFrames": [
+    { "bounds": [20, 20, 260, 103], "decision": "mask" },
+    { "bounds": [20, 48, 260, 34], "decision": "textInput" }
+  ]
+}
