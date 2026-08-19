@@ -118,11 +118,11 @@ class MPSessionReplayAutoMaskedViewsTests: BaseTests {
 
         SensitiveViewManager.shared.knownSensitiveViews.insert(label)
         SensitiveViewManager.shared.knownSensitiveViews.insert(imageView)
-        SensitiveViewManager.shared.sensitiveTextFieldViews.insert(textField)
+        SensitiveViewManager.shared.sensitiveTextInputViews.insert(textField)
         SensitiveViewManager.shared.sensitiveClassViews.insert(customView)
 
         XCTAssertTrue(SensitiveViewManager.shared.knownSensitiveViews.contains(label))
-        XCTAssertTrue(SensitiveViewManager.shared.sensitiveTextFieldViews.contains(textField))
+        XCTAssertTrue(SensitiveViewManager.shared.sensitiveTextInputViews.contains(textField))
         XCTAssertTrue(SensitiveViewManager.shared.sensitiveClassViews.contains(customView))
 
         // Update masking - should clear all caches
@@ -137,7 +137,7 @@ class MPSessionReplayAutoMaskedViewsTests: BaseTests {
 
         XCTAssertFalse(SensitiveViewManager.shared.knownSensitiveViews.contains(label))
         XCTAssertFalse(SensitiveViewManager.shared.knownSensitiveViews.contains(imageView))
-        XCTAssertFalse(SensitiveViewManager.shared.sensitiveTextFieldViews.contains(textField))
+        XCTAssertFalse(SensitiveViewManager.shared.sensitiveTextInputViews.contains(textField))
         XCTAssertFalse(SensitiveViewManager.shared.sensitiveClassViews.contains(customView))
     }
 

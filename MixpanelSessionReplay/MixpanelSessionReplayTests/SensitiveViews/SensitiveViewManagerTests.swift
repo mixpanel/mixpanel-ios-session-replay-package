@@ -32,11 +32,27 @@ class SensitiveViewManagerTests: BaseTests {
         XCTAssertEqual(result, .sensitiveTextField, "UITextField should be detected as sensitiveTextField")
     }
 
+    func testSensitiveViewDetection_EditableTextView() {
+        let textView = UITextView()
+        textView.isEditable = true
+        let result = manager.isSensitiveView(view: textView)
+        XCTAssertEqual(result, .sensitiveTextField, "Editable UITextView should be detected as sensitiveTextField")
+    }
+
     func testSensitiveViewDetection_Label() {
         let label = UILabel()
         let result = manager.isSensitiveView(view: label)
         XCTAssertEqual(
             result, .sensitive, "UILabel should be detected as sensitive when maskAllText is enabled")
+    }
+
+    func testSensitiveViewDetection_NonEditableTextView() {
+        let textView = UITextView()
+        textView.isEditable = false
+        let result = manager.isSensitiveView(view: textView)
+        XCTAssertEqual(
+            result, .sensitive,
+            "Non-editable UITextView should be detected as sensitive (like a label) when maskAllText is enabled")
     }
 
     func testSensitiveViewDetection_ImageView() {
@@ -164,11 +180,11 @@ class SensitiveViewManagerTests: BaseTests {
 
         manager.knownSensitiveViews.insert(label)
         manager.sensitiveClassViews.insert(customView)
-        manager.sensitiveTextFieldViews.insert(textField)
+        manager.sensitiveTextInputViews.insert(textField)
 
         XCTAssertTrue(manager.knownSensitiveViews.contains(label))
         XCTAssertTrue(manager.sensitiveClassViews.contains(customView))
-        XCTAssertTrue(manager.sensitiveTextFieldViews.contains(textField))
+        XCTAssertTrue(manager.sensitiveTextInputViews.contains(textField))
 
         // Clear cache
         manager.clearCache()
@@ -176,7 +192,7 @@ class SensitiveViewManagerTests: BaseTests {
         // Verify all caches are cleared
         XCTAssertFalse(manager.knownSensitiveViews.contains(label))
         XCTAssertFalse(manager.sensitiveClassViews.contains(customView))
-        XCTAssertFalse(manager.sensitiveTextFieldViews.contains(textField))
+        XCTAssertFalse(manager.sensitiveTextInputViews.contains(textField))
     }
 
     func testSensitiveViewDetection_TextField_ReturnsSensitiveTextField() {
