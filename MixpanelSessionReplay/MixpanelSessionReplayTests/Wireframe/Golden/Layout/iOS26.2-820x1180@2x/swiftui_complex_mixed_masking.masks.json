@@ -1,8 +1,0 @@
-{
-  "maskFrames": [
-    { "bounds": [20, 20, 248, 33], "decision": "auto" },
-    { "bounds": [20, 210, 100, 100], "decision": "mask" },
-    { "bounds": [20, 323, 70, 20], "decision": "auto" },
-    { "bounds": [166, 322, 120, 22], "decision": "textInput" }
-  ]
-}

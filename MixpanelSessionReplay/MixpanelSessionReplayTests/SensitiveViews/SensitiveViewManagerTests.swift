@@ -478,7 +478,16 @@ class SensitiveViewManagerTests: BaseTests {
     }
 
     @available(iOS 26.0, *)
-    func testGetSensitiveFrames_WithLayerHierarchy() {
+    /// Scoped to iOS 26+, matching what it builds. The standalone `CALayer` with a
+    /// `UIImageView` delegate is the shape SwiftUI produces from iOS 26 (see the
+    /// comment below), and the only thing that can detect it is `traverseLayer`, which
+    /// is `@available(iOS 26.0, *)`. Below 26 the walk is views-only and that layer is
+    /// unreachable by design, so the test asserted something impossible and failed --
+    /// it had simply never been run on an older runtime, because CI only ran 26.2.
+    func testGetSensitiveFrames_WithLayerHierarchy() throws {
+        guard #available(iOS 26.0, *) else {
+            throw XCTSkip("Layer-based detection is iOS 26+; the walk is views-only below it.")
+        }
         let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
         let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
 

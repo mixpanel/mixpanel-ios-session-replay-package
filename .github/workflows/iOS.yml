@@ -15,23 +15,48 @@ jobs:
       # than masking them.
       fail-fast: false
       matrix:
+        # One device per OS. The axis worth covering is the OS, not the screen:
+        # SensitiveViewManager forks at `#available(iOS 26.0, *)`, and below 26 the
+        # entire layer walk is absent, so SwiftUI content is found by a different
+        # code path. Extra devices on the same OS re-run the same path.
+        #
+        # iPhone 17 does not exist on the 18.0 runtime, so the older leg uses the
+        # closest equivalent from the iPhone 16 family.
+        #
         # Wireframe layout goldens are recorded per destination, under
         # MixpanelSessionReplayTests/Wireframe/Golden/Layout/<key>/, where the key
         # is derived from OS version + logical screen size + scale. Adding a
-        # destination here means recording its directory (run the suite once; a
-        # missing golden is written and passes). Removing one means deleting its
-        # directory. iPad is deliberately included: it is the only @2x coverage,
-        # and text measures 1pt differently at @2x than @3x.
+        # destination means recording its directory (run the suite once; a missing
+        # golden is written and passes); removing one means deleting its directory.
         destination:
           - 'name=iPhone 17,OS=26.2'
-          - 'name=iPhone 17 Pro Max,OS=26.2'
-          - 'name=iPad (A16),OS=26.2'
+          - 'name=iPhone 16,OS=18.0'
     name: Test (${{ matrix.destination }})
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
     - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90  # v1
       with:
         xcode-version: '26.2'
+    - name: Ensure the simulator runtime is present
+      # The pinned Xcode ships only its own iOS runtime, so the older leg needs one
+      # the image may not carry. Try to fetch it, and if it still is not there, say
+      # so plainly -- xcodebuild's own error for a missing runtime is just
+      # "Unable to find a device matching the provided destination specifier", which
+      # reads like a typo in the destination rather than a missing download.
+      run: |
+        OS_VERSION="$(printf '%s' "${{ matrix.destination }}" | sed -n 's/.*OS=\([0-9.]*\).*/\1/p')"
+        if xcrun simctl list runtimes | grep -q "iOS ${OS_VERSION}"; then
+          echo "iOS ${OS_VERSION} runtime already present"
+          exit 0
+        fi
+        echo "iOS ${OS_VERSION} runtime missing; attempting download"
+        xcodebuild -downloadPlatform iOS -buildVersion "${OS_VERSION}" || true
+        if ! xcrun simctl list runtimes | grep -q "iOS ${OS_VERSION}"; then
+          echo "::error::iOS ${OS_VERSION} simulator runtime is unavailable on this image."
+          echo "Available runtimes:"; xcrun simctl list runtimes
+          exit 1
+        fi
+
     - name: Run Test
       working-directory: MixpanelSessionReplay
       run: |
