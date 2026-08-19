@@ -537,4 +537,169 @@ class SensitiveViewManagerTests: BaseTests {
                 + "SwiftUI may have renamed/removed CGDrawingLayer in this iOS version — "
         )
     }
+
+    // MARK: - PR #113 Tests: TextField Masking in Safe Views
+
+    func testTextFieldInSafeView_IsMasked() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        // Create a container marked as safe
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        // Add a textfield inside the safe container
+        let textField = UITextField(frame: CGRect(x: 10, y: 10, width: 80, height: 30))
+        safeContainer.addSubview(textField)
+
+        // Add a regular label inside safe container (should not be masked)
+        let label = UILabel(frame: CGRect(x: 10, y: 50, width: 80, height: 20))
+        safeContainer.addSubview(label)
+
+        manager.maskAllText = true
+        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // The textfield should be masked even though its parent is safe
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField.frame)], .textInput,
+            "TextField inside safe container should still be masked as textInput")
+
+        // The label should not be masked (parent is safe)
+        XCTAssertNil(
+            sensitiveFrames[HashableRect(label.frame)],
+            "Label inside safe container should not be masked")
+    }
+
+    func testNestedTextFieldsInSafeView_AllMasked() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
+
+        // Create a safe container
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        // Add a nested container inside safe view
+        let nestedContainer = UIView(frame: CGRect(x: 10, y: 10, width: 180, height: 180))
+        safeContainer.addSubview(nestedContainer)
+
+        // Add textfield at level 1 (direct child of safe view)
+        let textField1 = UITextField(frame: CGRect(x: 10, y: 10, width: 80, height: 30))
+        safeContainer.addSubview(textField1)
+
+        // Add textfield at level 2 (nested inside another view)
+        let textField2 = UITextField(frame: CGRect(x: 10, y: 10, width: 80, height: 30))
+        nestedContainer.addSubview(textField2)
+
+        // Add deeply nested textfield at level 3
+        let deepContainer = UIView(frame: CGRect(x: 10, y: 50, width: 160, height: 120))
+        nestedContainer.addSubview(deepContainer)
+        let textField3 = UITextField(frame: CGRect(x: 10, y: 10, width: 80, height: 30))
+        deepContainer.addSubview(textField3)
+
+        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // All textfields should be masked via stack-based traversal
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField1.frame)], .textInput,
+            "TextField at level 1 should be masked")
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField2.frame)], .textInput,
+            "TextField at level 2 should be masked")
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField3.frame)], .textInput,
+            "Deeply nested textfield at level 3 should be masked")
+    }
+
+    func testSafeView_WithoutTextFields_BehavesNormally() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        // Create a safe container with no textfields
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        // Add regular views inside (should not be masked)
+        let label = UILabel(frame: CGRect(x: 10, y: 10, width: 80, height: 20))
+        safeContainer.addSubview(label)
+
+        let imageView = UIImageView(frame: CGRect(x: 10, y: 40, width: 80, height: 40))
+        safeContainer.addSubview(imageView)
+
+        manager.maskAllText = true
+        manager.maskAllImages = true
+        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // Nothing should be masked (all inside safe container, no textfields)
+        XCTAssertNil(
+            sensitiveFrames[HashableRect(label.frame)],
+            "Label inside safe container should not be masked")
+        XCTAssertNil(
+            sensitiveFrames[HashableRect(imageView.frame)],
+            "ImageView inside safe container should not be masked")
+    }
+
+    func testMultipleSafeViews_WithTextFields() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+
+        // First safe container with textfield
+        let safeContainer1 = UIView(frame: CGRect(x: 0, y: 0, width: 140, height: 100))
+        safeContainer1.mpReplaySensitive = false
+        rootView.addSubview(safeContainer1)
+
+        let textField1 = UITextField(frame: CGRect(x: 10, y: 10, width: 120, height: 30))
+        safeContainer1.addSubview(textField1)
+
+        // Second safe container with textfield
+        let safeContainer2 = UIView(frame: CGRect(x: 150, y: 0, width: 140, height: 100))
+        safeContainer2.mpReplaySensitive = false
+        rootView.addSubview(safeContainer2)
+
+        let textField2 = UITextField(frame: CGRect(x: 10, y: 10, width: 120, height: 30))
+        safeContainer2.addSubview(textField2)
+
+        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // Both textfields should be masked
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField1.frame)], .textInput,
+            "TextField in first safe container should be masked")
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField2.frame)], .textInput,
+            "TextField in second safe container should be masked")
+    }
+
+    func testSafeViewWithTextFieldAndSensitiveView_BothHandledCorrectly() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        // Safe container
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        // Textfield inside safe view (should be masked)
+        let textField = UITextField(frame: CGRect(x: 10, y: 10, width: 80, height: 30))
+        safeContainer.addSubview(textField)
+
+        // Regular sensitive view outside safe container (should be masked)
+        let sensitiveView = UIView(frame: CGRect(x: 120, y: 10, width: 70, height: 70))
+        sensitiveView.mpReplaySensitive = true
+        rootView.addSubview(sensitiveView)
+
+        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // TextField should be masked
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField.frame)], .textInput,
+            "TextField inside safe container should be masked")
+
+        // Sensitive view should be masked
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(sensitiveView.frame)], .mask,
+            "Explicitly sensitive view should be masked as .mask")
+    }
 }
