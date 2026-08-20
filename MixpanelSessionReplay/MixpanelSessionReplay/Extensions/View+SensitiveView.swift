@@ -76,7 +76,12 @@ struct MixpanelSensitiveWrapper<Content: View>: UIViewControllerRepresentable {
 
         // Always set the sensitivity flag, even when nil, to prevent stale values
         controller.view.mpReplaySensitive = isSensitive
-
+        // iOS 15 and below: disable autoresizing to respect SwiftUI layout
+        if #available(iOS 16.0, *) {
+            // sizeThatFits will handle sizing
+        } else {
+            controller.view.translatesAutoresizingMaskIntoConstraints = false
+        }
         return controller
     }
 
@@ -87,6 +92,17 @@ struct MixpanelSensitiveWrapper<Content: View>: UIViewControllerRepresentable {
 
         // Always update sensitivity flag, even when nil, to clear previous values
         uiViewController.view.mpReplaySensitive = isSensitive
+    }
+
+    @available(iOS 16.0, *)
+    func sizeThatFits(_ proposal: ProposedViewSize, uiViewController: UIHostingController<Content>, context: Context)
+        -> CGSize?
+    {
+        return uiViewController.sizeThatFits(
+            in: CGSize(
+                width: proposal.width ?? .infinity,
+                height: proposal.height ?? .infinity
+            ))
     }
 }
 
