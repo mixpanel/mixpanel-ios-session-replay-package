@@ -74,19 +74,19 @@ struct MixpanelSensitiveWrapper<Content: View>: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIHostingController<Content> {
         let controller = UIHostingController(rootView: content)
 
-        // Set the sensitivity flag on the parent UIView for Mixpanel SDK
-        if let isSensitive = isSensitive {
-            controller.view.mpReplaySensitive = isSensitive
-        }
+        // Always set the sensitivity flag, even when nil, to prevent stale values
+        controller.view.mpReplaySensitive = isSensitive
 
         return controller
     }
 
-    /// Updates the sensitivity flag when SwiftUI state changes
+    /// Updates the content and sensitivity flag when SwiftUI state changes
     func updateUIViewController(_ uiViewController: UIHostingController<Content>, context: Context) {
-        if let isSensitive = isSensitive {
-            uiViewController.view.mpReplaySensitive = isSensitive
-        }
+        // Update content when state changes
+        uiViewController.rootView = content
+
+        // Always update sensitivity flag, even when nil, to clear previous values
+        uiViewController.view.mpReplaySensitive = isSensitive
     }
 }
 

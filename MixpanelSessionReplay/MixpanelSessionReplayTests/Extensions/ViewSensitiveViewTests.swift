@@ -141,6 +141,36 @@ class ViewSensitiveViewTests: XCTestCase {
             controller.view.mpReplaySensitive, true,
             "Should update to true after updateUIViewController")
     }
+
+    func testMixpanelSensitiveWrapper_ClearsPropertyWhenNil() {
+        // Test that the wrapper clears the property when isSensitive becomes nil
+        let content = Text("Test Content")
+
+        // Start with true
+        let wrapper1 = MixpanelSensitiveWrapper(isSensitive: true) {
+            content
+        }
+
+        let controller = wrapper1.makeUIViewController(
+            context: ViewControllerRepresentableContext(wrapper1))
+
+        XCTAssertEqual(
+            controller.view.mpReplaySensitive, true,
+            "Initial value should be true")
+
+        // Update to nil - should clear the property
+        let wrapper2 = MixpanelSensitiveWrapper(isSensitive: nil) {
+            content
+        }
+
+        wrapper2.updateUIViewController(
+            controller,
+            context: ViewControllerRepresentableContext(wrapper2))
+
+        XCTAssertNil(
+            controller.view.mpReplaySensitive,
+            "Property should be cleared when isSensitive becomes nil")
+    }
 }
 
 // Helper to create ViewControllerRepresentableContext for testing
