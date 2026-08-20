@@ -241,12 +241,7 @@ class SensitiveViewManager {
     }
 
     func isTextInput(view: UIView) -> Bool {
-        if view.isKind(of: UITextField.self) {
-            return true
-        }
-
-        // Check if the textView is editable, then consider as textInput
-        if view.isKind(of: UITextView.self), let textView = view as? UITextView {
+        if view.isKind(of: UITextField.self) || view.isKind(of: UITextView.self) {
             return true
         }
 
