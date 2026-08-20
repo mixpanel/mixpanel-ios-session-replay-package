@@ -218,11 +218,6 @@ class SensitiveViewManager {
             return true
         }
 
-        // Check if the textView is non-editable, then consider as label
-        if view.isKind(of: UITextView.self), let textView = view as? UITextView, !textView.isEditable {
-            return true
-        }
-
         // Legacy: SwiftUI CGDrawingView (iOS 18 and earlier)
         if let swiftUiTextClass, type(of: view) == swiftUiTextClass {
             return true
@@ -251,7 +246,7 @@ class SensitiveViewManager {
         }
 
         // Check if the textView is editable, then consider as textInput
-        if view.isKind(of: UITextView.self), let textView = view as? UITextView, textView.isEditable {
+        if view.isKind(of: UITextView.self), let textView = view as? UITextView {
             return true
         }
 
