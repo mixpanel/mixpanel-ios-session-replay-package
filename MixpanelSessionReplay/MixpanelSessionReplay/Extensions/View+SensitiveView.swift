@@ -47,34 +47,39 @@ extension UIView: SensitiveView {
     }
 }
 
-struct SensitiveViewWrapperRepresentable: UIViewRepresentable {
-    let onCreate: (SensitiveViewWrapper) -> Void
+/// Creates an invisible marker view as a sibling to mark the parent view as sensitive/safe
+/// Uses .background() to create a sibling relationship without wrapping or affecting layout
+struct MixpanelSensitiveMarker: UIViewRepresentable {
+    /// Sensitivity flag: true = mask view, false = show view, nil = not specified
+    let isSensitive: Bool?
 
-    func makeUIView(context: Context) -> SensitiveViewWrapper {
-        let wrapper = SensitiveViewWrapper()
-        onCreate(wrapper)
-        return wrapper
+    func makeUIView(context: Context) -> UIView {
+        let marker = UIView(frame: .zero)
+        marker.isHidden = true  // Invisible - doesn't affect layout or rendering
+        marker.isUserInteractionEnabled = false  // Doesn't intercept touches
+        return marker
     }
 
-    func updateUIView(_ uiView: SensitiveViewWrapper, context: Context) {}
+    func updateUIView(_ uiView: UIView, context: Context) {
+        // Mark the parent view (which contains both the marker and actual content)
+        // This allows traversal into the content's children normally
+        DispatchQueue.main.async {
+            uiView.superview?.mpReplaySensitive = isSensitive
+        }
+    }
 }
 
-struct SensitiveModifier: ViewModifier {
-    let isSensitive: Bool
+struct MixpanelReplaySensitiveModifier: ViewModifier {
+    let isSensitive: Bool?
 
     func body(content: Content) -> some View {
-        content
-            .background(
-                SensitiveViewWrapperRepresentable { wrapper in
-                    wrapper.mpReplaySensitive = self.isSensitive
-                }
-            )
+        content.background(MixpanelSensitiveMarker(isSensitive: isSensitive))
     }
 }
 
 extension View {
-    public func mpReplaySensitive(_ isSensitive: Bool) -> some View {
-        self.modifier(SensitiveModifier(isSensitive: isSensitive))
+    public func mpReplaySensitive(_ isSensitive: Bool?) -> some View {
+        modifier(MixpanelReplaySensitiveModifier(isSensitive: isSensitive))
     }
 }
 
