@@ -173,7 +173,7 @@ class SensitiveViewManager {
             return .sensitive
         }
 
-        // Text inputs (textfields and editable textviews) are always sensitive, so check before !isSensitive
+        // Text inputs (UITextField / UITextView) are always sensitive, so check before !isSensitive
         if isTextInput(view: view) {
             sensitiveTextInputViews.insert(view)
             return .sensitiveTextField
