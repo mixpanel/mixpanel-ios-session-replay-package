@@ -702,4 +702,43 @@ class SensitiveViewManagerTests: BaseTests {
             sensitiveFrames[HashableRect(sensitiveView.frame)], .mask,
             "Explicitly sensitive view should be masked as .mask")
     }
+
+    func testSafeView_InvisibleTextFieldsNotMasked() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        // Safe container
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        // Hidden textfield (should NOT be masked)
+        let hiddenTextField = UITextField(frame: CGRect(x: 10, y: 10, width: 80, height: 30))
+        hiddenTextField.isHidden = true
+        safeContainer.addSubview(hiddenTextField)
+
+        // Transparent textfield (should NOT be masked)
+        let transparentTextField = UITextField(frame: CGRect(x: 10, y: 50, width: 80, height: 30))
+        transparentTextField.alpha = 0
+        safeContainer.addSubview(transparentTextField)
+
+        // Visible textfield (should be masked)
+        let visibleTextField = UITextField(frame: CGRect(x: 10, y: 90, width: 80, height: 30))
+        safeContainer.addSubview(visibleTextField)
+
+        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // Hidden and transparent textfields should NOT be in sensitive frames
+        XCTAssertNil(
+            sensitiveFrames[HashableRect(hiddenTextField.frame)],
+            "Hidden textfield should not be masked")
+        XCTAssertNil(
+            sensitiveFrames[HashableRect(transparentTextField.frame)],
+            "Transparent textfield should not be masked")
+
+        // Visible textfield SHOULD be masked
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(visibleTextField.frame)], .textInput,
+            "Visible textfield should be masked")
+    }
 }

@@ -403,6 +403,10 @@ class SensitiveViewManager {
                 var safeViewStack: [UIView] = [view]
                 while !safeViewStack.isEmpty {
                     let currentView = safeViewStack.removeLast()
+
+                    // Skip invisible views (hidden or transparent) to avoid masking visible content
+                    guard currentView.isVisible() else { continue }
+
                     if isTextField(view: currentView), let rect = hashableFrame(for: currentView.layer, in: window) {
                         addOrUpdate(&maskDecisions, rect: rect, decision: .textInput)
                     }
