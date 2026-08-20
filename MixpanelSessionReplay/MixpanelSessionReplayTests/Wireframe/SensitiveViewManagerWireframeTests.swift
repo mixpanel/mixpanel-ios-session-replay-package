@@ -290,7 +290,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
   /// (leaf `SwiftUI.CGDrawingView` on iOS <=18, `CGDrawingLayer` on iOS 26+
   /// carry only Swift-value-typed ivars). So the walker must never surface the
   /// rendered string, and it must never accidentally leak it either. Readable
-  /// text for SwiftUI is supplied by the developer via `.mpReplay(wireframeText:)`.
+  /// text for SwiftUI is supplied by the developer via `.mpWireframeText(_:)`.
   func test_realSwiftUIText_emitsShellWithoutLeakingText() throws {
     let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 480))
     let host = UIHostingController(rootView: Text("Welcome"))
@@ -312,7 +312,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     }
   }
 
-  /// End-to-end SwiftUI check of the *real* `.mpReplay(wireframeText:)`
+  /// End-to-end SwiftUI check of the *real* `.mpWireframeText(_:)`
   /// modifier (not `MPReplayWrapper` planted directly): the modifier must
   /// install its background wrapper in the live SwiftUI hierarchy so the walker
   /// surfaces the developer-declared text. Behavioral only — SwiftUI sizes the
@@ -320,7 +320,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
   /// deterministic bounds live in `WireframeGoldenTests`.
   func test_realSwiftUI_mpReplayModifier_emitsDeclaredText() throws {
     let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 480))
-    let host = UIHostingController(rootView: Text("Welcome").mpReplay(wireframeText: "Welcome"))
+    let host = UIHostingController(rootView: Text("Welcome").mpWireframeText("Welcome"))
     window.rootViewController = host
     window.makeKeyAndVisible()
     host.view.setNeedsLayout()
@@ -340,9 +340,9 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     }
   }
 
-  // MARK: - Unified `.mpReplay(sensitive:text:)` opt-in (MPReplayWrapper)
+  // MARK: - Unified `.mpReplaySensitive(_:)` / `.mpWireframeText(_:)` opt-in (MPReplayWrapper)
 
-  /// `.mpReplay(wireframeText:)` plants an MPReplayWrapper carrying the declared
+  /// `.mpWireframeText(_:)` plants an MPReplayWrapper carrying the declared
   /// text. The walker emits it as a `.text` element with decision `.declared`.
   func test_mpReplayWrapper_withText_emitsDeclaredText() {
     let root = UIView(frame: window.bounds)
@@ -360,10 +360,15 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     XCTAssertEqual(texts[0].h, 40)
   }
 
-  /// `.mpReplay(sensitive: true, wireframeText:)` is orthogonal: the region is
-  /// masked (opaque rectangle) AND the customer-declared text is still emitted,
-  /// because it is authored rather than scraped. The `.declared` decision lets
-  /// it survive the geometric strip against its own mask region downstream.
+  /// Masking and declared text are orthogonal: the region is masked (opaque
+  /// rectangle) AND the customer-declared text is still emitted, because it is
+  /// authored rather than scraped. The `.declared` decision lets it survive the
+  /// geometric strip against its own mask region downstream.
+  ///
+  /// Both flags are set on a single wrapper here. Chaining
+  /// `.mpReplaySensitive(true).mpWireframeText(…)` plants two wrappers at
+  /// identical bounds instead; only the text-bearing one emits an element, so
+  /// the outcome asserted below is the same either way.
   func test_mpReplayWrapper_sensitiveWithText_masksAndEmitsDeclaredText() {
     let root = UIView(frame: window.bounds)
     let wrapper = MPReplayWrapper(frame: CGRect(x: 0, y: 0, width: 120, height: 40))
@@ -380,7 +385,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     XCTAssertEqual(texts[0].decision, .declared)
   }
 
-  /// The `.mpReplay(text:)` background is a *sibling* of SwiftUI's drawing view,
+  /// The `.mpWireframeText(_:)` background is a *sibling* of SwiftUI's drawing view,
   /// so an empty `.text` shell can be emitted at the same bounds. The dedup pass
   /// must drop that empty shell in favor of the declared-text element.
   func test_mpReplayWrapper_siblingEmptyTextShell_isDeduped() {

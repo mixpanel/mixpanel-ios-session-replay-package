@@ -22,7 +22,7 @@ enum WireframeRole: String, Hashable {
 /// and 4 (sensitive rules) mutate `text` and `decision` before serialization.
 ///
 /// ``MPMaskDecision/declared`` marks text the customer authored via
-/// `.mpReplay(wireframeText:)` rather than text scraped from a rendered view.
+/// `.mpWireframeText(_:)` rather than text scraped from a rendered view.
 /// Declared text is authored and trusted, so it is exempt from the geometric
 /// leak-prevention strip (Layer 2) — including its own sensitive mask region.
 /// Configured sensitive rules (Layer 4) still apply as a safety net, and may

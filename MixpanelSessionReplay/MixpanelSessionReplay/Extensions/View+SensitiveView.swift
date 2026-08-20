@@ -50,17 +50,31 @@ extension UIView: SensitiveView {
 extension View {
     /// Marks a SwiftUI view as sensitive (masked) or explicitly safe.
     ///
-    /// Retained for source compatibility. New code should prefer the unified
-    /// `.mpReplay(sensitive:text:)`, which is the single entry point for all
-    /// Mixpanel SwiftUI replay annotations. This forwards to it.
+    /// - Parameter isSensitive: Pass `true` to mask the view — an opaque
+    ///   rectangle is drawn over it in the recording and its pixels are not
+    ///   captured. Pass `false` to explicitly opt the view out of automatic
+    ///   masking.
+    ///
+    /// This controls **pixels only**. To declare the text recorded for the view
+    /// in the `mp_wireframe` event, use ``SwiftUI/View/mpWireframeText(_:)`` —
+    /// the two concerns are orthogonal and chain:
+    ///
+    /// ```swift
+    /// Image("avatar").mpReplaySensitive(true).mpWireframeText("profile photo")
+    /// ```
     public func mpReplaySensitive(_ isSensitive: Bool) -> some View {
-        self.mpReplay(sensitive: isSensitive)
+        self.modifier(MPReplayModifier(sensitive: isSensitive, wireframeText: nil))
     }
 }
 
 private var mpReplaySensitiveKey: UInt8 = 0
 
 extension UIView {
+    /// Marks this view as sensitive (masked) or explicitly safe.
+    ///
+    /// Controls **pixels only**. To declare the text recorded for the view in
+    /// the `mp_wireframe` event, set ``mpWireframeText`` — the two concerns are
+    /// orthogonal.
     public var mpReplaySensitive: Bool? {
         get { objc_getAssociatedObject(self, &mpReplaySensitiveKey) as? Bool }
         set {

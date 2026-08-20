@@ -61,7 +61,7 @@ public struct MPWireframesOptions {
   /// without it they are sent as bare `role + bounds` shells.
   ///
   /// The label is only ever the third tier of the text precedence chain:
-  /// 1. Text declared with `.mpReplay(wireframeText:)` — always wins, and is
+  /// 1. Text declared with `.mpWireframeText(_:)` — always wins, and is
   ///    never gated by this flag.
   /// 2. The element's own rendered text (a `UILabel`'s `text`, a `UIButton`'s
   ///    title, …).
@@ -72,7 +72,7 @@ public struct MPWireframesOptions {
   /// label is not drawn on screen, so unlike visible text you cannot confirm
   /// what it contains by watching the replay — which also means turning this
   /// off leaves you no way to describe an icon except
-  /// `.mpReplay(wireframeText:)`.
+  /// `.mpWireframeText(_:)`.
   ///
   /// This changes what an element *says*, never which pixels are masked: a
   /// masked element stays textless either way, and ``sensitiveRules`` still run

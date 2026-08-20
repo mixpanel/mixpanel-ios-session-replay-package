@@ -160,7 +160,7 @@ its content. Four layers enforce this:
 2. **Geometric leak-prevention** — an element whose bounds intersect *any* mask
    rectangle the screenshot is drawing loses its text, even if the element itself
    was never marked sensitive.
-3. **Declared text** — `.mpReplay(wireframeText:)` substitutes authored copy.
+3. **Declared text** — `.mpWireframeText(_:)` substitutes authored copy.
 4. **Sensitive rules** — your own content rules, run last as a safety net.
 
 ```swift
@@ -179,12 +179,12 @@ rest. Element text is capped at 50 characters including the trailing `…`.
 
 Apple exposes no public API for reading rendered strings out of SwiftUI's drawing
 views, so SwiftUI content ships as textless shells unless you label it. Use
-`.mpReplay(wireframeText:)`:
+`.mpWireframeText(_:)`:
 
 ```swift
-Text("Welcome back").mpReplay(wireframeText: "Welcome back")
-Button("Continue") { … }.mpReplay(wireframeText: "Continue")
-Image("avatar").mpReplay(sensitive: true, wireframeText: "profile photo")
+Text("Welcome back").mpWireframeText("Welcome back")
+Button("Continue") { … }.mpWireframeText("Continue")
+Image("avatar").mpReplaySensitive(true).mpWireframeText("profile photo")
 ```
 
 Declared text is **authored by you, not scraped**, so it is sent even when the

@@ -19,7 +19,7 @@
 //  the bounds and the element counts must all match the UIKit suite even though the
 //  text column does not.
 //
-//  Declared text (`.mpReplay(wireframeText:)`) is the exception — it is authored
+//  Declared text (`.mpWireframeText(_:)`) is the exception — it is authored
 //  rather than scraped, so it survives, and it is the only way a SwiftUI screen gets
 //  readable copy into a summary. The declared cases below therefore carry real
 //  strings and exercise the rule engine the same way UIKit does.
@@ -135,13 +135,13 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
     }
 
     func test_swiftui_textExplicitlyMasked() {
-        layoutSwiftUI(Text("Balance $1,234.56").mpReplay(sensitive: true))
+        layoutSwiftUI(Text("Balance $1,234.56").mpReplaySensitive(true))
         assertGolden("swiftui_text_explicit_masked.json")
     }
 
     func test_swiftui_textUnmaskOverridesAutoMask() {
         manager.maskAllText = true
-        layoutSwiftUI(Text("Public Override").mpReplay(sensitive: false))
+        layoutSwiftUI(Text("Public Override").mpReplaySensitive(false))
         assertGolden("swiftui_text_unmask_overrides_auto.json")
     }
 
@@ -156,7 +156,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
     func test_swiftui_inputInsideUnmaskStillTextEntry() {
         layoutSwiftUI(
             VStack { TextField("", text: .constant("password123")).frame(width: 260) }
-                .mpReplay(sensitive: false)
+                .mpReplaySensitive(false)
         )
         assertGolden("swiftui_input_in_unmask_still_masked.json")
     }
@@ -179,7 +179,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
     }
 
     func test_swiftui_buttonMaskedDropsLabel() {
-        layoutSwiftUI(Button("Pay") {}.mpReplay(sensitive: true))
+        layoutSwiftUI(Button("Pay") {}.mpReplaySensitive(true))
         assertGolden("swiftui_button_masked_drops_label.json")
     }
 
@@ -202,7 +202,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
     }
 
     func test_swiftui_imageMaskedDropsLabel() {
-        layoutSwiftUI(image().accessibilityLabel("Company logo").mpReplay(sensitive: true))
+        layoutSwiftUI(image().accessibilityLabel("Company logo").mpReplaySensitive(true))
         assertGolden("swiftui_image_masked_drops_label.json")
     }
 
@@ -215,11 +215,11 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
     func test_swiftui_nestedUnmaskInMask() {
         layoutSwiftUI(
             VStack(alignment: .leading) {
-                Text("Inner unmasked").mpReplay(sensitive: false)
+                Text("Inner unmasked").mpReplaySensitive(false)
                 Text("Sibling content that makes the container taller")
                 Text("And taller still")
             }
-            .mpReplay(sensitive: true)
+            .mpReplaySensitive(true)
         )
         let result = manager.collectFramesAndWireframes(in: root, window: window)
         XCTAssertFalse(
@@ -231,7 +231,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
     /// The degenerate variant: the unmask covers *exactly* the same rect as the mask,
     /// because a `VStack` hugs its only child. The mask must still stand.
     ///
-    /// This is the case that exposed the bug. `.mpReplay()` plants a background *rect*
+    /// This is the case that exposed the bug. `.mpReplaySensitive(_:)` plants a background *rect*
     /// rather than marking an ancestor, so unlike UIKit there is no traversal stop and
     /// the safe-frame sweep arbitrates — and the sweep used to drop any mask a safe
     /// frame contained, which coincident rects make trivially true. An inner unmask
@@ -243,8 +243,8 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
     /// overrides *auto*-masking, never an explicit developer decision.
     func test_swiftui_unmaskCoincidentWithMask_maskStillWins() {
         layoutSwiftUI(
-            VStack { Text("Inner unmasked").mpReplay(sensitive: false) }
-                .mpReplay(sensitive: true)
+            VStack { Text("Inner unmasked").mpReplaySensitive(false) }
+                .mpReplaySensitive(true)
         )
         let result = manager.collectFramesAndWireframes(in: root, window: window)
         XCTAssertFalse(
@@ -257,11 +257,11 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
         layoutSwiftUI(
             VStack {
                 VStack {
-                    Text("Inner unmasked").mpReplay(sensitive: false)
+                    Text("Inner unmasked").mpReplaySensitive(false)
                     Text("Inner plain")
                 }
             }
-            .mpReplay(sensitive: true)
+            .mpReplaySensitive(true)
         )
         assertGolden("swiftui_nested_unmask_under_layout.json")
     }
@@ -272,8 +272,8 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
     /// exemption in the safe-frame sweep. The wireframe is a textless shell either way.
     func test_swiftui_nestedMaskInUnmask() {
         layoutSwiftUI(
-            VStack { Text("Still secret").mpReplay(sensitive: true) }
-                .mpReplay(sensitive: false)
+            VStack { Text("Still secret").mpReplaySensitive(true) }
+                .mpReplaySensitive(false)
         )
         XCTAssertFalse(
             manager.collectFramesAndWireframes(in: root, window: window).frames.isEmpty,
@@ -286,7 +286,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
     func test_swiftui_geometricOverlapNullsSibling() {
         layoutSwiftUI(
             ZStack(alignment: .topLeading) {
-                Color.gray.frame(width: 300, height: 200).mpReplay(sensitive: true)
+                Color.gray.frame(width: 300, height: 200).mpReplaySensitive(true)
                 Text("Account balance").padding(.top, 40).padding(.leading, 20)
             }
         )
@@ -296,7 +296,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
     func test_swiftui_geometricOverlapStripsButtonAndImage() {
         layoutSwiftUI(
             ZStack(alignment: .topLeading) {
-                Color.gray.frame(width: 300, height: 200).mpReplay(sensitive: true)
+                Color.gray.frame(width: 300, height: 200).mpReplaySensitive(true)
                 VStack(alignment: .leading, spacing: 12) {
                     Button("Checkout") {}
                     image(60).accessibilityLabel("Company logo")
@@ -314,12 +314,12 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
     // contract worth pinning.
 
     func test_swiftui_ruleStripOnDeclaredText() {
-        layoutSwiftUI(Text("x").mpReplay(wireframeText: "Bearer eyJhbGciOi"))
+        layoutSwiftUI(Text("x").mpWireframeText("Bearer eyJhbGciOi"))
         assertGolden("swiftui_rule_strip.json", rules: [.strip(text: "Bearer ")])
     }
 
     func test_swiftui_ruleRedactOnDeclaredText() {
-        layoutSwiftUI(Text("x").mpReplay(wireframeText: "email: alice@example.com"))
+        layoutSwiftUI(Text("x").mpWireframeText("email: alice@example.com"))
         assertGolden(
             "swiftui_rule_redact.json",
             rules: [.redact(text: "alice@example.com", replacement: "[EMAIL]")])
@@ -327,13 +327,13 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
 
     func test_swiftui_ruleStripRegexOnDeclaredText() throws {
         let regex = try NSRegularExpression(pattern: #"^token-"#)
-        layoutSwiftUI(Text("x").mpReplay(wireframeText: "token-abc123"))
+        layoutSwiftUI(Text("x").mpWireframeText("token-abc123"))
         assertGolden("swiftui_rule_strip_regex.json", rules: [.stripRegex(regex)])
     }
 
     func test_swiftui_ruleRedactRegexOnDeclaredText() throws {
         let regex = try NSRegularExpression(pattern: #"\d{3}-\d{2}-\d{4}"#)
-        layoutSwiftUI(Text("x").mpReplay(wireframeText: "SSN: 123-45-6789"))
+        layoutSwiftUI(Text("x").mpWireframeText("SSN: 123-45-6789"))
         assertGolden(
             "swiftui_rule_redact_regex.json", rules: [.redactRegex(regex, replacement: "[SSN]")])
     }
@@ -348,12 +348,13 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
     // MARK: - Declared wireframe text
 
     func test_swiftui_declaredTextSurvivesMaskOnImage() {
-        layoutSwiftUI(image().mpReplay(sensitive: true, wireframeText: "profile photo"))
+        layoutSwiftUI(image().mpReplaySensitive(true).mpWireframeText("profile photo"))
         assertGolden("swiftui_declared_mask_image.json")
     }
 
     func test_swiftui_declaredTextOnButton() {
-        layoutSwiftUI(Button("Submit") {}.mpReplay(sensitive: true, wireframeText: "checkout action"))
+        layoutSwiftUI(
+            Button("Submit") {}.mpReplaySensitive(true).mpWireframeText("checkout action"))
         assertGolden("swiftui_declared_button.json")
     }
 
@@ -361,7 +362,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
         layoutSwiftUI(
             TextField("", text: .constant("4111 1111 1111 1111"))
                 .frame(width: 260)
-                .mpReplay(wireframeText: "Card number")
+                .mpWireframeText("Card number")
         )
         assertGolden("swiftui_declared_input.json")
     }
@@ -373,7 +374,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
                 Text("Pay now")
                 TextField("", text: .constant("")).frame(width: 260)
             }
-            .mpReplay(sensitive: false, wireframeText: "payment form")
+            .mpReplaySensitive(false).mpWireframeText("payment form")
         )
         assertGolden("swiftui_declared_container_keeps_input.json")
     }
@@ -384,23 +385,23 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
             Rectangle()
                 .fill(Color.blue)
                 .frame(width: 200, height: 100)
-                .mpReplay(wireframeText: "monthly spend")
+                .mpWireframeText("monthly spend")
         )
         assertGolden("swiftui_declared_custom_content.json")
     }
 
     /// Declared text is exempt from Layer 2 but not from Layer 4.
     func test_swiftui_declaredTextStillStrippedByRule() {
-        layoutSwiftUI(Text("x").mpReplay(wireframeText: "card 4111 secret"))
+        layoutSwiftUI(Text("x").mpWireframeText("card 4111 secret"))
         assertGolden("swiftui_declared_rule_stripped.json", rules: [.strip(text: "secret")])
     }
 
     func test_swiftui_declaredTextSurvivesGeometricStrip() {
         layoutSwiftUI(
             ZStack(alignment: .topLeading) {
-                Color.gray.frame(width: 300, height: 200).mpReplay(sensitive: true)
+                Color.gray.frame(width: 300, height: 200).mpReplaySensitive(true)
                 Text("Scraped")
-                    .mpReplay(wireframeText: "Declared label")
+                    .mpWireframeText("Declared label")
                     .padding(.top, 40).padding(.leading, 20)
             }
         )
@@ -424,7 +425,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
         layoutSwiftUI(
             image(40)
                 .accessibilityLabel("scraped")
-                .mpReplay(wireframeText: "Open settings")
+                .mpWireframeText("Open settings")
         )
         assertGolden(
             "swiftui_declared_beats_label_fallback_off.json", useAccessibilityLabelFallback: false)
@@ -451,9 +452,8 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
     /// emitter with a value.
     func test_swiftui_declaredTextTruncated() {
         layoutSwiftUI(
-            Text("x").mpReplay(
-                wireframeText:
-                    "This label is far too long to ship intact and must therefore exceed the "
+            Text("x").mpWireframeText(
+                "This label is far too long to ship intact and must therefore exceed the "
                     + "fifty character wireframe cap")
         )
         let element = manager.collectFramesAndWireframes(in: root, window: window)
@@ -464,7 +464,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
 
     /// Declared text is authored, so its codepoints are not second-guessed.
     func test_swiftui_declaredGlyphKeptVerbatim() {
-        layoutSwiftUI(image(40).mpReplay(wireframeText: "\u{E900}"))
+        layoutSwiftUI(image(40).mpWireframeText("\u{E900}"))
         assertGolden("swiftui_declared_glyph_kept.json")
     }
 
@@ -484,11 +484,11 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Auto masked header").font(.title)
                 image(100).accessibilityLabel("Hero")
-                Text("Explicitly unmasked").mpReplay(sensitive: false)
-                image(100).accessibilityLabel("Secret chart").mpReplay(sensitive: true)
+                Text("Explicitly unmasked").mpReplaySensitive(false)
+                image(100).accessibilityLabel("Secret chart").mpReplaySensitive(true)
                 HStack(spacing: 12) {
                     Text("Row auto")
-                    Text("Middle").mpReplay(sensitive: false)
+                    Text("Middle").mpReplaySensitive(false)
                     TextField("", text: .constant("")).frame(width: 120)
                 }
             }

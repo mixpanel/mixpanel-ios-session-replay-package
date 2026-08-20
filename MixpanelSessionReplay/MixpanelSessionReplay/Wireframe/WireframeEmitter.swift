@@ -203,7 +203,7 @@ final class WireframeEmitter {
       return element
     }
 
-    // Customer-declared text (`.mpReplay(wireframeText:)`) is authored, not
+    // Customer-declared text (`.mpWireframeText(_:)`) is authored, not
     // scraped, and is intentionally sent even when the view is masked. Skip the
     // geometric strip — otherwise the view's own mask region would null it —
     // but still run the configured sensitive rules below as a safety net.

@@ -19,7 +19,7 @@ import Foundation
 public enum MPMaskDecision: String, Codable {
   /// Text emitted as-is.
   case none = "NONE"
-  /// Developer-supplied `.mpReplay(wireframeText:)`. Emitted verbatim, even on
+  /// Developer-supplied `.mpWireframeText(_:)`. Emitted verbatim, even on
   /// a masked or editable view, because the text is authored rather than
   /// scraped from the screen. Exempt from the Layer 2 geometric strip; Layer 3
   /// sensitive rules still run over it, so an element that started as
@@ -27,7 +27,7 @@ public enum MPMaskDecision: String, Codable {
   case declared = "DECLARED"
   /// Explicitly marked sensitive by the app
   /// (`addSensitiveClass`, `mpReplaySensitive = true`, or the
-  /// `.mpReplay(sensitive: true)` SwiftUI modifier).
+  /// `.mpReplaySensitive(true)` SwiftUI modifier).
   case explicit = "EXPLICIT"
   /// Automatically masked because it matched an `MPAutoMaskedViews` category
   /// (text, image, web, map).

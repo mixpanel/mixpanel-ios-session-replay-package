@@ -12,7 +12,8 @@
 //  that shows `text: null` with the correct `maskDecision` is the regression
 //  guard for "a masked view must never leak its text into the wireframe."
 //
-//  The SwiftUI declarative path (`.mpReplay(...)`) is exercised here through the
+//  The SwiftUI declarative path (`.mpReplaySensitive(_:)` / `.mpWireframeText(_:)`)
+//  is exercised here through the
 //  `MPReplayWrapper` it plants — the exact view the walker keys on — so the
 //  declared-text goldens are both deterministic and faithful to production. A
 //  real `UIHostingController` end-to-end check lives in
@@ -233,7 +234,7 @@ final class WireframeGoldenTests: XCTestCase {
 
   /// A class the developer registered through `addSensitiveClass` reports
   /// **EXPLICIT**, not AUTO — per the ERD's Layer 1 table, which groups it with
-  /// `mpReplay(sensitive: true)`. Only the `maskAll*` type matches report AUTO.
+  /// `mpReplaySensitive(true)`. Only the `maskAll*` type matches report AUTO.
   /// Auto-masking is off here, so the class registration is the only thing
   /// masking this view. Mirrors Android's
   /// `golden walker developer registered class reports explicit`.
@@ -363,7 +364,7 @@ final class WireframeGoldenTests: XCTestCase {
       golden: "wireframe_rule_redact_regex.json")
   }
 
-  // MARK: - Declared wireframe text (`.mpReplay(wireframeText:)`)
+  // MARK: - Declared wireframe text (`.mpWireframeText(_:)`)
 
   func test_golden_declaredText() {
     let wrapper = MPReplayWrapper(frame: CGRect(x: 5, y: 6, width: 120, height: 40))
@@ -477,7 +478,7 @@ final class WireframeGoldenTests: XCTestCase {
   /// are intrinsically sized per OS/font — non-deterministic, and already
   /// guarded behaviorally in `SensitiveViewManagerWireframeTests`
   /// (`test_realSwiftUIText_emitsShellWithoutLeakingText`). The
-  /// `.mpReplay(wireframeText:)` elements, by contrast, are planted at explicit
+  /// `.mpWireframeText(_:)` elements, by contrast, are planted at explicit
   /// `.frame`/`.position` bounds, so they are deterministic and OS-independent —
   /// exactly what a coordinate golden should pin. The password row also asserts
   /// the orthogonal masking contract: `sensitive: true` still emits its declared
@@ -539,7 +540,7 @@ final class WireframeGoldenTests: XCTestCase {
 /// Deterministic SwiftUI login form for `test_golden_swiftUIDeclaredLoginForm`.
 ///
 /// Every row is given an explicit `.frame` and absolute `.position` inside a
-/// 320×480 host so the `.mpReplay(wireframeText:)` wrappers land at fixed,
+/// 320×480 host so the `.mpWireframeText(_:)` wrappers land at fixed,
 /// OS-independent window coordinates. (`.mpReplay` plants its `MPReplayWrapper`
 /// as a `.background`, which sizes to the framed view, so the frame drives the
 /// declared element's bounds.) The rectangles stand in for the input fields;
@@ -550,22 +551,22 @@ private struct GoldenLoginForm: View {
     ZStack {
       Text("Sign in")
         .frame(width: 200, height: 40)
-        .mpReplay(wireframeText: "Sign in")
+        .mpWireframeText("Sign in")
         .position(x: 160, y: 60)
 
       RoundedRectangle(cornerRadius: 8)
         .frame(width: 260, height: 44)
-        .mpReplay(wireframeText: "Email")
+        .mpWireframeText("Email")
         .position(x: 160, y: 130)
 
       RoundedRectangle(cornerRadius: 8)
         .frame(width: 260, height: 44)
-        .mpReplay(sensitive: true, wireframeText: "Password")
+        .mpReplaySensitive(true).mpWireframeText("Password")
         .position(x: 160, y: 190)
 
       Text("Log in")
         .frame(width: 200, height: 44)
-        .mpReplay(wireframeText: "Log in")
+        .mpWireframeText("Log in")
         .position(x: 160, y: 260)
     }
     // Ignore the safe area so `.position` is measured from the window origin,

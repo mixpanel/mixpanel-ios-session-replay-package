@@ -439,7 +439,7 @@ class SensitiveViewManager {
     }
 
     /// Drops the empty SwiftUI text shell that overlaps a customer-declared
-    /// `.mpReplay(wireframeText:)` element. The declaration is planted as a
+    /// `.mpWireframeText(_:)` element. The declaration is planted as a
     /// `.background`, which is a *sibling* of SwiftUI's drawing view — not a
     /// descendant — so `insideWireframeLeaf` cannot suppress it, and both emit a
     /// `.text` element at the same bounds (one with the declared text, one
@@ -544,13 +544,16 @@ class SensitiveViewManager {
         // Skip invisible views
         guard view.isVisible() else { return }
 
-        // MARK: - Mixpanel opt-in wrapper (`.mpReplay(sensitive:wireframeText:)`)
-        // A single MPReplayWrapper background carries both the sensitivity flag
-        // and any customer-declared wireframe text. Its two concerns are
-        // orthogonal: `sensitive` covers the view with an opaque mask rectangle,
-        // while `wireframeText` is authored (not scraped) and is emitted even
-        // when the view is sensitive. The wrapper is an empty background view, so
-        // we fully resolve it here and stop.
+        // MARK: - Mixpanel opt-in wrapper (`.mpReplaySensitive(_:)` / `.mpWireframeText(_:)`)
+        // An MPReplayWrapper background carries the sensitivity flag, the
+        // customer-declared wireframe text, or — when both modifiers are chained
+        // — one wrapper for each. The two concerns are orthogonal: `sensitive`
+        // covers the view with an opaque mask rectangle, while `wireframeText` is
+        // authored (not scraped) and is emitted even when the view is sensitive.
+        // Chained wrappers are leaf views at identical bounds and only the
+        // text-bearing one emits an element, so two wrappers produce the same
+        // output as one carrying both. The wrapper is an empty background view,
+        // so we fully resolve it here and stop.
         if view is MPReplayWrapper {
             if let hashableRect = hashableFrame(for: view.layer, in: window) {
                 switch view.mpReplaySensitive {
@@ -582,7 +585,7 @@ class SensitiveViewManager {
             return
         }
 
-        // Developer-declared text (`.mpReplay(wireframeText:)` / `mpWireframeText`).
+        // Developer-declared text (SwiftUI `.mpWireframeText(_:)`, UIKit `mpWireframeText`).
         // Authored rather than scraped, so it is emitted with the view's real role
         // even when the view is masked — masking hides the pixels while the
         // declared text still describes the view for the AI summary. Resolved once
@@ -666,7 +669,7 @@ class SensitiveViewManager {
                 // A class registered via `addSensitiveClass` counts as *manually
                 // marked*, reporting `.mask` (wire `EXPLICIT`) rather than `.auto`:
                 // per the ERD's Layer 1 table it is a developer opt-in, alongside
-                // `mpReplay(sensitive: true)`. Only the `maskAllText`/`maskAllImages`/
+                // `mpReplaySensitive(true)`. Only the `maskAllText`/`maskAllImages`/
                 // `maskAllWebViews`/`maskAllMapViews` type matches are `AUTO`.
                 // Matches Android's `isViewClassCustomerSensitive` branch.
                 //
@@ -887,7 +890,7 @@ class SensitiveViewManager {
         // Text content reliably — it lives on `_UIHostingView._rootView`, not the
         // leaf drawing layer the walk reaches. We deliberately do not read it via
         // private reflection; SwiftUI text ships as a role + bounds shell, and
-        // developers supply readable text with `.mpReplay(wireframeText:)`.
+        // developers supply readable text with `.mpWireframeText(_:)`.
         var newInsideLeaf = insideWireframeLeaf
         if let wireframes, !insideWireframeLeaf, isText || isImage,
             let frame = hashableFrame(for: layer, in: window)
@@ -945,7 +948,7 @@ class SensitiveViewManager {
     }
 
     /// Tier 1 of the text precedence chain: text the developer declared with
-    /// `.mpReplay(wireframeText:)` (SwiftUI) or by setting `mpWireframeText`
+    /// `.mpWireframeText(_:)` (SwiftUI) or by setting `mpWireframeText`
     /// directly (UIKit).
     ///
     /// Never gated by ``useAccessibilityLabelFallback`` — that flag governs only
@@ -985,7 +988,7 @@ class SensitiveViewManager {
                 // not this leaf render view), and we deliberately do not read it
                 // via private reflection. The accessibility fallback below is
                 // skipped on purpose; developers label these with
-                // `.mpReplay(wireframeText:)`.
+                // `.mpWireframeText(_:)`.
                 if let swiftUiTextClass, type(of: view) == swiftUiTextClass {
                     return nil
                 }

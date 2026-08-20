@@ -168,7 +168,7 @@ final class WireframeEmitterTests: XCTestCase {
     XCTAssertEqual(customPayload(from: event).elements[0].text, "safe")
   }
 
-  // MARK: - Declared text (customer-authored via .mpReplay(wireframeText:))
+  // MARK: - Declared text (customer-authored via .mpWireframeText(_:))
 
   func testDeclared_survivesGeometricStrip_evenWhenMaskIntersects() throws {
     // Customer-authored text is intentionally sent even over its own mask
