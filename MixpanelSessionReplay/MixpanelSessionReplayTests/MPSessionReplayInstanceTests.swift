@@ -122,6 +122,47 @@ class MPSessionReplayInstanceTests: BaseTests {
         )
     }
 
+    /// A new recording session must clear wireframe dedup state.
+    ///
+    /// The emitter is built once per SDK lifetime and survives a stop/start cycle, so
+    /// without an explicit reset the new replay's first frame is compared against the
+    /// previous replay's last one. Backgrounding and foregrounding onto an unchanged
+    /// screen then dedups the opening `mp_wireframe` away, leaving a screenshot with
+    /// nothing to describe it — the one frame an AI summary most needs.
+    ///
+    /// Asserted at the `startRecording` call site on purpose: a test that calls
+    /// `resetDedup()` directly still passes if the call site is deleted.
+    func testStartRecording_ResetsWireframeDedupState() throws {
+        let emitter = WireframeEmitter(options: MPWireframesOptions())
+        ScreenRecorder.shared.wireframeEmitter = emitter
+        defer { ScreenRecorder.shared.wireframeEmitter = nil }
+
+        // Prime dedup state the way a previous session's last frame would.
+        emitter.emit(
+            elements: [
+                WireframeElement.from(
+                    role: .text, text: "unchanged",
+                    rect: CGRect(x: 0, y: 0, width: 10, height: 10),
+                    decision: .none)
+            ],
+            viewport: (100, 100), maskBounds: [])
+
+        let primed = expectation(description: "dedup state primed")
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 0.2) {
+            primed.fulfill()
+        }
+        wait(for: [primed], timeout: 2.0)
+        XCTAssertTrue(
+            emitter.hasDedupStateForTesting,
+            "precondition: the primed emit should leave a payload hash behind")
+
+        instance.startRecording()
+
+        XCTAssertFalse(
+            emitter.hasDedupStateForTesting,
+            "startRecording must reset dedup so the new session's first frame publishes")
+    }
+
     func testStopRecording() {
         var observer: NSObjectProtocol?
         let expectation = expectation(description: "Unregister notification received")

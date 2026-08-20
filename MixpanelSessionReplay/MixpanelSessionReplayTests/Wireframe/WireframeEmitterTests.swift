@@ -378,6 +378,34 @@ final class WireframeEmitterTests: XCTestCase {
     assertNoPublishedEvent("identical emit should be deduped")
   }
 
+  /// Dedup state is per *session*, not per SDK lifetime.
+  ///
+  /// The emitter outlives a stop/start cycle, so a new replay's first frame used to be
+  /// compared against the previous replay's last one. Backgrounding and foregrounding
+  /// onto an unchanged screen therefore shipped an opening screenshot with no
+  /// `mp_wireframe` to describe it — the one frame an AI summary most needs.
+  /// `MPSessionReplayInstance.startRecording` calls `resetDedup()` at the session
+  /// boundary; this pins the emitter half of that contract.
+  func testDedup_resetDedup_reEmitsIdenticalPayloadAfterSessionRestart() throws {
+    let emitter = WireframeEmitter(options: MPWireframesOptions())
+    let element = WireframeElement.from(
+      role: .text, text: "unchanged",
+      rect: CGRect(x: 0, y: 0, width: 10, height: 10),
+      decision: .none)
+
+    emitter.emit(elements: [element], viewport: (100, 100), maskBounds: [])
+    _ = try waitForFirstPublishedEvent()
+
+    // Same screen, new session.
+    publishedEvents.removeAll()
+    emitter.resetDedup()
+    emitter.emit(elements: [element], viewport: (100, 100), maskBounds: [])
+    let event = try waitForFirstPublishedEvent()
+    XCTAssertEqual(
+      customPayload(from: event).elements.first?.text, "unchanged",
+      "the first frame of a new session must publish even when the screen has not changed")
+  }
+
   func testDedup_maskBoundsThatStartStrippingTextReEmits() throws {
     let emitter = WireframeEmitter(options: MPWireframesOptions())
     let element = WireframeElement.from(

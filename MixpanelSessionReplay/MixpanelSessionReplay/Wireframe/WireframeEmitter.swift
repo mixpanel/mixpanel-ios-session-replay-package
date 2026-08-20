@@ -95,12 +95,32 @@ final class WireframeEmitter {
   }
 
   /// Reset dedup state so the next emit publishes even if identical.
-  /// Useful when tearing down or switching sessions.
+  ///
+  /// Dedup is scoped to a *recording session*, but this emitter is built once per SDK
+  /// lifetime and survives a stop/start cycle — so the boundary has to be announced.
+  /// `MPSessionReplayInstance.startRecording` calls this right after
+  /// `SessionManager.generateNewSession()`, which is the only place a new replay id is
+  /// minted. Without it, a background/foreground onto an unchanged screen compares the
+  /// new replay's first frame against the *previous* replay's last one and dedups it
+  /// away, shipping an opening screenshot with no `mp_wireframe` to describe it.
   func resetDedup() {
     hashLock.write {
       self.lastPayloadHash = nil
     }
   }
+
+  #if DEBUG
+    /// Test-only seam: whether a previous emit's payload hash is still held, i.e.
+    /// whether the next identical frame would dedup. Exists so the session-boundary
+    /// reset can be asserted at the `startRecording` call site rather than only on
+    /// ``resetDedup()`` itself — a test that calls `resetDedup()` directly cannot
+    /// catch the call site being dropped.
+    var hasDedupStateForTesting: Bool {
+      var held = false
+      hashLock.read { held = self.lastPayloadHash != nil }
+      return held
+    }
+  #endif
 
   #if DEBUG
     /// Test-only seam. Runs Layers 2 and 4 (geometric leak-prevention + sensitive

@@ -236,6 +236,14 @@ open class MPSessionReplayInstance: MPSessionReplaying {
                 SessionManager.shared.generateNewSession()
                 // generate a new session will make old session events obsolete, so clean it up.
                 eventService.clearEvents()
+                // Wireframe dedup is per *session*, not per SDK lifetime. The emitter
+                // outlives a stop/start cycle, so without this the new replay's first
+                // frame is compared against the previous replay's last one — and a
+                // background/foreground onto an unchanged screen dedups it away,
+                // shipping an opening screenshot with no `mp_wireframe` to describe it.
+                // This is the one session boundary: `generateNewSession()` has no other
+                // caller. Android and Flutter reset at the same point.
+                ScreenRecorder.shared.wireframeEmitter?.resetDedup()
                 performSwizzling()
                 record()
                 isRecording = true
