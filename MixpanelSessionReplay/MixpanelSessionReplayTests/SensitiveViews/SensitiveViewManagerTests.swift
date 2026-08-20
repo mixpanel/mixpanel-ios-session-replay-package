@@ -51,7 +51,7 @@ class SensitiveViewManagerTests: BaseTests {
         textView.isEditable = false
         let result = manager.isSensitiveView(view: textView)
         XCTAssertEqual(
-            result, .sensitive,
+            result, .sensitiveTextField,
             "Non-editable UITextView should be detected as sensitive (like a label) when maskAllText is enabled")
     }
 
