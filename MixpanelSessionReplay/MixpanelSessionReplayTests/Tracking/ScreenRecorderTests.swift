@@ -204,11 +204,14 @@ class ScreenRecorderTests: XCTestCase {
 
     // MARK: - Wireframe / screenshot timestamp agreement
 
-    /// The render path must hand the wireframe emitter the same capture instant the
-    /// screenshot event is stamped with. Before this was threaded through, the emitter
-    /// read the clock itself *after* rendering finished, so the two events describing
-    /// one frame drifted apart by the render duration. Android threads `capturedAtMs`
-    /// and Flutter threads `captureTimestamp` for the same reason.
+    /// The render path must hand the wireframe emitter the same capture instant it reports
+    /// to its caller, so the `mp_wireframe` event and the screenshot event describing one
+    /// frame agree. Two regressions live here: the emitter used to read the clock itself
+    /// after rendering finished (drifting from the screenshot by the render duration), and
+    /// the instant used to come *in* from `record()` as the trigger time — on a
+    /// touch-triggered capture, the touch's own timestamp, which tied the frame to the
+    /// touch that produced it. Android reads it right after `createBitmapFromView` and
+    /// Flutter reads `captureTimestamp` at the render for the same reason.
     func testRenderViewHierarchyAsImage_stampsWireframeWithTheCaptureInstant() throws {
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
         let label = UILabel(frame: CGRect(x: 10, y: 10, width: 100, height: 20))
@@ -230,8 +233,9 @@ class ScreenRecorderTests: XCTestCase {
             EventPublisher.shared.resetSubscribers()
         }
 
-        let capturedAt: Int64 = 1_700_000_000_123
-        XCTAssertNotNil(recorder.renderViewHierarchyAsImage(window: window, capturedAtMs: capturedAt))
+        let before = TimestampUtils.timestamp()
+        let frame = try XCTUnwrap(recorder.renderViewHierarchyAsImage(window: window))
+        let after = TimestampUtils.timestamp()
 
         let deadline = Date().addingTimeInterval(2)
         while published.isEmpty && Date() < deadline {
@@ -240,8 +244,12 @@ class ScreenRecorderTests: XCTestCase {
 
         let event = try XCTUnwrap(published.first, "expected an mp_wireframe event")
         XCTAssertEqual(
-            event.timestamp, capturedAt,
-            "wireframe must carry the capture instant, not the time rendering finished")
+            event.timestamp, frame.capturedAtMs,
+            "wireframe must carry the same capture instant the frame reports")
+        // Read at the render, so it falls inside the window this call occupied — it is
+        // neither a trigger time from before the call nor a clock read after publishing.
+        XCTAssertGreaterThanOrEqual(frame.capturedAtMs, before)
+        XCTAssertLessThanOrEqual(frame.capturedAtMs, after)
     }
 
     // MARK: - Empty wireframes

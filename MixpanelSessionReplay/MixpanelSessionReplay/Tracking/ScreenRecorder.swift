@@ -7,6 +7,25 @@
 import SwiftUI
 import UIKit
 
+/// A rendered frame plus the wall-clock instant its pixels came off the renderer.
+///
+/// The instant is read at the render, not at the trigger that asked for it, so the frame
+/// reports **when it was on screen** rather than when something decided to capture it.
+/// Mirrors Android's `RenderedFrame.capturedAtMs`; Flutter's equivalent is
+/// `captureTimestamp` in `screenshot_capturer.dart`.
+struct RenderedFrame {
+    let image: UIImage
+    let capturedAtMs: Int64
+}
+
+/// A compressed frame, still carrying its ``RenderedFrame/capturedAtMs``, so the value
+/// survives JPEG compression on its way to `RawScreenshotEvent.timestamp`. Mirrors
+/// Android's `CapturedScreenshot`.
+struct CapturedScreenshot {
+    let data: Data
+    let capturedAtMs: Int64
+}
+
 class ScreenRecorder {
     static let shared = ScreenRecorder()
 
@@ -126,12 +145,20 @@ class ScreenRecorder {
         return (view, viewBounds, res.isPresented)
     }
 
-    /// - Parameter capturedAtMs: Wall-clock instant this frame is being captured for.
-    ///   Threaded through to the wireframe emitter so the `mp_wireframe` event and the
-    ///   screenshot event that describe the same frame carry the same timestamp.
-    func renderViewHierarchyAsImage(
-        window: UIWindow, capturedAtMs: Int64 = TimestampUtils.timestamp()
-    ) -> UIImage? {
+    /// Renders `window` and stamps the result with the instant the pixels came off the
+    /// renderer, which is also the instant handed to the wireframe emitter — so the
+    /// `mp_wireframe` event and the screenshot event describing one frame agree, and both
+    /// report when the screen was actually shown.
+    ///
+    /// The clock is deliberately read **here** rather than accepted from the caller. The
+    /// caller's trigger time is earlier by the render duration (a full-window
+    /// `drawHierarchy` plus the whole wireframe walk run inside the renderer block), and on
+    /// a touch-triggered capture it is the touch's own timestamp — which would make the
+    /// frame tie exactly with the touch event that produced it. The service's sampler is
+    /// touch-gated, so a tie leaves "which screen did this tap act on" to be resolved by
+    /// sort stability rather than by the data. Stamping at the render puts the frame
+    /// strictly after its touch, matching Android and Flutter.
+    func renderViewHierarchyAsImage(window: UIWindow) -> RenderedFrame? {
         let (view, viewBounds, isPresented) = getTopViewFor(window: window)
 
         guard let renderer = getRenderer(isPresented: isPresented, size: window.bounds.size) else {
@@ -180,6 +207,11 @@ class ScreenRecorder {
             }
         }
 
+        // Read immediately after the render block, the way Android reads it straight after
+        // `createBitmapFromView`. Everything above — the walk and the draw — is the work
+        // that separates the trigger from the pixels.
+        let capturedAtMs = TimestampUtils.timestamp()
+
         // Emitted whenever collection is on, including for a frame that produced no
         // elements. An empty `elements` array is meaningful — it says the frame was
         // described and had nothing readable on it, which is different from no
@@ -193,15 +225,19 @@ class ScreenRecorder {
                 capturedAtMs: capturedAtMs)
         }
 
-        return image
+        return RenderedFrame(image: image, capturedAtMs: capturedAtMs)
     }
 
-    func captureScreenshot(capturedAtMs: Int64 = TimestampUtils.timestamp()) -> Data? {
+    /// Renders and compresses the current window, carrying the frame's capture instant
+    /// through compression so the screenshot event can be stamped with it.
+    func captureScreenshot() -> CapturedScreenshot? {
         guard let currentWindow = ViewUtils.getCurrentWindow() else { return nil }
 
-        if let image = renderViewHierarchyAsImage(window: currentWindow, capturedAtMs: capturedAtMs) {
-            if let compressedData = image.jpegData(compressionQuality: ImageSettings.jpegCompressionRate) {
-                return compressedData
+        if let frame = renderViewHierarchyAsImage(window: currentWindow) {
+            if let compressedData = frame.image.jpegData(
+                compressionQuality: ImageSettings.jpegCompressionRate)
+            {
+                return CapturedScreenshot(data: compressedData, capturedAtMs: frame.capturedAtMs)
             }
             Logger.warn(message: "Failed to compress image to jpeg")
             return nil

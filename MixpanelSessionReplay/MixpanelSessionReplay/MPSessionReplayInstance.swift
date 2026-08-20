@@ -316,29 +316,39 @@ open class MPSessionReplayInstance: MPSessionReplaying {
         return components?.url?.absoluteString
     }
 
+    /// - Parameter triggerTimestamp: When the thing that asked for this capture happened —
+    ///   a touch's own `UITouch.timestamp`, or `nil` for "now". Used **only** to rate-limit
+    ///   against `ReplaySettings.recordInterval`; it is deliberately not what the resulting
+    ///   events are stamped with. The frame carries the instant its pixels came off the
+    ///   renderer (`RenderedFrame.capturedAtMs`), which is strictly later than the trigger
+    ///   by the render duration. Those are two different quantities: the gate asks "has
+    ///   enough time passed since we last captured", the event asserts "this is what the
+    ///   screen looked like at T". Conflating them back-dated every touch-triggered frame
+    ///   to its touch, tying the two events and leaving the service's touch-gated sampler
+    ///   to break the tie by sort stability. Android and Flutter stamp at the pixels too.
     func record(_ triggerTimestamp: Int64? = nil) {
         if shouldRecordSession && isScreenDirty() {
-            let timestamp = triggerTimestamp ?? TimestampUtils.timestamp()
-            let elapsedTime = timestamp - MPSessionReplayInstance.lastRecordTimestamp
+            let triggeredAtMs = triggerTimestamp ?? TimestampUtils.timestamp()
+            let elapsedTime = triggeredAtMs - MPSessionReplayInstance.lastRecordTimestamp
 
             if elapsedTime < ReplaySettings.recordInterval {
                 return
             }
-            MPSessionReplayInstance.lastRecordTimestamp = timestamp
+            MPSessionReplayInstance.lastRecordTimestamp = triggeredAtMs
 
             MPSessionReplayInstance.recordWorkItem?.cancel()
             MPSessionReplayInstance.recordWorkItem = DispatchWorkItem { [weak self] in
                 let startTime = TimestampUtils.timestamp()
-                // Stamp the wireframe with the same instant the screenshot event gets, so
-                // the pair describes one moment. On a touch-triggered capture that instant
-                // is the tap's own timestamp, which back-dates both events to the tap
-                // rather than to the pixels — the ordering the summarizer keys off.
-                if let screenshot = ScreenRecorder.shared.captureScreenshot(capturedAtMs: timestamp) {
+                // The screenshot and its `mp_wireframe` are stamped from one instant read at
+                // the render, so the pair describes one moment and both report when that
+                // moment was on screen.
+                if let screenshot = ScreenRecorder.shared.captureScreenshot() {
                     let endTime = TimestampUtils.timestamp()
                     Logger.debug(message: "Time taken to take screenshot - \(endTime - startTime)")
                     // Additional recording check to skip processing screenshot that accidentally got captured due to async processing
                     if self?.isRecording == true {
-                        self?.processScreenshot(screenshot, timestamp: timestamp)
+                        self?.processScreenshot(
+                            screenshot.data, timestamp: screenshot.capturedAtMs)
                     }
                 }
             }
@@ -353,11 +363,15 @@ open class MPSessionReplayInstance: MPSessionReplaying {
         }
     }
 
+    /// - Parameter timestamp: The frame's `RenderedFrame.capturedAtMs`, not the time this
+    ///   runs. Publishing hops to a background queue and the encoder sits behind the event
+    ///   serial queue, so a publish-time stamp would date the screen to whenever the
+    ///   pipeline drained — while touches are accurate at the source. Same reasoning as
+    ///   Android's `RawScreenshotEvent.timestamp`.
     func processScreenshot(_ screenshot: Data, timestamp: Int64) {
         _screenIsDirty = false
         // Move event publishing to a background thread
         DispatchQueue.global(qos: .utility).async {
-            // Use notificationTimestamp to associate the screenshot with the click
             EventPublisher.shared.publishSessionEvent(
                 // TODO: Refactor or cleanup incremental snapshot support, only send full snapshots for now (isInitial: true)
                 RawScreenshotEvent(data: screenshot, isInitial: true, timestamp: timestamp)
