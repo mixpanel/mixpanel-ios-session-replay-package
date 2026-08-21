@@ -53,6 +53,10 @@ struct MixpanelSensitiveMarker: UIViewRepresentable {
     /// Sensitivity flag: true = mask view, false = show view, nil = not specified
     let isSensitive: Bool?
 
+    func makeCoordinator() -> MarkerState {
+        MarkerState()
+    }
+
     func makeUIView(context: Context) -> UIView {
         let marker = UIView(frame: .zero)
         marker.isHidden = true  // Invisible - doesn't affect layout or rendering
@@ -61,11 +65,32 @@ struct MixpanelSensitiveMarker: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: UIView, context: Context) {
-        // Mark the parent view (which contains both the marker and actual content)
-        // This allows traversal into the content's children normally
-        DispatchQueue.main.async {
-            uiView.superview?.mpReplaySensitive = isSensitive
+        let state = context.coordinator
+
+        // Clear previous parent if it changed (prevents stale metadata)
+        if let previousParent = state.markedParent, previousParent !== uiView.superview {
+            previousParent.mpReplaySensitive = nil
         }
+
+        // Mark the current parent view (which contains both the marker and actual content)
+        // This allows traversal into the content's children normally
+        uiView.superview?.mpReplaySensitive = isSensitive
+
+        // Track the parent we just marked for future cleanup
+        state.markedParent = uiView.superview
+    }
+
+    static func dismantleUIView(_ uiView: UIView, coordinator: MarkerState) {
+        // Clean up: clear the sensitivity flag when marker is removed
+        // This prevents stale metadata when views are conditionally shown/hidden
+        coordinator.markedParent?.mpReplaySensitive = nil
+        coordinator.markedParent = nil
+    }
+
+    /// Tracks the parent view that has been marked with sensitivity metadata
+    /// Used for cleanup when the marker is removed or moves to a different parent
+    class MarkerState {
+        weak var markedParent: UIView?
     }
 }
 
@@ -82,8 +107,6 @@ extension View {
         modifier(MixpanelReplaySensitiveModifier(isSensitive: isSensitive))
     }
 }
-
-class SensitiveViewWrapper: UIView {}
 
 private var mpReplaySensitiveKey: UInt8 = 0
 
