@@ -242,6 +242,34 @@ final class WireframeEmitterTests: XCTestCase {
     XCTAssertEqual(customPayload(from: event).elements[0].text, "hello [REDACTED]")
   }
 
+  /// An empty rule is inert, not a wildcard that scrubs the whole screen.
+  ///
+  /// `applyRules` relies on Foundation for this rather than guarding it: `range(of:)`
+  /// reports no match for an empty search string, and `replacingOccurrences(of:)`
+  /// returns the receiver unchanged. That is a documented contract, but a load-bearing
+  /// one — if it ever stopped holding, a single empty rule (a config typo, not an
+  /// intent) would strip or redact the text of *every element on screen*. So it is
+  /// pinned here rather than assumed.
+  func testEmptyRuleText_isInert_ratherThanMatchingEverything() throws {
+    let rules: [MPSensitiveRule] = [
+      .strip(text: ""),
+      .redact(text: "", replacement: "[REDACTED]"),
+    ]
+    let emitter = WireframeEmitter(
+      options: MPWireframesOptions(sensitiveRules: rules))
+    let element = WireframeElement.from(
+      role: .text, text: "Dashboard",
+      rect: CGRect(x: 0, y: 0, width: 100, height: 20),
+      decision: .none)
+
+    emitter.emit(elements: [element], viewport: (100, 100), maskBounds: [])
+    let event = try waitForFirstPublishedEvent()
+
+    XCTAssertEqual(
+      customPayload(from: event).elements[0].text, "Dashboard",
+      "an empty rule must not match, let alone strip or redact")
+  }
+
   func testRedactRegex_replacementIsLiteral_notInterpreted() throws {
     let regex = try NSRegularExpression(pattern: "\\d+")
     let rules: [MPSensitiveRule] = [.redactRegex(regex, replacement: "$1<>\\1")]

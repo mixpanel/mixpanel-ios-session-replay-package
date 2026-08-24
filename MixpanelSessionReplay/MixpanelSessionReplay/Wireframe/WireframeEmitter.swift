@@ -161,6 +161,8 @@ final class WireframeEmitter {
     guard element.decision == .none || element.decision == .declared else {
       return element
     }
+    // No text to scrub: skip both layers. The only emptiness check in the
+    // pipeline — a rule's own search text needs none, see `applyRules`.
     guard let originalText = element.text, !originalText.isEmpty else {
       return element
     }
@@ -276,6 +278,17 @@ final class WireframeEmitter {
     return nil
   }
 
+  /// Runs Layer 4: the configured ``MPSensitiveRule``s, in declared order.
+  ///
+  /// A rule declared with empty search text is inert, and needs no guard of its
+  /// own to be: Foundation's `range(of:)` reports no match for an empty search
+  /// string, and `replacingOccurrences(of:)` returns the receiver unchanged.
+  /// `WireframeEmitterTests.testEmptyRuleText_isInert_ratherThanMatchingEverything`
+  /// pins that, since it is the reason nothing here has to check.
+  ///
+  /// The rule's search text is named `ruleText` rather than shadowing `text`: the
+  /// two are different strings — `text` is the element's own content, `ruleText`
+  /// is the pattern being looked for in it.
   private func applyRules(_ element: WireframeElement, text: String) -> WireframeElement {
     var current = text
     var redacted = false
@@ -288,8 +301,8 @@ final class WireframeEmitter {
           stripped.decision = .ruleStrip
           return stripped
         }
-      case .strip(let text):
-        if !text.isEmpty, current.range(of: text, options: .caseInsensitive) != nil {
+      case .strip(let ruleText):
+        if current.range(of: ruleText, options: .caseInsensitive) != nil {
           var stripped = element
           stripped.text = nil
           stripped.decision = .ruleStrip
@@ -300,10 +313,10 @@ final class WireframeEmitter {
           current = replaceLiteral(regex: regex, in: current, replacement: replacement)
           redacted = true
         }
-      case .redact(let text, let replacement):
-        if !text.isEmpty, current.range(of: text, options: .caseInsensitive) != nil {
+      case .redact(let ruleText, let replacement):
+        if current.range(of: ruleText, options: .caseInsensitive) != nil {
           current = current.replacingOccurrences(
-            of: text, with: replacement, options: .caseInsensitive)
+            of: ruleText, with: replacement, options: .caseInsensitive)
           redacted = true
         }
       }
