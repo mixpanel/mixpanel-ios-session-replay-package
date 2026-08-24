@@ -5,7 +5,6 @@
 //  Copyright © 2026 Mixpanel. All rights reserved.
 //
 
-import CoreGraphics
 import Foundation
 
 enum WireframeRole: String, Hashable {

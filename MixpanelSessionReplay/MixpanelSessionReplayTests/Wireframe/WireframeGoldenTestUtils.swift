@@ -31,6 +31,28 @@ import XCTest
 
 @testable import MixpanelSessionReplay
 
+extension WireframeEmitter {
+  /// Runs Layers 2 and 4 (geometric leak-prevention + sensitive rules) plus the
+  /// same wire text cleaning and truncation `processAndPublish` ships, returning
+  /// the final elements with `decision` preserved.
+  ///
+  /// This is the emitter's own production code — `applyMaskingPipeline` and
+  /// `wireText`, reached through `@testable import` — composed the way
+  /// `processAndPublish` composes it, minus the publish and the dedup mutation.
+  /// Tests need the elements rather than the wire DTO because only the element
+  /// carries **why** its text was dropped.
+  func processedElements(
+    elements: [WireframeElement],
+    maskBounds: Set<HashableRect>
+  ) -> [WireframeElement] {
+    elements.map { element in
+      var processed = applyMaskingPipeline(element, maskBounds: maskBounds)
+      processed.text = wireText(for: processed)
+      return processed
+    }
+  }
+}
+
 /// Directory holding the checked-in golden JSON files, resolved from this source
 /// file's location so it works regardless of the test runner's working
 /// directory (and supports auto-creating a missing golden in the source tree).
@@ -70,7 +92,7 @@ func assertWireframeGolden(
     options: MPWireframesOptions(
       sensitiveRules: rules,
       useAccessibilityLabelFallback: useAccessibilityLabelFallback))
-  let processed = emitter.processedElementsForTesting(
+  let processed = emitter.processedElements(
     elements: elements, maskBounds: Set(frames.keys))
   let viewport = [Int(window.bounds.width), Int(window.bounds.height)]
   assertWireframeGolden(

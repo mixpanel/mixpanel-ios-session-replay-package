@@ -406,6 +406,46 @@ final class WireframeEmitterTests: XCTestCase {
       "the first frame of a new session must publish even when the screen has not changed")
   }
 
+  /// The reset has to outrank work the outgoing session already queued.
+  ///
+  /// `emit` is asynchronous, so a frame captured just before the session boundary can
+  /// still be in flight when `resetDedup()` lands. Left alone, that frame writes the
+  /// previous session's hash back *after* the reset and the new session's first frame —
+  /// identical, because the screen never changed — is deduped away again, which is the
+  /// exact failure the reset exists to prevent. The stale frame is dropped instead: it
+  /// describes a replay that has already ended.
+  func testDedup_resetDedup_outranksAnEmitAlreadyInFlight() throws {
+    let emitter = WireframeEmitter(options: MPWireframesOptions())
+
+    // A frame with enough elements that the work queue is still processing it when
+    // the reset lands on the next line — no sleep, and no dependence on how quickly
+    // GCD brings the worker up.
+    let stale = (0..<2_000).map { index in
+      WireframeElement.from(
+        role: .text, text: "row \(index)",
+        rect: CGRect(x: 0, y: index, width: 10, height: 10),
+        decision: .none)
+    }
+
+    emitter.emit(elements: stale, viewport: (100, 100), maskBounds: [])
+    emitter.resetDedup()
+    assertNoPublishedEvent(
+      "a frame captured before the session boundary must not ship, and must not leave "
+        + "its hash behind")
+    XCTAssertNil(
+      emitter.currentPayloadHash,
+      "an in-flight emit from the previous session must not restore dedup state")
+
+    // The emitter is still live after dropping the stale frame.
+    let fresh = WireframeElement.from(
+      role: .text, text: "new session",
+      rect: CGRect(x: 0, y: 0, width: 10, height: 10),
+      decision: .none)
+    emitter.emit(elements: [fresh], viewport: (100, 100), maskBounds: [])
+    let event = try waitForFirstPublishedEvent()
+    XCTAssertEqual(customPayload(from: event).elements.first?.text, "new session")
+  }
+
   func testDedup_maskBoundsThatStartStrippingTextReEmits() throws {
     let emitter = WireframeEmitter(options: MPWireframesOptions())
     let element = WireframeElement.from(

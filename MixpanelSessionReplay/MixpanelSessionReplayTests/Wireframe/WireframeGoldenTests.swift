@@ -496,7 +496,7 @@ final class WireframeGoldenTests: XCTestCase {
     let (frames, elements) = manager.collectFramesAndWireframes(
       in: host.view, window: swiftUIWindow)
     let emitter = WireframeEmitter(options: MPWireframesOptions(sensitiveRules: []))
-    let processed = emitter.processedElementsForTesting(
+    let processed = emitter.processedElements(
       elements: elements, maskBounds: Set(frames.keys))
     let declared =
       processed

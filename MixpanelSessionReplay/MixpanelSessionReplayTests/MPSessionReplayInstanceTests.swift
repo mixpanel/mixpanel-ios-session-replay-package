@@ -152,14 +152,14 @@ class MPSessionReplayInstanceTests: BaseTests {
             primed.fulfill()
         }
         wait(for: [primed], timeout: 2.0)
-        XCTAssertTrue(
-            emitter.hasDedupStateForTesting,
+        XCTAssertNotNil(
+            emitter.currentPayloadHash,
             "precondition: the primed emit should leave a payload hash behind")
 
         instance.startRecording()
 
-        XCTAssertFalse(
-            emitter.hasDedupStateForTesting,
+        XCTAssertNil(
+            emitter.currentPayloadHash,
             "startRecording must reset dedup so the new session's first frame publishes")
     }
 

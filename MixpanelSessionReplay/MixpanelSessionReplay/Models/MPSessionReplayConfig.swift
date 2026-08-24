@@ -176,9 +176,31 @@ public struct MPSessionReplayConfig: Codable {
     ///   same masking guarantees the screenshot honors are enforced on the
     ///   wireframe (view-level, geometric leak-prevention, and content rules).
     ///
+    /// ## Example
+    /// ```swift
+    /// var config = MPSessionReplayConfig()
+    ///
+    /// // Turn wireframes on with the defaults.
+    /// config.wireframesOptions = MPWireframesOptions()
+    ///
+    /// // Or opt into content rules and disable the accessibility-label fallback.
+    /// config.wireframesOptions = MPWireframesOptions(
+    ///     sensitiveRules: [
+    ///         // Drop the text of any element mentioning an account number.
+    ///         .strip(text: "Account #"),
+    ///         // Replace anything that looks like an email address.
+    ///         .redactRegex(
+    ///             try! NSRegularExpression(pattern: #"[\w.+-]+@[\w-]+\.[\w.]+"#),
+    ///             replacement: "[EMAIL]"),
+    ///     ],
+    ///     useAccessibilityLabelFallback: false
+    /// )
+    /// ```
+    ///
     /// - Default: `nil`
     /// - Note: Not persisted through `Codable` — the field is skipped by JSON
-    ///   encoding/decoding because it holds a closure and `NSRegularExpression`.
+    ///   encoding/decoding because its rules can hold `NSRegularExpression`
+    ///   values. Set it programmatically after decoding.
     /// - SeeAlso: ``MPWireframesOptions``, ``MPSensitiveRule``
     public var wireframesOptions: MPWireframesOptions?
 
@@ -245,9 +267,9 @@ public struct MPSessionReplayConfig: Codable {
         self.serverURL = getTrimmedServerURL(urlString: serverURL)
     }
 
-    // `wireframesOptions` is deliberately excluded from Codable — it holds a
-    // closure and `NSRegularExpression`, neither of which are Codable. Callers
-    // set it programmatically after decoding.
+    // `wireframesOptions` is deliberately excluded from Codable — its rules can
+    // hold `NSRegularExpression` values, which are not Codable. Callers set it
+    // programmatically after decoding.
     enum CodingKeys: String, CodingKey {
         case wifiOnly
         case autoMaskedViews

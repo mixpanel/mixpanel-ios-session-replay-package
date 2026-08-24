@@ -102,7 +102,7 @@ func assertWireframeLayoutGolden(
         options: MPWireframesOptions(
             sensitiveRules: rules,
             useAccessibilityLabelFallback: useAccessibilityLabelFallback))
-    let processed = emitter.processedElementsForTesting(
+    let processed = emitter.processedElements(
         elements: elements, maskBounds: Set(frames.keys))
     let viewport = [Int(window.bounds.width), Int(window.bounds.height)]
     assertWireframeLayoutGolden(

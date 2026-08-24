@@ -16,7 +16,12 @@ struct TouchEventData {
     var phase: UITouch.Phase
     var location: CGPoint
     var hash: Int
-    /// Wall-clock milliseconds, converted from `UITouch.timestamp`.
+    /// Wall-clock milliseconds read when the `UIEvent` reached us.
+    ///
+    /// Deliberately *not* derived from `UITouch.timestamp`: that clock can report a
+    /// stale instant, and because screenshots are stamped with the current time, a
+    /// touch dated earlier than the frames around it stretches the replay's apparent
+    /// duration. A customer hit exactly that.
     var timestamp: Int64
 }
 
@@ -27,8 +32,8 @@ struct TouchEventData {
 /// rrweb-web; secondary pointers going down or up mid-gesture are ignored.
 ///
 /// Nothing here is deferred: batches drain on the next sampled move or when the gesture
-/// ends, so no position is held behind a timer and every event carries the timestamp of
-/// the `UITouch` that produced it.
+/// ends, so no position is held behind a timer and every event carries the instant its
+/// `UIEvent` arrived.
 struct TouchEventTracker {
     /// Identifies the one pointer we follow. `nil` means no gesture is in flight.
     private static var primaryTouchHash: Int?
@@ -48,14 +53,19 @@ struct TouchEventTracker {
 
         // As UITouch can be accessed on the main thread, grab the required values from the touch
         // and do the rest processing with that data on the background thread
-        let touchEventsData: [TouchEventData] = touches(for: event, in: window)
+        // One clock read for the whole event, so every touch it carries lands on the
+        // same instant.
+        let touchEventsData: [TouchEventData] = touches(
+            for: event, in: window, timestamp: TimestampUtils.timestamp())
 
         DispatchQueue.main.async {
             handleTouches(touchEventsData)
         }
     }
 
-    private static func touches(for event: UIEvent, in window: UIWindow) -> [TouchEventData] {
+    private static func touches(
+        for event: UIEvent, in window: UIWindow, timestamp: Int64
+    ) -> [TouchEventData] {
         // Get the touch events only for the current window
         guard let touches = event.touches(for: window) else { return [] }
         return touches.map { touch in
@@ -63,7 +73,7 @@ struct TouchEventTracker {
                 phase: touch.phase,
                 location: touch.location(in: window),
                 hash: ObjectIdentifier(touch).hashValue,
-                timestamp: TimestampUtils.convertTouchTimestamp(touch.timestamp))
+                timestamp: timestamp)
         }
     }
 

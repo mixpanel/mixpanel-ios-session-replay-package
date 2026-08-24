@@ -5,7 +5,6 @@
 //  Copyright © 2026 Mixpanel. All rights reserved.
 //
 
-import CoreGraphics
 import Foundation
 
 /// Runs Layer 2 (geometric leak-prevention) and Layer 3 (sensitive rules) on
@@ -56,6 +55,34 @@ final class WireframeEmitter {
   /// `lastPayloadHash` and Flutter's `_lastPayloadHash`.
   private var lastPayloadHash: Int?
 
+  /// Bumped by ``resetDedup()``; identifies the recording session a frame was
+  /// captured in.
+  ///
+  /// ``emit(elements:viewport:maskBounds:capturedAtMs:)`` stamps each frame with
+  /// the epoch current at capture time, and ``processAndPublish`` drops any frame
+  /// whose stamp is stale. Without it the reset races the work queue: a frame
+  /// queued by the outgoing session can finish *after* the reset and restore the
+  /// old hash, so the new session's first frame — identical, because the screen
+  /// never changed — is deduped away again, which is exactly what the reset
+  /// exists to prevent. Dropping the stale frame is also the right outcome on its
+  /// own: it describes a screen from a replay that has already ended, and
+  /// `startRecording` triggers a fresh capture immediately.
+  private var dedupEpoch: UInt64 = 0
+
+  /// Hash of the last published payload, or `nil` when no frame has been
+  /// published since the last ``resetDedup()`` — i.e. whether the next identical
+  /// frame would dedup.
+  ///
+  /// Exposed so the session-boundary reset can be asserted at the
+  /// `startRecording` call site rather than only on ``resetDedup()`` itself; a
+  /// test that calls `resetDedup()` directly cannot catch the call site being
+  /// dropped.
+  var currentPayloadHash: Int? {
+    var hash: Int?
+    hashLock.read { hash = self.lastPayloadHash }
+    return hash
+  }
+
   /// - Parameters:
   ///   - options: The wireframe capture options. `wireframesOptions` is the
   ///     single switch that turns capture on.
@@ -84,12 +111,17 @@ final class WireframeEmitter {
     maskBounds: Set<HashableRect>,
     capturedAtMs: Int64 = TimestampUtils.timestamp()
   ) {
+    // Stamped here, at capture time, not inside the queued work — the point is to
+    // record which session this frame belongs to before a reset can intervene.
+    var epoch: UInt64 = 0
+    hashLock.read { epoch = self.dedupEpoch }
     workQueue.async { [weak self] in
       self?.processAndPublish(
         elements: elements,
         viewport: viewport,
         maskBounds: maskBounds,
-        timestamp: capturedAtMs
+        timestamp: capturedAtMs,
+        epoch: epoch
       )
     }
   }
@@ -103,113 +135,23 @@ final class WireframeEmitter {
   /// minted. Without it, a background/foreground onto an unchanged screen compares the
   /// new replay's first frame against the *previous* replay's last one and dedups it
   /// away, shipping an opening screenshot with no `mp_wireframe` to describe it.
+  ///
+  /// Ordered against in-flight work through ``dedupEpoch``, so a frame the outgoing
+  /// session already queued cannot land after the reset and restore its hash.
   func resetDedup() {
     hashLock.write {
       self.lastPayloadHash = nil
+      self.dedupEpoch &+= 1
     }
   }
 
-  #if DEBUG
-    /// Test-only seam: whether a previous emit's payload hash is still held, i.e.
-    /// whether the next identical frame would dedup. Exists so the session-boundary
-    /// reset can be asserted at the `startRecording` call site rather than only on
-    /// ``resetDedup()`` itself — a test that calls `resetDedup()` directly cannot
-    /// catch the call site being dropped.
-    var hasDedupStateForTesting: Bool {
-      var held = false
-      hashLock.read { held = self.lastPayloadHash != nil }
-      return held
-    }
-  #endif
+  // MARK: - Pipeline
 
-  #if DEBUG
-    /// Test-only seam. Runs Layers 2 and 4 (geometric leak-prevention + sensitive
-    /// rules) and applies the same wire text cleaning + truncation that
-    /// `processAndPublish` ships, returning the final elements with `decision`
-    /// preserved. Lets golden tests assert the *whole* pipeline — including
-    /// **why** an element's text was dropped — rather than only the stripped
-    /// wire DTO, which carries no decision. Never called in production;
-    /// synchronous and side-effect-free (no publish, no dedup mutation).
-    /// Mirrors Android's `WireframeEmitter.processForTesting(elements:maskBounds:)`.
-    func processedElementsForTesting(
-      elements: [WireframeElement],
-      maskBounds: Set<HashableRect>
-    ) -> [WireframeElement] {
-      elements.map { element in
-        var processed = applyMaskingPipeline(element, maskBounds: maskBounds)
-        processed.text = wireText(for: processed)
-        return processed
-      }
-    }
-  #endif
-
-  // MARK: - Private
-
-  private func processAndPublish(
-    elements: [WireframeElement],
-    viewport: (width: Int, height: Int),
-    maskBounds: Set<HashableRect>,
-    timestamp: Int64
-  ) {
-    // Process first, dedup on the result. A deduped frame costs one pipeline
-    // pass — rect intersection and regex over a few hundred elements, on a
-    // utility queue — which is negligible next to the JPEG compression running
-    // alongside it, and buys a key that reflects what actually ships.
-    let processed = elements.map { element in
-      applyMaskingPipeline(element, maskBounds: maskBounds)
-    }
-
-    let payload = WireframePayload(
-      viewport: [viewport.width, viewport.height],
-      elements: processed.map { element in
-        WireframeElementJson(
-          role: element.role.wireName,
-          text: wireText(for: element),
-          bounds: [element.x, element.y, element.w, element.h]
-        )
-      }
-    )
-
-    let payloadHash = payload.hashValue
-    var shouldPublish = true
-    hashLock.read {
-      if self.lastPayloadHash == payloadHash {
-        shouldPublish = false
-      }
-    }
-    guard shouldPublish else { return }
-
-    let sessionEvent = SessionEvent(
-      type: EventType.custom,
-      data: .customData(SessionCustomEventData(tag: WireframeEmitter.tag, payload: payload)),
-      timestamp: timestamp
-    )
-    EventPublisher.shared.publishCustomEvent(sessionEvent)
-
-    hashLock.write {
-      self.lastPayloadHash = payloadHash
-    }
-
-    if let debugEmitter {
-      let snapshot = MPWireframeDebugSnapshot(
-        timestamp: timestamp,
-        viewport: [viewport.width, viewport.height],
-        elements: processed.map { element in
-          MPWireframeDebugSnapshot.DebugElement(
-            role: element.role.wireName,
-            text: wireText(for: element),
-            bounds: [element.x, element.y, element.w, element.h],
-            maskDecision: element.decision
-          )
-        }
-      )
-      debugQueue.async {
-        debugEmitter(snapshot)
-      }
-    }
-  }
-
-  private func applyMaskingPipeline(
+  /// Runs Layers 2 and 4 (geometric leak-prevention + sensitive rules) over one
+  /// element, returning it with `text` and `decision` updated. `internal` rather
+  /// than `private` so tests can drive the same code production does instead of
+  /// a test-only entry point.
+  func applyMaskingPipeline(
     _ element: WireframeElement,
     maskBounds: Set<HashableRect>
   ) -> WireframeElement {
@@ -234,6 +176,89 @@ final class WireframeEmitter {
     }
 
     return applyRules(element, text: originalText)
+  }
+
+  /// Final text an element ships with: normalization then truncation.
+  ///
+  /// Declared text skips normalization — it is authored by the developer, not
+  /// scraped, so it is taken verbatim rather than second-guessed for blankness
+  /// or glyph content. It is still truncated. Mirrors Flutter's
+  /// `_cleanText` / `_truncate` ordering.
+  ///
+  /// `internal` for the same reason as ``applyMaskingPipeline(_:maskBounds:)``.
+  func wireText(for element: WireframeElement) -> String? {
+    let cleaned = element.isDeclared ? element.text : cleanTextForWire(element.text)
+    return cleaned.flatMap(truncateForWire)
+  }
+
+  // MARK: - Private
+
+  private func processAndPublish(
+    elements: [WireframeElement],
+    viewport: (width: Int, height: Int),
+    maskBounds: Set<HashableRect>,
+    timestamp: Int64,
+    epoch: UInt64
+  ) {
+    // Process first, dedup on the result. A deduped frame costs one pipeline
+    // pass — rect intersection and regex over a few hundred elements, on a
+    // utility queue — which is negligible next to the JPEG compression running
+    // alongside it, and buys a key that reflects what actually ships.
+    let processed = elements.map { element in
+      applyMaskingPipeline(element, maskBounds: maskBounds)
+    }
+
+    let payload = WireframePayload(
+      viewport: [viewport.width, viewport.height],
+      elements: processed.map { element in
+        WireframeElementJson(
+          role: element.role.wireName,
+          text: wireText(for: element),
+          bounds: [element.x, element.y, element.w, element.h]
+        )
+      }
+    )
+
+    // Compare and claim under one write barrier: a `read` to test followed by a
+    // `write` to store leaves a window where a concurrent `resetDedup()` lands in
+    // between and gets overwritten by the frame it was meant to clear.
+    let payloadHash = payload.hashValue
+    var shouldPublish = false
+    hashLock.write {
+      // Stale frame: captured before the session boundary, so it describes a
+      // replay that has already ended. Dropping it also keeps it from restoring
+      // this hash over the reset.
+      guard epoch == self.dedupEpoch else { return }
+      guard self.lastPayloadHash != payloadHash else { return }
+      self.lastPayloadHash = payloadHash
+      shouldPublish = true
+    }
+    guard shouldPublish else { return }
+
+    let sessionEvent = SessionEvent(
+      type: EventType.custom,
+      data: .customData(SessionCustomEventData(tag: WireframeEmitter.tag, payload: payload)),
+      timestamp: timestamp
+    )
+    EventPublisher.shared.publishCustomEvent(sessionEvent)
+
+    if let debugEmitter {
+      let snapshot = MPWireframeDebugSnapshot(
+        timestamp: timestamp,
+        viewport: [viewport.width, viewport.height],
+        elements: processed.map { element in
+          MPWireframeDebugSnapshot.DebugElement(
+            role: element.role.wireName,
+            text: wireText(for: element),
+            bounds: [element.x, element.y, element.w, element.h],
+            maskDecision: element.decision
+          )
+        }
+      )
+      debugQueue.async {
+        debugEmitter(snapshot)
+      }
+    }
   }
 
   private func applyGeometricStrip(
@@ -308,17 +333,6 @@ final class WireframeEmitter {
     let range = NSRange(location: 0, length: mutable.length)
     regex.replaceMatches(in: mutable, options: [], range: range, withTemplate: escaped)
     return mutable as String
-  }
-
-  /// Final text an element ships with: normalization then truncation.
-  ///
-  /// Declared text skips normalization — it is authored by the developer, not
-  /// scraped, so it is taken verbatim rather than second-guessed for blankness
-  /// or glyph content. It is still truncated. Mirrors Flutter's
-  /// `_cleanText` / `_truncate` ordering.
-  private func wireText(for element: WireframeElement) -> String? {
-    let cleaned = element.isDeclared ? element.text : cleanTextForWire(element.text)
-    return cleaned.flatMap(truncateForWire)
   }
 
   /// Normalize an unmasked element's text for the wire *without dropping the

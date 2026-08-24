@@ -284,7 +284,7 @@ final class WireframeLayoutGoldenTests: XCTestCase {
         // present, which is the emitter's job to strip, not the walk's.
         let collected = manager.collectFramesAndWireframes(in: root, window: window)
         let processed = WireframeEmitter(options: MPWireframesOptions())
-            .processedElementsForTesting(
+            .processedElements(
                 elements: collected.wireframes, maskBounds: Set(collected.frames.keys))
         XCTAssertEqual(processed.count, 1, "the masked container's contents are still described")
         XCTAssertNil(processed.first?.text, "but never with their text")
