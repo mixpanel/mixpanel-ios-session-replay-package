@@ -183,7 +183,7 @@ public struct MPSessionReplayConfig: Codable {
     /// // Turn wireframes on with the defaults.
     /// config.wireframesOptions = MPWireframesOptions()
     ///
-    /// // Or opt into content rules and disable the accessibility-label fallback.
+    /// // Or opt into content rules and the accessibility-label fallback.
     /// config.wireframesOptions = MPWireframesOptions(
     ///     sensitiveRules: [
     ///         // Drop the text of any element mentioning an account number.
@@ -193,7 +193,7 @@ public struct MPSessionReplayConfig: Codable {
     ///             try! NSRegularExpression(pattern: #"[\w.+-]+@[\w-]+\.[\w.]+"#),
     ///             replacement: "[EMAIL]"),
     ///     ],
-    ///     useAccessibilityLabelFallback: false
+    ///     useAccessibilityLabelFallback: true
     /// )
     /// ```
     ///

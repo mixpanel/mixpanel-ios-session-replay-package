@@ -195,19 +195,21 @@ directly.
 
 ### Accessibility label fallback
 
-An element with no text of its own falls back to its `accessibilityLabel`. This
-is on by default: for icons and image buttons the label is usually the only
-description of what the element is for, and without it they ship as bare
-`role` + `bounds` shells. It is only ever the third tier of the chain —
-declared text, then the element's own rendered text, then the label.
+An element with no text of its own can fall back to its `accessibilityLabel`.
+This is **off by default**: an accessibility label is not drawn on screen, so
+unlike visible text you cannot confirm what it contains by watching the replay.
 
-An accessibility label is not drawn on screen, so unlike visible text you cannot
-confirm what it contains by watching the replay. If your labels might hold
-anything you would not want sent, turn the fallback off:
+With it off, icons and image buttons ship as bare `role` + `bounds` shells;
+describe them with `.mpWireframeText(_:)`, which this flag does not gate. If
+your labels are safe to send and you would rather have those elements named,
+turn the fallback on:
 
 ```swift
-config.wireframesOptions = MPWireframesOptions(useAccessibilityLabelFallback: false)
+config.wireframesOptions = MPWireframesOptions(useAccessibilityLabelFallback: true)
 ```
+
+The label is only ever the third tier of the chain — declared text, then the
+element's own rendered text, then the label.
 
 This changes what an element *says*, never which pixels are masked.
 

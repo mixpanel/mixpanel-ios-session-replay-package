@@ -242,6 +242,9 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
   }
 
   func test_uiimageview_notMasked_emitsAccessibilityLabelAsText() {
+    // Opted in explicitly — the shipped default is off, and this case is about
+    // tier 3 of the text chain.
+    manager.useAccessibilityLabelFallback = true
     let root = UIView(frame: window.bounds)
     let iv = UIImageView(frame: CGRect(x: 0, y: 0, width: 64, height: 64))
     iv.accessibilityLabel = "avatar"

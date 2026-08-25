@@ -56,9 +56,9 @@ public struct MPWireframesOptions {
   public var sensitiveRules: [MPSensitiveRule]
 
   /// Whether an element with no text of its own may fall back to its
-  /// `accessibilityLabel`. On by default: for icons and image buttons the
-  /// label is usually the only description of what the element is for, and
-  /// without it they are sent as bare `role + bounds` shells.
+  /// `accessibilityLabel`. Off by default: a label is not drawn on screen, so
+  /// unlike visible text you cannot confirm what it contains by watching the
+  /// replay, and labels sometimes hold more than what is shown.
   ///
   /// The label is only ever the third tier of the text precedence chain:
   /// 1. Text declared with `.mpWireframeText(_:)` — always wins, and is
@@ -68,11 +68,10 @@ public struct MPWireframesOptions {
   /// 3. `accessibilityLabel` — reached only when 1 and 2 are absent, **and**
   ///    only when this is `true`.
   ///
-  /// Turn it off if your labels might hold anything you would not want sent. A
-  /// label is not drawn on screen, so unlike visible text you cannot confirm
-  /// what it contains by watching the replay — which also means turning this
-  /// off leaves you no way to describe an icon except
-  /// `.mpWireframeText(_:)`.
+  /// Turn it on if you want icons and image buttons named: for an icon-only
+  /// control the label is usually the only description of what the element is
+  /// for, and with the fallback off it is sent as a bare `role + bounds` shell
+  /// instead — `.mpWireframeText(_:)` is then the only way to describe it.
   ///
   /// This changes what an element *says*, never which pixels are masked: a
   /// masked element stays textless either way, and ``sensitiveRules`` still run
@@ -81,7 +80,7 @@ public struct MPWireframesOptions {
 
   public init(
     sensitiveRules: [MPSensitiveRule] = [],
-    useAccessibilityLabelFallback: Bool = true
+    useAccessibilityLabelFallback: Bool = false
   ) {
     self.sensitiveRules = sensitiveRules
     self.useAccessibilityLabelFallback = useAccessibilityLabelFallback

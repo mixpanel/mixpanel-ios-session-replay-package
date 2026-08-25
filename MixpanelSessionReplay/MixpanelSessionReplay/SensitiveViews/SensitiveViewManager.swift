@@ -111,7 +111,7 @@ class SensitiveViewManager {
     /// consulted by `extractWireframeText`; masking is unaffected. When false,
     /// an element with no rendered text of its own ships as a textless
     /// `role + bounds` shell rather than borrowing its `accessibilityLabel`.
-    var useAccessibilityLabelFallback: Bool = true
+    var useAccessibilityLabelFallback: Bool = false
 
     var sensitiveClasses: [AnyClass] = []
 
