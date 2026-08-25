@@ -158,9 +158,12 @@ open class MPSessionReplayInstance: MPSessionReplaying {
         // Clean up mask regions listener (safe to set to nil even if not set)
         SensitiveViewManager.shared.maskRegionsListener = nil
 
-        // Tear down wireframe capture (safe to run when never enabled)
+        // Tear down wireframe capture (safe to run when never enabled). Only the emitter
+        // needs clearing by hand: `ScreenRecorder` is a separate singleton that survives
+        // this teardown, while every `SensitiveViewManager` flag — `wireframeCollectionEnabled`
+        // included — goes with `SensitiveViewManager.reset()` a few lines later in
+        // `deinitializeInstance`, the sole caller of this method.
         ScreenRecorder.shared.wireframeEmitter = nil
-        SensitiveViewManager.shared.wireframeCollectionEnabled = false
     }
 
     @objc func appDidEnterBackground() {

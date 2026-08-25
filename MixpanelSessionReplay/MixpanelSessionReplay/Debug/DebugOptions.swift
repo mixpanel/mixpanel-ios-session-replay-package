@@ -10,7 +10,13 @@ import Foundation
 /// Configuration for debug features in Session Replay.
 ///
 /// Pass an instance of this class to ``MPSessionReplayConfig/debugOptions``
-/// to enable debug features. Only works in debug builds.
+/// to enable debug features.
+///
+/// The two members differ in where they take effect. ``overlayColors`` draws on
+/// the user's screen, so it is compiled out of release builds. ``wireframeEmitter``
+/// renders nothing and only hands your own code a description of a frame the SDK
+/// already built, so it is delivered in any build — a release app can legitimately
+/// want one, for example to attach the last wireframe to a crash report.
 ///
 /// ## Example
 /// ```swift
@@ -32,6 +38,8 @@ public struct DebugOptions: Codable {
     /// This *observes* wireframe capture; it does not enable it. Wireframes are
     /// only captured when ``MPSessionReplayConfig/wireframesOptions`` is set, so
     /// setting this on its own is harmless but never calls you back.
+    ///
+    /// Unlike ``overlayColors``, this is not restricted to debug builds.
     ///
     /// Delivered on a background queue so a slow callback never holds up
     /// recording; make your callback thread-safe. Nothing given to it is ever
