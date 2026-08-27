@@ -206,7 +206,6 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     ///   The `recordingSessionsPercent` value from the config is ignored when calling this method.
     ///
     /// If recording is already active, calling this method has no effect.
-    /// The recording will continue until you manually stop it or until the app goes to the background, whichever happens first.
     public func startRecording(sessionsPercent: Double = 100.0) {
         /// Use main thread for all recording start setup to ensure thread safety with consistent state updates and avoid potential race conditions
         ThreadUtils.runOnMainThread { [weak self] in
