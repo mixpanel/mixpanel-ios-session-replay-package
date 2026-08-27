@@ -338,7 +338,7 @@ class SensitiveViewManagerTests: BaseTests {
             manager.isImageLayer(layer), "Layer without delegate should not be detected as image layer")
     }
 
-    // MARK: - Layer Frame Detection Tests
+    // MARK: - Layer Frame Detection Testsx
 
     func testGetFrame_ForVisibleLayer() {
         let window = UIView(frame: CGRect(x: 0, y: 0, width: 375, height: 667))
@@ -604,28 +604,56 @@ class SensitiveViewManagerTests: BaseTests {
         let textField1 = UITextField(frame: CGRect(x: 10, y: 10, width: 80, height: 30))
         safeContainer.addSubview(textField1)
 
+        // Add UITextView at level 1
+        let textView1 = UITextView(frame: CGRect(x: 10, y: 50, width: 80, height: 30))
+        safeContainer.addSubview(textView1)
+
         // Add textfield at level 2 (nested inside another view)
         let textField2 = UITextField(frame: CGRect(x: 10, y: 10, width: 80, height: 30))
         nestedContainer.addSubview(textField2)
+
+        // Add UITextView at level 2
+        let textView2 = UITextView(frame: CGRect(x: 10, y: 50, width: 40, height: 30))
+        nestedContainer.addSubview(textView2)
 
         // Add deeply nested textfield at level 3
         let deepContainer = UIView(frame: CGRect(x: 10, y: 50, width: 160, height: 120))
         nestedContainer.addSubview(deepContainer)
         let textField3 = UITextField(frame: CGRect(x: 10, y: 10, width: 80, height: 30))
         deepContainer.addSubview(textField3)
-
+        // Add UITextView at level 3
+        let textView3 = UITextView(frame: CGRect(x: 10, y: 54, width: 90, height: 30))
+        deepContainer.addSubview(textView3)
         let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // Convert frames to window coordinates for lookup (getSensitiveFrames returns window coordinates)
+        let textField1WindowFrame = textField1.convert(textField1.bounds, to: window)
+        let textView1WindowFrame = textView1.convert(textView1.bounds, to: window)
+        let textField2WindowFrame = textField2.convert(textField2.bounds, to: window)
+        let textView2WindowFrame = textView2.convert(textView2.bounds, to: window)
+        let textField3WindowFrame = textField3.convert(textField3.bounds, to: window)
+        let textView3WindowFrame = textView3.convert(textView3.bounds, to: window)
 
         // All textfields should be masked via stack-based traversal
         XCTAssertEqual(
-            sensitiveFrames[HashableRect(textField1.frame)], .textInput,
+            sensitiveFrames[HashableRect(textField1WindowFrame)], .textInput,
             "TextField at level 1 should be masked")
         XCTAssertEqual(
-            sensitiveFrames[HashableRect(textField2.frame)], .textInput,
+            sensitiveFrames[HashableRect(textView1WindowFrame)], .textInput,
+            "TextView at level 1 should be masked")
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField2WindowFrame)], .textInput,
             "TextField at level 2 should be masked")
         XCTAssertEqual(
-            sensitiveFrames[HashableRect(textField3.frame)], .textInput,
+            sensitiveFrames[HashableRect(textView2WindowFrame)], .textInput,
+            "TextView at level 2 should be masked")
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField3WindowFrame)], .textInput,
             "Deeply nested textfield at level 3 should be masked")
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textView3WindowFrame)], .textInput,
+            "Deeply nested TextView at level 3 should be masked")
+
     }
 
     func testSafeView_WithoutTextFields_BehavesNormally() {
