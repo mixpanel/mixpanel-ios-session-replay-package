@@ -47,53 +47,34 @@ extension UIView: SensitiveView {
     }
 }
 
-struct MixpanelReplaySensitiveModifier: ViewModifier {
-    let isSensitive: Bool?
+struct SensitiveViewWrapperRepresentable: UIViewRepresentable {
+    let onCreate: (SensitiveViewWrapper) -> Void
+
+    func makeUIView(context: Context) -> SensitiveViewWrapper {
+        let wrapper = SensitiveViewWrapper()
+        onCreate(wrapper)
+        return wrapper
+    }
+
+    func updateUIView(_ uiView: SensitiveViewWrapper, context: Context) {}
+}
+
+struct SensitiveModifier: ViewModifier {
+    let isSensitive: Bool
 
     func body(content: Content) -> some View {
-        MixpanelSensitiveWrapper(isSensitive: isSensitive) {
-            content
-        }
+        content
+            .background(
+                SensitiveViewWrapperRepresentable { wrapper in
+                    wrapper.mpReplaySensitive = self.isSensitive
+                }
+            )
     }
 }
 
-/// Wraps SwiftUI content in a UIHostingController to access the underlying UIView
-/// and mark it as sensitive/non-sensitive for Mixpanel session replay
-struct MixpanelSensitiveWrapper<Content: View>: UIViewControllerRepresentable {
-    /// Sensitivity flag: true = mask view, false = show view, nil = not specified
-    let isSensitive: Bool?
-    /// The SwiftUI content to wrap
-    let content: Content
-
-    init(isSensitive: Bool?, @ViewBuilder content: () -> Content) {
-        self.isSensitive = isSensitive
-        self.content = content()
-    }
-
-    /// Creates the UIHostingController and sets the sensitivity flag on its view
-    func makeUIViewController(context: Context) -> UIHostingController<Content> {
-        let controller = UIHostingController(rootView: content)
-
-        // Always set the sensitivity flag, even when nil, to prevent stale values
-        controller.view.mpReplaySensitive = isSensitive
-
-        return controller
-    }
-
-    /// Updates the content and sensitivity flag when SwiftUI state changes
-    func updateUIViewController(_ uiViewController: UIHostingController<Content>, context: Context) {
-        // Update content when state changes
-        uiViewController.rootView = content
-
-        // Always update sensitivity flag, even when nil, to clear previous values
-        uiViewController.view.mpReplaySensitive = isSensitive
-    }
-}
-
-// Extension to make it easy to use
 extension View {
-    public func mpReplaySensitive(_ isSensitive: Bool?) -> some View {
-        modifier(MixpanelReplaySensitiveModifier(isSensitive: isSensitive))
+    public func mpReplaySensitive(_ isSensitive: Bool) -> some View {
+        self.modifier(SensitiveModifier(isSensitive: isSensitive))
     }
 }
 
