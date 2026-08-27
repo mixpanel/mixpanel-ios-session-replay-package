@@ -54,7 +54,7 @@ final class WireframeEmitter {
   /// into the payload. A mask that moves without changing any element's text
   /// produces an identical render and should dedup. Matches Android's
   /// `lastPayloadHash` and Flutter's `_lastPayloadHash`.
-  private var lastPayloadHash: Int?
+  private var _lastPayloadHash: Int?
 
   /// Bumped by ``resetDedup()``; identifies the recording session a frame was
   /// captured in.
@@ -74,13 +74,16 @@ final class WireframeEmitter {
   /// published since the last ``resetDedup()`` — i.e. whether the next identical
   /// frame would dedup.
   ///
+  /// The lock-guarded read of `_lastPayloadHash`; the underscored property is the
+  /// raw storage, never read outside the `hashLock` closures.
+  ///
   /// Exposed so the session-boundary reset can be asserted at the
   /// `startRecording` call site rather than only on ``resetDedup()`` itself; a
   /// test that calls `resetDedup()` directly cannot catch the call site being
   /// dropped.
-  var currentPayloadHash: Int? {
+  var lastPayloadHash: Int? {
     var hash: Int?
-    hashLock.read { hash = self.lastPayloadHash }
+    hashLock.read { hash = self._lastPayloadHash }
     return hash
   }
 
@@ -141,7 +144,7 @@ final class WireframeEmitter {
   /// session already queued cannot land after the reset and restore its hash.
   func resetDedup() {
     hashLock.write {
-      self.lastPayloadHash = nil
+      self._lastPayloadHash = nil
       self.dedupEpoch &+= 1
     }
   }
@@ -232,8 +235,8 @@ final class WireframeEmitter {
       // replay that has already ended. Dropping it also keeps it from restoring
       // this hash over the reset.
       guard epoch == self.dedupEpoch else { return }
-      guard self.lastPayloadHash != payloadHash else { return }
-      self.lastPayloadHash = payloadHash
+      guard self._lastPayloadHash != payloadHash else { return }
+      self._lastPayloadHash = payloadHash
       shouldPublish = true
     }
     guard shouldPublish else { return }

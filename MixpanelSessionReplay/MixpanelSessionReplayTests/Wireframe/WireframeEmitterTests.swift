@@ -461,7 +461,7 @@ final class WireframeEmitterTests: XCTestCase {
       "a frame captured before the session boundary must not ship, and must not leave "
         + "its hash behind")
     XCTAssertNil(
-      emitter.currentPayloadHash,
+      emitter.lastPayloadHash,
       "an in-flight emit from the previous session must not restore dedup state")
 
     // The emitter is still live after dropping the stale frame.

@@ -153,13 +153,13 @@ class MPSessionReplayInstanceTests: BaseTests {
         }
         wait(for: [primed], timeout: 2.0)
         XCTAssertNotNil(
-            emitter.currentPayloadHash,
+            emitter.lastPayloadHash,
             "precondition: the primed emit should leave a payload hash behind")
 
         instance.startRecording()
 
         XCTAssertNil(
-            emitter.currentPayloadHash,
+            emitter.lastPayloadHash,
             "startRecording must reset dedup so the new session's first frame publishes")
     }
 
