@@ -47,66 +47,38 @@ extension UIView: SensitiveView {
     }
 }
 
-/// Creates an invisible marker view as a sibling to mark the parent view as sensitive/safe
-/// Uses .background() to create a sibling relationship without wrapping or affecting layout
-struct MixpanelSensitiveMarker: UIViewRepresentable {
-    /// Sensitivity flag: true = mask view, false = show view, nil = not specified
-    let isSensitive: Bool?
+struct SensitiveViewWrapperRepresentable: UIViewRepresentable {
+    let onCreate: (SensitiveViewWrapper) -> Void
 
-    func makeCoordinator() -> MarkerState {
-        MarkerState()
+    func makeUIView(context: Context) -> SensitiveViewWrapper {
+        let wrapper = SensitiveViewWrapper()
+        onCreate(wrapper)
+        return wrapper
     }
 
-    func makeUIView(context: Context) -> UIView {
-        let marker = UIView(frame: .zero)
-        marker.isHidden = true  // Invisible - doesn't affect layout or rendering
-        marker.isUserInteractionEnabled = false  // Doesn't intercept touches
-        return marker
-    }
-
-    func updateUIView(_ uiView: UIView, context: Context) {
-        let state = context.coordinator
-
-        // Clear previous parent if it changed (prevents stale metadata)
-        if let previousParent = state.markedParent, previousParent !== uiView.superview {
-            previousParent.mpReplaySensitive = nil
-        }
-
-        // Mark the current parent view (which contains both the marker and actual content)
-        // This allows traversal into the content's children normally
-        uiView.superview?.mpReplaySensitive = isSensitive
-
-        // Track the parent we just marked for future cleanup
-        state.markedParent = uiView.superview
-    }
-
-    static func dismantleUIView(_ uiView: UIView, coordinator: MarkerState) {
-        // Clean up: clear the sensitivity flag when marker is removed
-        // This prevents stale metadata when views are conditionally shown/hidden
-        coordinator.markedParent?.mpReplaySensitive = nil
-        coordinator.markedParent = nil
-    }
-
-    /// Tracks the parent view that has been marked with sensitivity metadata
-    /// Used for cleanup when the marker is removed or moves to a different parent
-    class MarkerState {
-        weak var markedParent: UIView?
-    }
+    func updateUIView(_ uiView: SensitiveViewWrapper, context: Context) {}
 }
 
-struct MixpanelReplaySensitiveModifier: ViewModifier {
-    let isSensitive: Bool?
+struct SensitiveModifier: ViewModifier {
+    let isSensitive: Bool
 
     func body(content: Content) -> some View {
-        content.background(MixpanelSensitiveMarker(isSensitive: isSensitive))
+        content
+            .background(
+                SensitiveViewWrapperRepresentable { wrapper in
+                    wrapper.mpReplaySensitive = self.isSensitive
+                }
+            )
     }
 }
 
 extension View {
-    public func mpReplaySensitive(_ isSensitive: Bool?) -> some View {
-        modifier(MixpanelReplaySensitiveModifier(isSensitive: isSensitive))
+    public func mpReplaySensitive(_ isSensitive: Bool) -> some View {
+        self.modifier(SensitiveModifier(isSensitive: isSensitive))
     }
 }
+
+class SensitiveViewWrapper: UIView {}
 
 private var mpReplaySensitiveKey: UInt8 = 0
 
