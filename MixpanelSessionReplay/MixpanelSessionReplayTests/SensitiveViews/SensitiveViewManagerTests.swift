@@ -546,4 +546,88 @@ class SensitiveViewManagerTests: BaseTests {
                 + "SwiftUI may have renamed/removed CGDrawingLayer in this iOS version — "
         )
     }
+    // MARK: - PR 49 scenario: text field inside an explicitly-safe container
+
+    /// The leak PR 49 set out to fix: a container marked `mpReplaySensitive = false`
+    /// containing a `UITextField`. Stopping traversal at the safe container never
+    /// visited the field, so the characters the user typed shipped unmasked.
+    func testPR49_textFieldInsideSafeContainer_isStillMasked() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 150, height: 150))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        // Nested one level deeper than PR 49's fixture, to prove the walk recurses.
+        let inner = UIView(frame: CGRect(x: 5, y: 5, width: 140, height: 100))
+        safeContainer.addSubview(inner)
+
+        let field = UITextField(frame: CGRect(x: 10, y: 10, width: 100, height: 30))
+        inner.addSubview(field)
+
+        let frames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        XCTAssertEqual(
+            frames[HashableRect(CGRect(x: 15, y: 15, width: 100, height: 30))], .textInput,
+            "Text field inside a safe container must still be masked as text input")
+    }
+
+    /// The half of PR 49's scenario its fixture does not cover: an *explicit*
+    /// `mpReplaySensitive = true` nested inside a safe container. PR 49's
+    /// descendant scan only looks for text fields, so this stays unmasked there.
+    func testPR49_explicitMaskInsideSafeContainer_isStillMasked() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 150, height: 150))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        let secret = UIView(frame: CGRect(x: 10, y: 10, width: 60, height: 20))
+        secret.mpReplaySensitive = true
+        safeContainer.addSubview(secret)
+
+        let frames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        XCTAssertEqual(
+            frames[HashableRect(secret.frame)], .mask,
+            "An explicit mask nested inside a safe container must survive")
+    }
+
+    /// The SwiftUI shape of the same scenario, which is *structurally* different:
+    /// `.mpReplaySensitive(false)` plants an `MPReplayWrapper` as a `.background`,
+    /// so the flag sits on a childless *sibling* of the content, not an ancestor.
+    /// The text field is therefore reached by ordinary recursion (never "inside" a
+    /// safe subtree at all) and masked; the safe rect exempts only what it
+    /// geometrically contains, and `.textInput` is exempt from that sweep.
+    ///
+    /// This is what PR 49's parent-marking would replace with a structural
+    /// relationship — worth a golden either way, since the two models protect the
+    /// field for entirely different reasons.
+    func testPR49_swiftUIShape_siblingUnmaskWrapper_textFieldStillMasked() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        // SwiftUI container holding [background wrapper, content] at equal bounds.
+        let container = UIView(frame: CGRect(x: 0, y: 0, width: 150, height: 150))
+        rootView.addSubview(container)
+
+        let wrapper = MPReplayWrapper(frame: container.bounds)
+        wrapper.mpReplaySensitive = false
+        container.addSubview(wrapper)
+
+        let content = UIView(frame: container.bounds)
+        container.addSubview(content)
+
+        let field = UITextField(frame: CGRect(x: 10, y: 10, width: 100, height: 30))
+        content.addSubview(field)
+
+        let frames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        XCTAssertEqual(
+            frames[HashableRect(field.frame)], .textInput,
+            "Text field under a sibling unmask wrapper must still be masked")
+    }
+
 }

@@ -7,11 +7,31 @@
 
 import Foundation
 
+/// What kind of thing an element is, as reported to the summarizer.
+///
+/// A **closed** set, deliberately. The role is the one field the masking pipeline never
+/// touches — Layers 1–4 mask, strip and redact `text`, and nothing filters `role` — so a role
+/// sourced from developer-supplied text would be a channel that bypasses masking entirely.
+/// Every value here is produced by mapping a platform enum or trait bitmask, never by
+/// forwarding a string, so that channel does not exist.
+///
+/// The first four come from view type. The rest come from accessibility traits, which is
+/// developer-declared intent rather than inference, and are therefore only as complete as the
+/// app's own accessibility annotations. Coverage differs by platform on purpose: iOS collapses
+/// most of React Native's `accessibilityRole` values to `UIAccessibilityTraitNone`, so only
+/// ``button``, ``link`` and ``header`` are distinguishable here, while Android can read its
+/// full role enum. Reporting what a platform can actually see beats reporting the intersection.
 enum WireframeRole: String, Hashable {
   case text
   case button
   case input
   case image
+  case link
+  case header
+  case checkbox
+  case `switch`
+  case radio
+  case tab
 
   var wireName: String { rawValue }
 }

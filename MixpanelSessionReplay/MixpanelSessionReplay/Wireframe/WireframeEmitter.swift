@@ -26,6 +26,7 @@ final class WireframeEmitter {
   static let ellipsis = "…"
 
   private let sensitiveRules: [MPSensitiveRule]
+
   private let debugEmitter: ((MPWireframeDebugSnapshot) -> Void)?
 
   private let workQueue = DispatchQueue(

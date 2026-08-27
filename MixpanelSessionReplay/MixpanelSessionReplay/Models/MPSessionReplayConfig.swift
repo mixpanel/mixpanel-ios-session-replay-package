@@ -198,9 +198,11 @@ public struct MPSessionReplayConfig: Codable {
     /// ```
     ///
     /// - Default: `nil`
-    /// - Note: Not persisted through `Codable` — the field is skipped by JSON
-    ///   encoding/decoding because its rules can hold `NSRegularExpression`
-    ///   values. Set it programmatically after decoding.
+    /// - Note: Carried through `Codable`, so cross-platform bridges (React
+    ///   Native) can turn wireframes on through the config JSON they already
+    ///   send. Both of ``MPWireframesOptions``'s fields are optional in JSON,
+    ///   so `"wireframesOptions": {}` means "on, with the defaults"; omitting
+    ///   the key entirely leaves capture off.
     /// - SeeAlso: ``MPWireframesOptions``, ``MPSensitiveRule``
     public var wireframesOptions: MPWireframesOptions?
 
@@ -267,9 +269,6 @@ public struct MPSessionReplayConfig: Codable {
         self.serverURL = getTrimmedServerURL(urlString: serverURL)
     }
 
-    // `wireframesOptions` is deliberately excluded from Codable — its rules can
-    // hold `NSRegularExpression` values, which are not Codable. Callers set it
-    // programmatically after decoding.
     enum CodingKeys: String, CodingKey {
         case wifiOnly
         case autoMaskedViews
@@ -281,6 +280,7 @@ public struct MPSessionReplayConfig: Codable {
         case enableSessionReplayOniOS26AndLater
         case debugOptions
         case serverURL
+        case wireframesOptions
     }
 
     /// Validates the serverURL and logs errors if invalid

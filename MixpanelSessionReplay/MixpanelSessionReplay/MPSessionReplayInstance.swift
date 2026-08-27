@@ -466,6 +466,16 @@ open class MPSessionReplayInstance: MPSessionReplaying {
         flushService.flushEvents(forAll: true, completionHandler: completionHandler)
     }
 
+    /// Masks every view that is an instance of `aClass`.
+    ///
+    /// **Registrations do not survive re-initialization.** `MPSessionReplay.initialize`
+    /// deinitializes any previous instance first, and `deinitializeInstance` replaces
+    /// `SensitiveViewManager` outright — so registered classes are gone and the incoming config
+    /// decides what is masked. Register again after re-initializing.
+    ///
+    /// This has always been the behaviour here; it was undocumented, and Android used to differ
+    /// by keeping registrations. Android now matches (2026-08-26) — a new initialization is a new
+    /// initialization on both.
     public func addSensitiveClass(_ aClass: AnyClass) {
         SensitiveViewManager.shared.addSensitiveClass(aClass)
     }

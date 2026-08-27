@@ -772,7 +772,14 @@ class SensitiveViewManager {
                         text: text,
                         rect: hashableRect.cgRect,
                         decision: declaredText != nil ? .declared : .none))
-                newInsideLeaf = role != nil
+                // A *view-type* role closes the subtree — a `UIButton`'s inner `UILabel` must
+                // not re-emit. An accessibility-derived role must not, because it lands on
+                // containers: a `Pressable` closing its subtree swallowed both the `<Text>`
+                // carrying its label and any nested control, which is exactly the failure mode
+                // that makes Flutter's `ListTile` lose a row's action. So a roled container
+                // ships as a textless shell and its children keep emitting beside it — the same
+                // shape Android produces, where a roled container was never a leaf.
+                newInsideLeaf = role != nil && accessibilityRole(for: view) == nil
             }
         }
 
@@ -944,8 +951,54 @@ class SensitiveViewManager {
             return .image
         }
         if let swiftUiTextClass, type(of: view) == swiftUiTextClass { return .text }
+        // React Native draws its own text and (on the legacy architecture) its own
+        // images, so none of the UIKit checks above see them.
+        if let reactNativeRole = ReactNativeWireframeSupport.role(for: view) {
+            return reactNativeRole
+        }
+        // Last: a role the developer declared through accessibility. Intent, not inference —
+        // and the only signal available for a control that is a plain view, which is what
+        // React Native's `Pressable`/`TouchableOpacity` produce.
+        return accessibilityRole(for: view)
+    }
+
+    /// Role implied by a view's accessibility traits, or `nil` if it declares none we honor.
+    ///
+    /// Reads the trait *bitmask*, never a string, so nothing developer-authored can reach the
+    /// `role` field — see ``WireframeRole``. UIKit collapses most of React Native's
+    /// `accessibilityRole` values to `UIAccessibilityTraitNone`, so button, link and header are
+    /// all that is distinguishable here; Android reads its full role enum and reports more.
+    /// That asymmetry is deliberate.
+    ///
+    /// Ordered most specific first, which matters because these are a bitmask and React Native
+    /// composes them: its switch trait is `0x20000000000001`, whose low bit *is*
+    /// `UIAccessibilityTraitButton` (that is how iOS surfaces a switch to VoiceOver). Testing
+    /// `.button` first would therefore report every switch as a button. `imagebutton` sets
+    /// image|button and is deliberately left as a button, because the action is what a summary
+    /// cares about.
+    ///
+    /// Note the trait is only present when the view is an accessibility element: React Native
+    /// applies `accessibilityRole` to traits for a view that is `accessible`, which `Pressable`
+    /// and `TouchableOpacity` default to but a hand-written `<View>` does not.
+    func accessibilityRole(for view: UIView) -> WireframeRole? {
+        let traits = view.accessibilityTraits
+        // React Native's composite switch trait — not a UIKit constant, so it is spelled out.
+        let switchTrait = UIAccessibilityTraits(rawValue: 0x0020_0000_0000_0001)
+        if traits.contains(switchTrait) { return .switch }
+        if traits.contains(.button) { return .button }
+        if traits.contains(.link) { return .link }
+        if traits.contains(.header) { return .header }
         return nil
     }
+
+    // No text absorption, deliberately.
+  //
+  // An earlier pass borrowed a roled container's descendants' text so the control would not
+  // ship textless. It was wrong twice over: the goldens showed it swallowing nested controls
+  // (`role_nested_control` reported one `button: "Cupcake Add"` and lost the inner button), and
+  // once an accessibility-derived role stopped closing the subtree the label was already there
+  // as a sibling element with bounds inside the control. A summary can associate the two by
+  // geometry; it cannot recover an element that was never emitted.
 
     /// Tier 1 of the text precedence chain: text the developer declared with
     /// `.mpWireframeText(_:)` (SwiftUI) or by setting `mpWireframeText`
@@ -969,11 +1022,24 @@ class SensitiveViewManager {
                 return nil
             case .image:
                 return accessibilityFallback(for: view)
-            case .button:
+            case .button, .link, .header, .checkbox, .switch, .radio, .tab:
+                // A real UIButton knows its own title.
                 if let button = view as? UIButton {
                     if let title = button.currentTitle, !title.isEmpty { return title }
                     if let title = button.titleLabel?.text, !title.isEmpty { return title }
                 }
+                // An accessibility-derived role deliberately gets *no* text.
+                //
+                // Those roles land on containers, and React Native gives an accessible container
+                // an `accessibilityLabel` synthesized by concatenating its descendants. Reading
+                // it duplicated the label: the container reported "Log in" and the `<Text>`
+                // inside it emitted "Log in" again, because such a role does not close the
+                // subtree. Worse, that synthesized label is the same
+                // swallow-the-subtree-into-one-string behaviour this deliberately avoids.
+                //
+                // So the control ships as a textless shell with its label beside it, bounds
+                // nested inside — the same shape Android produces.
+                if accessibilityRole(for: view) != nil { return nil }
                 return accessibilityFallback(for: view)
             case .text:
                 if let label = view as? UILabel {
@@ -992,6 +1058,11 @@ class SensitiveViewManager {
                 if let swiftUiTextClass, type(of: view) == swiftUiTextClass {
                     return nil
                 }
+                // React Native paragraph text. Tier 2, not the label tier — see
+                // `ReactNativeWireframeSupport.renderedText(for:)`.
+                if let reactNativeText = ReactNativeWireframeSupport.renderedText(for: view) {
+                    return reactNativeText
+                }
                 return accessibilityFallback(for: view)
         }
     }
@@ -1006,7 +1077,7 @@ class SensitiveViewManager {
         return (label?.isEmpty == false) ? label : nil
     }
 
-    func getFrame(for layer: CALayer, in window: UIView) -> CGRect? {
+  func getFrame(for layer: CALayer, in window: UIView) -> CGRect? {
         // Use presentation layer for accurate frame during animations
         let targetLayer = layer.presentation() ?? layer
 

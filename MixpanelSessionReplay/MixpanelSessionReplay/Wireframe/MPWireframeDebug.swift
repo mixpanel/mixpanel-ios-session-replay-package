@@ -107,10 +107,30 @@ private struct DebugSnapshotJSON: Encodable {
   let timestamp: Int64
   let viewport: [Int]
   let elements: [Element]
+
   struct Element: Encodable {
     let role: String
     let text: String?
     let bounds: [Int]
     let maskDecision: String
+
+    private enum CodingKeys: String, CodingKey {
+      case role, text, bounds, maskDecision
+    }
+
+    /// Written out so a textless element emits `"text": null` rather than dropping the
+    /// key. The synthesized conformance uses `encodeIfPresent` for optionals, which made
+    /// this JSON disagree with Android's (`encodeDefaults = true` writes the null) and
+    /// with the golden format, which specifies a `text: null` literal. Comparing two
+    /// platforms' debug output by eye is the point of the sample apps, and a missing key
+    /// reads as `undefined` rather than "no text" to anything consuming it — which is
+    /// exactly how the React Native bridge first surfaced this.
+    func encode(to encoder: Encoder) throws {
+      var container = encoder.container(keyedBy: CodingKeys.self)
+      try container.encode(role, forKey: .role)
+      try container.encode(text, forKey: .text)
+      try container.encode(bounds, forKey: .bounds)
+      try container.encode(maskDecision, forKey: .maskDecision)
+    }
   }
 }

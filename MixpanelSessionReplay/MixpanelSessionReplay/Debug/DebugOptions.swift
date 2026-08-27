@@ -57,11 +57,25 @@ public struct DebugOptions: Codable {
     /// ```
     public var wireframeEmitter: ((MPWireframeDebugSnapshot) -> Void)? = nil
 
+    /// Whether to build a debug snapshot of each captured wireframe.
+    ///
+    /// `Codable`, and therefore the switch a cross-platform host can set: React Native's whole
+    /// configuration crosses the bridge as JSON, so it cannot pass ``wireframeEmitter`` and
+    /// instead sets this, leaving its bridge to attach the callback.
+    ///
+    /// A native caller has no use for it — providing ``wireframeEmitter`` is both the switch and
+    /// the destination, and setting this without a callback delivers nowhere.
+    ///
+    /// - Default: `false`
+    public var emitWireframes: Bool = false
+
     public init(
         overlayColors: DebugOverlayColors? = DebugOverlayColors(),
+        emitWireframes: Bool = false,
         wireframeEmitter: ((MPWireframeDebugSnapshot) -> Void)? = nil
     ) {
         self.overlayColors = overlayColors
+        self.emitWireframes = emitWireframes
         self.wireframeEmitter = wireframeEmitter
     }
 
@@ -70,5 +84,6 @@ public struct DebugOptions: Codable {
     // the callback directly, mirroring Android's `@Transient wireframeEmitter`.
     private enum CodingKeys: String, CodingKey {
         case overlayColors
+        case emitWireframes
     }
 }

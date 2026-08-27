@@ -622,6 +622,41 @@ final class WireframeEmitterTests: XCTestCase {
     XCTAssertEqual(publishedEvents.count, 0, message, file: file, line: line)
   }
 
+  // MARK: - Debug snapshot JSON
+
+  /// A textless element must emit `"text": null`, not drop the key.
+  ///
+  /// The synthesized `Encodable` for an optional uses `encodeIfPresent`, which omitted it
+  /// — so this JSON disagreed with Android's (`encodeDefaults = true` writes the null) and
+  /// with the golden format's `text: null` literal. Comparing two platforms' debug output
+  /// by eye is the whole point of the sample apps, and a missing key reads as `undefined`
+  /// rather than "no text" to anything parsing it, which is how the React Native bridge
+  /// surfaced this in the first place.
+  func test_debugSnapshotJson_emitsExplicitNullForTextlessElements() throws {
+    let json = MPWireframeDebugSnapshot(
+      timestamp: 1_700_000_000_000,
+      viewport: [393, 852],
+      elements: [
+        .init(role: "image", text: nil, bounds: [16, 141, 40, 40], maskDecision: .none),
+        .init(role: "text", text: "Cupcake", bounds: [68, 142, 273, 19], maskDecision: .none),
+      ]
+    ).toJson()
+
+    XCTAssertTrue(
+      json.contains("\"text\" : null"),
+      "a textless element must carry an explicit null; got:\n\(json)")
+
+    // And it has to survive a round trip as a present-but-null key, which is what a
+    // JSON consumer distinguishing "no text" from "field missing" relies on.
+    let parsed =
+      try JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any]
+    let elements = try XCTUnwrap(parsed?["elements"] as? [[String: Any]])
+    XCTAssertEqual(elements.count, 2)
+    XCTAssertTrue(elements[0].keys.contains("text"), "the key must be present")
+    XCTAssertTrue(elements[0]["text"] is NSNull)
+    XCTAssertEqual(elements[1]["text"] as? String, "Cupcake")
+  }
+
   private func customPayload(from event: SessionEvent) -> WireframePayload {
     guard case .customData(let custom) = event.data else {
       preconditionFailure("expected customData")

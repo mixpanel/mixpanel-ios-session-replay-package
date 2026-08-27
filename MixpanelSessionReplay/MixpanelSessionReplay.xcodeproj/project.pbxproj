@@ -85,6 +85,9 @@
 		AB00000000000000000000F6 /* WireframeElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F5 /* WireframeElement.swift */; };
 		AB00000000000000000000F8 /* WireframePayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F7 /* WireframePayload.swift */; };
 		AB00000000000000000000FA /* WireframeEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F9 /* WireframeEmitter.swift */; };
+		AB0000000000000000000701 /* ReactNativeWireframeSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000700 /* ReactNativeWireframeSupport.swift */; };
+		AB0000000000000000000711 /* ReactNativeWireframeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000710 /* ReactNativeWireframeTests.swift */; };
+		AB0000000000000000000721 /* MPWireframesOptionsCodableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000720 /* MPWireframesOptionsCodableTests.swift */; };
 		AB0000000000000000000101 /* WireframeEmitterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000100 /* WireframeEmitterTests.swift */; };
 		AB0000000000000000000103 /* SensitiveViewManagerWireframeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000102 /* SensitiveViewManagerWireframeTests.swift */; };
 		AB0000000000000000000501 /* WireframeGoldenTestUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000500 /* WireframeGoldenTestUtils.swift */; };
@@ -186,6 +189,9 @@
 		AB00000000000000000000F5 /* WireframeElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeElement.swift; sourceTree = "<group>"; };
 		AB00000000000000000000F7 /* WireframePayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframePayload.swift; sourceTree = "<group>"; };
 		AB00000000000000000000F9 /* WireframeEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeEmitter.swift; sourceTree = "<group>"; };
+		AB0000000000000000000700 /* ReactNativeWireframeSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactNativeWireframeSupport.swift; sourceTree = "<group>"; };
+		AB0000000000000000000710 /* ReactNativeWireframeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactNativeWireframeTests.swift; sourceTree = "<group>"; };
+		AB0000000000000000000720 /* MPWireframesOptionsCodableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPWireframesOptionsCodableTests.swift; sourceTree = "<group>"; };
 		AB0000000000000000000100 /* WireframeEmitterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeEmitterTests.swift; sourceTree = "<group>"; };
 		AB0000000000000000000102 /* SensitiveViewManagerWireframeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveViewManagerWireframeTests.swift; sourceTree = "<group>"; };
 		AB0000000000000000000500 /* WireframeGoldenTestUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeGoldenTestUtils.swift; sourceTree = "<group>"; };
@@ -354,6 +360,7 @@
 				AB00000000000000000000F5 /* WireframeElement.swift */,
 				AB00000000000000000000F7 /* WireframePayload.swift */,
 				AB00000000000000000000F9 /* WireframeEmitter.swift */,
+				AB0000000000000000000700 /* ReactNativeWireframeSupport.swift */,
 			);
 			path = Wireframe;
 			sourceTree = "<group>";
@@ -418,6 +425,8 @@
 				AB0000000000000000000510 /* WireframeLayoutGoldenTestUtils.swift */,
 				AB0000000000000000000512 /* WireframeLayoutGoldenTests.swift */,
 				AB0000000000000000000514 /* SwiftUIWireframeLayoutGoldenTests.swift */,
+				AB0000000000000000000710 /* ReactNativeWireframeTests.swift */,
+				AB0000000000000000000720 /* MPWireframesOptionsCodableTests.swift */,
 			);
 			path = Wireframe;
 			sourceTree = "<group>";
@@ -657,6 +666,7 @@
 				AB00000000000000000000F6 /* WireframeElement.swift in Sources */,
 				AB00000000000000000000F8 /* WireframePayload.swift in Sources */,
 				AB00000000000000000000FA /* WireframeEmitter.swift in Sources */,
+				AB0000000000000000000701 /* ReactNativeWireframeSupport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -694,6 +704,8 @@
 				AB0000000000000000000103 /* SensitiveViewManagerWireframeTests.swift in Sources */,
 				AB0000000000000000000501 /* WireframeGoldenTestUtils.swift in Sources */,
 				AB0000000000000000000503 /* WireframeGoldenTests.swift in Sources */,
+				AB0000000000000000000711 /* ReactNativeWireframeTests.swift in Sources */,
+				AB0000000000000000000721 /* MPWireframesOptionsCodableTests.swift in Sources */,
 				AB0000000000000000000511 /* WireframeLayoutGoldenTestUtils.swift in Sources */,
 				AB0000000000000000000513 /* WireframeLayoutGoldenTests.swift in Sources */,
 				AB0000000000000000000515 /* SwiftUIWireframeLayoutGoldenTests.swift in Sources */,
