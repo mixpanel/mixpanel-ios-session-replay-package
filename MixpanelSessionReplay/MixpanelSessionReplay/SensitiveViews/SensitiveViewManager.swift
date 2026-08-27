@@ -109,7 +109,7 @@ class SensitiveViewManager {
     var sensitiveClassViews: WeakViewsMap!
 
     // MARK: Liquid glass UI unaffected SwiftUI Classes
-    private let swiftUITextFieldClass: AnyClass? = NSClassFromString("SwiftUI.TextEditorTextView")
+    private let swiftUITextInputClass: AnyClass? = NSClassFromString("SwiftUI.TextEditorTextView")
     private let swiftUIImageLayer: AnyClass? = NSClassFromString("SwiftUI.ImageLayer")
 
     // MARK: - Legacy SwiftUI Classes (iOS 18 and earlier)
@@ -133,7 +133,7 @@ class SensitiveViewManager {
     private let buttonLabelClass: AnyClass? = NSClassFromString("UIButtonLabel")
 
     enum SensitiveViewState {
-        case sensitiveTextField
+        case sensitiveTextInput
         case sensitive
         case safe
         case unknown
@@ -164,9 +164,9 @@ class SensitiveViewManager {
             return .sensitive
         }
 
-        // Check text input cache first to maintain .sensitiveTextField return type
+        // Check text input cache first to maintain .sensitiveTextInput return type
         if sensitiveTextInputViews.contains(view) {
-            return .sensitiveTextField
+            return .sensitiveTextInput
         }
 
         if knownSensitiveViews.contains(view) || sensitiveClassViews.contains(view) {
@@ -176,7 +176,7 @@ class SensitiveViewManager {
         // Text inputs (UITextField / UITextView) are always sensitive, so check before !isSensitive
         if isTextInput(view: view) {
             sensitiveTextInputViews.insert(view)
-            return .sensitiveTextField
+            return .sensitiveTextInput
         }
 
         // If mpReplaySensitive is false, view is manually marked as safe
@@ -246,7 +246,7 @@ class SensitiveViewManager {
         }
 
         // Check for SwiftUI text editor text view
-        if let swiftUITextFieldClass, view.isKind(of: swiftUITextFieldClass) {
+        if let swiftUITextInputClass, view.isKind(of: swiftUITextInputClass) {
             return true
         }
 
@@ -400,7 +400,7 @@ class SensitiveViewManager {
         switch isSensitiveView(view: view) {
             case .safe:
                 // View is explicitly marked as safe - but we still need to mask text inputs within it
-                // Check if text input (textfield or editable textview) is present inside a view that is marked as safe,
+                // Check if text input (textfield or textview) is present inside a view that is marked as safe,
                 // if found, mask the text input
                 var safeViewStack: [UIView] = [view]
                 while !safeViewStack.isEmpty {
@@ -420,8 +420,8 @@ class SensitiveViewManager {
                 }
                 return  // Don't process subviews or sublayers
 
-            case .sensitiveTextField:
-                // Text inputs (textfields/editable textviews) are always sensitive and cannot be overridden by safe parents
+            case .sensitiveTextInput:
+                // Text inputs (textfields/textviews) are always sensitive and cannot be overridden by safe parents
                 if let hashableRect = hashableFrame(for: view.layer, in: window) {
                     addOrUpdate(&maskDecisions, rect: hashableRect, decision: .textInput)
                 }

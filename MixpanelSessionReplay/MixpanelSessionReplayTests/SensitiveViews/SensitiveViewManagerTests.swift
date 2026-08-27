@@ -29,14 +29,14 @@ class SensitiveViewManagerTests: BaseTests {
     func testSensitiveViewDetection_TextField() {
         let textField = UITextField()
         let result = manager.isSensitiveView(view: textField)
-        XCTAssertEqual(result, .sensitiveTextField, "UITextField should be detected as sensitiveTextField")
+        XCTAssertEqual(result, .sensitiveTextInput, "UITextField should be detected as sensitiveTextInput")
     }
 
     func testSensitiveViewDetection_EditableTextView() {
         let textView = UITextView()
         textView.isEditable = true
         let result = manager.isSensitiveView(view: textView)
-        XCTAssertEqual(result, .sensitiveTextField, "Editable UITextView should be detected as sensitiveTextField")
+        XCTAssertEqual(result, .sensitiveTextInput, "Editable UITextView should be detected as sensitiveTextInput")
     }
 
     func testSensitiveViewDetection_Label() {
@@ -51,7 +51,7 @@ class SensitiveViewManagerTests: BaseTests {
         textView.isEditable = false
         let result = manager.isSensitiveView(view: textView)
         XCTAssertEqual(
-            result, .sensitiveTextField,
+            result, .sensitiveTextInput,
             "Non-editable UITextView should still be masked as text input for security (conservative approach)")
     }
 
@@ -195,12 +195,12 @@ class SensitiveViewManagerTests: BaseTests {
         XCTAssertFalse(manager.sensitiveTextInputViews.contains(textField))
     }
 
-    func testSensitiveViewDetection_TextField_ReturnsSensitiveTextField() {
+    func testSensitiveViewDetection_TextField_ReturnsSensitiveTextInput() {
         let textField = UITextField()
         let result = manager.isSensitiveView(view: textField)
         XCTAssertEqual(
-            result, .sensitiveTextField,
-            "UITextField should return .sensitiveTextField enum case")
+            result, .sensitiveTextInput,
+            "UITextField should return .sensitiveTextInput enum case")
     }
 
     func testSensitiveViewDetection_TextField_ConsistentOnMultipleChecks() {
@@ -209,20 +209,20 @@ class SensitiveViewManagerTests: BaseTests {
         // First check - not in cache
         let firstResult = manager.isSensitiveView(view: textField)
         XCTAssertEqual(
-            firstResult, .sensitiveTextField,
-            "UITextField should return .sensitiveTextField on first check")
+            firstResult, .sensitiveTextInput,
+            "UITextField should return .sensitiveTextInput on first check")
 
         // Second check - now in cache
         let secondResult = manager.isSensitiveView(view: textField)
         XCTAssertEqual(
-            secondResult, .sensitiveTextField,
-            "UITextField should still return .sensitiveTextField on subsequent checks (cached)")
+            secondResult, .sensitiveTextInput,
+            "UITextField should still return .sensitiveTextInput on subsequent checks (cached)")
 
         // Third check - verify consistency
         let thirdResult = manager.isSensitiveView(view: textField)
         XCTAssertEqual(
-            thirdResult, .sensitiveTextField,
-            "UITextField should consistently return .sensitiveTextField")
+            thirdResult, .sensitiveTextInput,
+            "UITextField should consistently return .sensitiveTextInput")
     }
 
     func testGetSensitiveFrames_TextFieldsSeparatelyTracked() {
@@ -802,8 +802,8 @@ class SensitiveViewManagerTests: BaseTests {
 
         let result = manager.isSensitiveView(view: textEditor)
         XCTAssertEqual(
-            result, .sensitiveTextField,
-            "SwiftUI TextEditor should be detected as sensitiveTextField")
+            result, .sensitiveTextInput,
+            "SwiftUI TextEditor should be detected as sensitiveTextInput")
     }
 
     func testSwiftUITextEditor_IsTextInput() throws {
@@ -970,8 +970,8 @@ class SensitiveViewManagerTests: BaseTests {
         // First check - not in cache
         let firstResult = manager.isSensitiveView(view: textEditor)
         XCTAssertEqual(
-            firstResult, .sensitiveTextField,
-            "SwiftUI TextEditor should return .sensitiveTextField on first check")
+            firstResult, .sensitiveTextInput,
+            "SwiftUI TextEditor should return .sensitiveTextInput on first check")
 
         // Verify it's now in the text input cache
         XCTAssertTrue(
@@ -981,14 +981,14 @@ class SensitiveViewManagerTests: BaseTests {
         // Second check - now in cache
         let secondResult = manager.isSensitiveView(view: textEditor)
         XCTAssertEqual(
-            secondResult, .sensitiveTextField,
-            "SwiftUI TextEditor should still return .sensitiveTextField on subsequent checks (cached)")
+            secondResult, .sensitiveTextInput,
+            "SwiftUI TextEditor should still return .sensitiveTextInput on subsequent checks (cached)")
 
         // Third check - verify consistency
         let thirdResult = manager.isSensitiveView(view: textEditor)
         XCTAssertEqual(
-            thirdResult, .sensitiveTextField,
-            "SwiftUI TextEditor should consistently return .sensitiveTextField")
+            thirdResult, .sensitiveTextInput,
+            "SwiftUI TextEditor should consistently return .sensitiveTextInput")
     }
 
     func testSwiftUITextEditor_InvisibleInSafeView_NotMasked() throws {
