@@ -40,9 +40,17 @@ public enum MPSensitiveRule {
 
 /// Configuration for the wireframe capture pass.
 ///
+/// **Beta.** Wireframes are in beta. Before shipping to production, inspect the
+/// wireframes your app produces with ``DebugOptions/wireframeEmitter`` and
+/// confirm that no sensitive information is captured.
+///
 /// Setting `MPSessionReplayConfig.wireframesOptions` to a non-nil value turns
 /// wireframe capture on. When nil (the default), no wireframe events are
 /// emitted and the SDK behaves exactly as it did before this feature.
+///
+/// Mixpanel can also turn wireframe capture off for a project from the server.
+/// When it does, the rest of session replay keeps recording — only the
+/// wireframe payload is dropped — and the reason is logged at init.
 ///
 /// ### Checking what you're sending
 ///

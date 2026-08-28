@@ -160,7 +160,10 @@ public struct MPSessionReplayConfig: Codable {
 
     /// Debug feature configuration. When not nil, debug features are enabled.
     ///
-    /// Only works in debug builds to prevent accidental exposure in production.
+    /// Its two members differ in where they take effect: ``DebugOptions/overlayColors``
+    /// draws on the user's screen and is compiled out of release builds, while
+    /// ``DebugOptions/wireframeEmitter`` renders nothing and hands your own code a
+    /// description of a frame the SDK already built, so it is delivered in any build.
     ///
     /// - Default: `nil` (disabled)
     /// - SeeAlso: ``DebugOptions``, ``DebugOverlayColors``
@@ -169,6 +172,10 @@ public struct MPSessionReplayConfig: Codable {
     /// Enables wireframe capture: a per-frame structured list of visible UI
     /// elements (role, text, bounds) shipped as an rrweb Custom event alongside
     /// the screenshot stream.
+    ///
+    /// **Beta.** Wireframes are in beta. Before shipping to production, inspect
+    /// the wireframes your app produces and confirm that no sensitive
+    /// information is captured; see ``MPWireframesOptions``.
     ///
     /// - When `nil` (the default), no wireframe events are emitted and the SDK
     ///   behaves exactly as it did before wireframes were introduced.

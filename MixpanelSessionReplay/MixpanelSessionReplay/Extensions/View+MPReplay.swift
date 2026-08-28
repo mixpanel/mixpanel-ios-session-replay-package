@@ -74,6 +74,9 @@ struct MPReplayModifier: ViewModifier {
 extension View {
     /// Declares the text recorded for this view in the `mp_wireframe` event.
     ///
+    /// **Beta.** Wireframes are in beta; see ``MPWireframesOptions`` for what to
+    /// check before shipping to production.
+    ///
     /// Apple exposes no public API for reading rendered strings out of SwiftUI's
     /// drawing views, so SwiftUI content ships as textless shells unless you
     /// label it here. The declared string does not have to match what SwiftUI
@@ -109,6 +112,9 @@ extension UIView {
     /// Wireframe text declared for this view. The walker reads this to
     /// synthesize a wireframe element for content that otherwise cannot be
     /// extracted.
+    ///
+    /// **Beta.** Wireframes are in beta; see ``MPWireframesOptions`` for what to
+    /// check before shipping to production.
     ///
     /// This is the UIKit entry point, and the counterpart to SwiftUI's
     /// `.mpWireframeText(_:)`. Set it directly on any view:
