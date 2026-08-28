@@ -32,34 +32,34 @@ import XCTest
 @testable import MixpanelSessionReplay
 
 extension WireframeEmitter {
-  /// Runs Layers 2 and 4 (geometric leak-prevention + sensitive rules) plus the
-  /// same wire text cleaning and truncation `processAndPublish` ships, returning
-  /// the final elements with `decision` preserved.
-  ///
-  /// This is the emitter's own production code — `applyMaskingPipeline` and
-  /// `wireText`, reached through `@testable import` — composed the way
-  /// `processAndPublish` composes it, minus the publish and the dedup mutation.
-  /// Tests need the elements rather than the wire DTO because only the element
-  /// carries **why** its text was dropped.
-  func processedElements(
-    elements: [WireframeElement],
-    maskBounds: Set<HashableRect>
-  ) -> [WireframeElement] {
-    elements.map { element in
-      var processed = applyMaskingPipeline(element, maskBounds: maskBounds)
-      processed.text = wireText(for: processed)
-      return processed
+    /// Runs Layers 2 and 4 (geometric leak-prevention + sensitive rules) plus the
+    /// same wire text cleaning and truncation `processAndPublish` ships, returning
+    /// the final elements with `decision` preserved.
+    ///
+    /// This is the emitter's own production code — `applyMaskingPipeline` and
+    /// `wireText`, reached through `@testable import` — composed the way
+    /// `processAndPublish` composes it, minus the publish and the dedup mutation.
+    /// Tests need the elements rather than the wire DTO because only the element
+    /// carries **why** its text was dropped.
+    func processedElements(
+        elements: [WireframeElement],
+        maskBounds: Set<HashableRect>
+    ) -> [WireframeElement] {
+        elements.map { element in
+            var processed = applyMaskingPipeline(element, maskBounds: maskBounds)
+            processed.text = wireText(for: processed)
+            return processed
+        }
     }
-  }
 }
 
 /// Directory holding the checked-in golden JSON files, resolved from this source
 /// file's location so it works regardless of the test runner's working
 /// directory (and supports auto-creating a missing golden in the source tree).
 private func wireframeGoldenDirectory() -> URL {
-  URL(fileURLWithPath: #filePath)
-    .deletingLastPathComponent()
-    .appendingPathComponent("Golden")
+    URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .appendingPathComponent("Golden")
 }
 
 /// Runs the full wireframe pipeline over a laid-out view tree and asserts the
@@ -77,68 +77,68 @@ private func wireframeGoldenDirectory() -> URL {
 ///     `MPSessionReplayInstance` does at init.
 ///   - name: Golden filename, e.g. `"wireframe_text_plain.json"`.
 func assertWireframeGolden(
-  manager: SensitiveViewManager,
-  root: UIView,
-  window: UIView,
-  rules: [MPSensitiveRule] = [],
-  useAccessibilityLabelFallback: Bool = true,
-  golden name: String,
-  file: StaticString = #filePath,
-  line: UInt = #line
+    manager: SensitiveViewManager,
+    root: UIView,
+    window: UIView,
+    rules: [MPSensitiveRule] = [],
+    useAccessibilityLabelFallback: Bool = true,
+    golden name: String,
+    file: StaticString = #filePath,
+    line: UInt = #line
 ) {
-  manager.useAccessibilityLabelFallback = useAccessibilityLabelFallback
-  let (frames, elements) = manager.collectFramesAndWireframes(in: root, window: window)
-  let emitter = WireframeEmitter(
-    options: MPWireframesOptions(
-      sensitiveRules: rules,
-      useAccessibilityLabelFallback: useAccessibilityLabelFallback))
-  let processed = emitter.processedElements(
-    elements: elements, maskBounds: Set(frames.keys))
-  let viewport = [Int(window.bounds.width), Int(window.bounds.height)]
-  assertWireframeGolden(
-    processed, viewport: viewport, golden: name, file: file, line: line)
+    manager.useAccessibilityLabelFallback = useAccessibilityLabelFallback
+    let (frames, elements) = manager.collectFramesAndWireframes(in: root, window: window)
+    let emitter = WireframeEmitter(
+        options: MPWireframesOptions(
+            sensitiveRules: rules,
+            useAccessibilityLabelFallback: useAccessibilityLabelFallback))
+    let processed = emitter.processedElements(
+        elements: elements, maskBounds: Set(frames.keys))
+    let viewport = [Int(window.bounds.width), Int(window.bounds.height)]
+    assertWireframeGolden(
+        processed, viewport: viewport, golden: name, file: file, line: line)
 }
 
 /// Asserts a pre-collected element list against a golden. Prefer the
 /// `manager:root:window:` overload; this exists for tests that need to
 /// post-process the element list first.
 func assertWireframeGolden(
-  _ processed: [WireframeElement],
-  viewport: [Int],
-  golden name: String,
-  file: StaticString = #filePath,
-  line: UInt = #line
+    _ processed: [WireframeElement],
+    viewport: [Int],
+    golden name: String,
+    file: StaticString = #filePath,
+    line: UInt = #line
 ) {
-  let actual = wireframeGoldenJSON(viewport: viewport, elements: processed)
-  let directory = wireframeGoldenDirectory()
-  let fileManager = FileManager.default
-  if !fileManager.fileExists(atPath: directory.path) {
-    try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
-  }
-  let url = directory.appendingPathComponent(name)
-
-  guard let expected = try? String(contentsOf: url, encoding: .utf8) else {
-    // First run: write the golden so it can be reviewed and committed. Mirrors
-    // Flutter's create-and-pass convention.
-    do {
-      try actual.write(to: url, atomically: true, encoding: .utf8)
-      print("📸 Created wireframe golden: \(name)")
-    } catch {
-      XCTFail("Failed to create wireframe golden \(name): \(error)", file: file, line: line)
+    let actual = wireframeGoldenJSON(viewport: viewport, elements: processed)
+    let directory = wireframeGoldenDirectory()
+    let fileManager = FileManager.default
+    if !fileManager.fileExists(atPath: directory.path) {
+        try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
     }
-    return
-  }
+    let url = directory.appendingPathComponent(name)
 
-  XCTAssertEqual(
-    actual,
-    expected,
-    """
-    Wireframe golden mismatch for \(name).
-    Delete MixpanelSessionReplayTests/Wireframe/Golden/\(name) to regenerate.
-    """,
-    file: file,
-    line: line
-  )
+    guard let expected = try? String(contentsOf: url, encoding: .utf8) else {
+        // First run: write the golden so it can be reviewed and committed. Mirrors
+        // Flutter's create-and-pass convention.
+        do {
+            try actual.write(to: url, atomically: true, encoding: .utf8)
+            print("📸 Created wireframe golden: \(name)")
+        } catch {
+            XCTFail("Failed to create wireframe golden \(name): \(error)", file: file, line: line)
+        }
+        return
+    }
+
+    XCTAssertEqual(
+        actual,
+        expected,
+        """
+        Wireframe golden mismatch for \(name).
+        Delete MixpanelSessionReplayTests/Wireframe/Golden/\(name) to regenerate.
+        """,
+        file: file,
+        line: line
+    )
 }
 
 /// Serializes a processed element list to the cross-platform golden JSON.
@@ -146,57 +146,57 @@ func assertWireframeGolden(
 /// match Dart's `JsonEncoder.withIndent('  ')` and Android's hand-built
 /// equivalent. No trailing newline (matches both).
 func wireframeGoldenJSON(viewport: [Int], elements: [WireframeElement]) -> String {
-  var lines: [String] = []
-  lines.append("{")
-  lines.append("  \"viewport\": [")
-  for (index, value) in viewport.enumerated() {
-    lines.append("    \(value)\(index == viewport.count - 1 ? "" : ",")")
-  }
-  lines.append("  ],")
-
-  if elements.isEmpty {
-    lines.append("  \"elements\": []")
-  } else {
-    lines.append("  \"elements\": [")
-    for (index, element) in elements.enumerated() {
-      lines.append("    {")
-      lines.append("      \"role\": \(jsonStringLiteral(element.role.wireName)),")
-      lines.append("      \"text\": \(element.text.map(jsonStringLiteral) ?? "null"),")
-      lines.append("      \"bounds\": [")
-      lines.append("        \(element.x),")
-      lines.append("        \(element.y),")
-      lines.append("        \(element.w),")
-      lines.append("        \(element.h)")
-      lines.append("      ],")
-      lines.append("      \"maskDecision\": \(jsonStringLiteral(element.decision.rawValue))")
-      lines.append(index == elements.count - 1 ? "    }" : "    },")
+    var lines: [String] = []
+    lines.append("{")
+    lines.append("  \"viewport\": [")
+    for (index, value) in viewport.enumerated() {
+        lines.append("    \(value)\(index == viewport.count - 1 ? "" : ",")")
     }
-    lines.append("  ]")
-  }
+    lines.append("  ],")
 
-  lines.append("}")
-  return lines.joined(separator: "\n")
+    if elements.isEmpty {
+        lines.append("  \"elements\": []")
+    } else {
+        lines.append("  \"elements\": [")
+        for (index, element) in elements.enumerated() {
+            lines.append("    {")
+            lines.append("      \"role\": \(jsonStringLiteral(element.role.wireName)),")
+            lines.append("      \"text\": \(element.text.map(jsonStringLiteral) ?? "null"),")
+            lines.append("      \"bounds\": [")
+            lines.append("        \(element.x),")
+            lines.append("        \(element.y),")
+            lines.append("        \(element.w),")
+            lines.append("        \(element.h)")
+            lines.append("      ],")
+            lines.append("      \"maskDecision\": \(jsonStringLiteral(element.decision.rawValue))")
+            lines.append(index == elements.count - 1 ? "    }" : "    },")
+        }
+        lines.append("  ]")
+    }
+
+    lines.append("}")
+    return lines.joined(separator: "\n")
 }
 
 /// Minimal JSON string escaper. Emits non-ASCII (e.g. the "…" truncation
 /// ellipsis) verbatim to match Dart's default `JsonEncoder` behavior.
 private func jsonStringLiteral(_ string: String) -> String {
-  var out = "\""
-  for scalar in string.unicodeScalars {
-    switch scalar {
-    case "\"": out += "\\\""
-    case "\\": out += "\\\\"
-    case "\n": out += "\\n"
-    case "\r": out += "\\r"
-    case "\t": out += "\\t"
-    default:
-      if scalar.value < 0x20 {
-        out += String(format: "\\u%04x", scalar.value)
-      } else {
-        out.unicodeScalars.append(scalar)
-      }
+    var out = "\""
+    for scalar in string.unicodeScalars {
+        switch scalar {
+            case "\"": out += "\\\""
+            case "\\": out += "\\\\"
+            case "\n": out += "\\n"
+            case "\r": out += "\\r"
+            case "\t": out += "\\t"
+            default:
+                if scalar.value < 0x20 {
+                    out += String(format: "\\u%04x", scalar.value)
+                } else {
+                    out.unicodeScalars.append(scalar)
+                }
+        }
     }
-  }
-  out += "\""
-  return out
+    out += "\""
+    return out
 }

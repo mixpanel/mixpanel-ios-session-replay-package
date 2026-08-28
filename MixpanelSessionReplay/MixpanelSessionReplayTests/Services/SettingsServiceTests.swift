@@ -988,7 +988,8 @@ class SettingsServiceTests: XCTestCase {
         let expectation = self.expectation(description: "Completion handler invoked")
         var resultConfig: MPSessionReplayConfig?
 
-        settingsService.getRemoteConfiguration(token: testToken, mode: .fallback, originalConfig: config) { _, updatedConfig in
+        settingsService.getRemoteConfiguration(token: testToken, mode: .fallback, originalConfig: config) {
+            _, updatedConfig in
             resultConfig = updatedConfig
             expectation.fulfill()
         }
@@ -1043,7 +1044,8 @@ class SettingsServiceTests: XCTestCase {
         let expectation = self.expectation(description: "Completion handler invoked")
         var resultConfig: MPSessionReplayConfig?
 
-        settingsService.getRemoteConfiguration(token: testToken, mode: .fallback, originalConfig: config) { _, updatedConfig in
+        settingsService.getRemoteConfiguration(token: testToken, mode: .fallback, originalConfig: config) {
+            _, updatedConfig in
             resultConfig = updatedConfig
             expectation.fulfill()
         }

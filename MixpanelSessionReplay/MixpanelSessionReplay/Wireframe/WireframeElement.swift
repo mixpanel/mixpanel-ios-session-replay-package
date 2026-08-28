@@ -22,18 +22,18 @@ import Foundation
 /// ``button``, ``link`` and ``header`` are distinguishable here, while Android can read its
 /// full role enum. Reporting what a platform can actually see beats reporting the intersection.
 enum WireframeRole: String, Hashable {
-  case text
-  case button
-  case input
-  case image
-  case link
-  case header
-  case checkbox
-  case `switch`
-  case radio
-  case tab
+    case text
+    case button
+    case input
+    case image
+    case link
+    case header
+    case checkbox
+    case `switch`
+    case radio
+    case tab
 
-  var wireName: String { rawValue }
+    var wireName: String { rawValue }
 }
 
 /// Output of the wireframe walker, which runs Layer 1 (view-level masking) and
@@ -49,38 +49,38 @@ enum WireframeRole: String, Hashable {
 /// ``MPMaskDecision/ruleRedact``. Mirrors Android's `MaskDecision.DECLARED`
 /// and Flutter's `MaskDecision.declared`.
 struct WireframeElement: Hashable {
-  var role: WireframeRole
-  var text: String?
-  var x: Int
-  var y: Int
-  var w: Int
-  var h: Int
-  var decision: MPMaskDecision
+    var role: WireframeRole
+    var text: String?
+    var x: Int
+    var y: Int
+    var w: Int
+    var h: Int
+    var decision: MPMaskDecision
 
-  /// True when this element's text was authored by the customer rather than
-  /// scraped from the view.
-  var isDeclared: Bool { decision == .declared }
+    /// True when this element's text was authored by the customer rather than
+    /// scraped from the view.
+    var isDeclared: Bool { decision == .declared }
 
-  static func from(
-    role: WireframeRole,
-    text: String?,
-    rect: CGRect,
-    decision: MPMaskDecision
-  ) -> WireframeElement {
-    WireframeElement(
-      role: role,
-      text: text,
-      x: Int(rect.origin.x.rounded()),
-      y: Int(rect.origin.y.rounded()),
-      w: Int(rect.size.width.rounded()),
-      h: Int(rect.size.height.rounded()),
-      decision: decision
-    )
-  }
+    static func from(
+        role: WireframeRole,
+        text: String?,
+        rect: CGRect,
+        decision: MPMaskDecision
+    ) -> WireframeElement {
+        WireframeElement(
+            role: role,
+            text: text,
+            x: Int(rect.origin.x.rounded()),
+            y: Int(rect.origin.y.rounded()),
+            w: Int(rect.size.width.rounded()),
+            h: Int(rect.size.height.rounded()),
+            decision: decision
+        )
+    }
 }
 
 /// Mutable buffer carried through the view walker so subviews can append.
 /// Present only when the caller opted into wireframe collection.
 final class WireframeCollector {
-  var elements: [WireframeElement] = []
+    var elements: [WireframeElement] = []
 }

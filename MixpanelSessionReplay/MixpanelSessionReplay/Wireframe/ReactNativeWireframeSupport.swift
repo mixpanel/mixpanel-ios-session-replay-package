@@ -46,74 +46,74 @@ import UIKit
 /// mask rect. Both routes are pinned by `ReactNativeWireframeTests`.
 enum ReactNativeWireframeSupport {
 
-  /// Fabric (New Architecture, the default since RN 0.76). The component view for
-  /// `<Text>`; its `attributedText` is declared in `RCTParagraphComponentView.h` as
-  /// "to be only used by external introspection and debug tools", which is exactly this.
-  private static let paragraphComponentViewClass: AnyClass? =
-    NSClassFromString("RCTParagraphComponentView")
+    /// Fabric (New Architecture, the default since RN 0.76). The component view for
+    /// `<Text>`; its `attributedText` is declared in `RCTParagraphComponentView.h` as
+    /// "to be only used by external introspection and debug tools", which is exactly this.
+    private static let paragraphComponentViewClass: AnyClass? =
+        NSClassFromString("RCTParagraphComponentView")
 
-  /// Paper (legacy architecture). Classified so the element still ships, but its text is
-  /// left to the accessibility-label tier: `RCTTextView` keeps its `NSTextStorage` private
-  /// and publishes the string only through its `accessibilityLabel` override. See
-  /// ``renderedText(for:)``.
-  private static let legacyTextViewClass: AnyClass? = NSClassFromString("RCTTextView")
+    /// Paper (legacy architecture). Classified so the element still ships, but its text is
+    /// left to the accessibility-label tier: `RCTTextView` keeps its `NSTextStorage` private
+    /// and publishes the string only through its `accessibilityLabel` override. See
+    /// ``renderedText(for:)``.
+    private static let legacyTextViewClass: AnyClass? = NSClassFromString("RCTTextView")
 
-  /// Paper's `<Image>` is an `RCTView` that draws into its own layer, so it is invisible
-  /// to the `UIImageView` check. Fabric's is backed by `RCTUIImageViewAnimated`, a real
-  /// `UIImageView` subclass, and is already classified without help.
-  private static let legacyImageViewClass: AnyClass? = NSClassFromString("RCTImageView")
+    /// Paper's `<Image>` is an `RCTView` that draws into its own layer, so it is invisible
+    /// to the `UIImageView` check. Fabric's is backed by `RCTUIImageViewAnimated`, a real
+    /// `UIImageView` subclass, and is already classified without help.
+    private static let legacyImageViewClass: AnyClass? = NSClassFromString("RCTImageView")
 
-  /// Selector for Fabric's introspection property, resolved once.
-  private static let attributedTextSelector = NSSelectorFromString("attributedText")
+    /// Selector for Fabric's introspection property, resolved once.
+    private static let attributedTextSelector = NSSelectorFromString("attributedText")
 
-  /// True when this app links React Native at all. Lets the walk skip the class checks
-  /// entirely for native-only apps.
-  static let isReactNativeApp: Bool =
-    paragraphComponentViewClass != nil || legacyTextViewClass != nil
-    || legacyImageViewClass != nil
+    /// True when this app links React Native at all. Lets the walk skip the class checks
+    /// entirely for native-only apps.
+    static let isReactNativeApp: Bool =
+        paragraphComponentViewClass != nil || legacyTextViewClass != nil
+        || legacyImageViewClass != nil
 
-  /// The wireframe role for a React Native view, or `nil` if this is not one of the RN
-  /// views the UIKit checks miss.
-  static func role(for view: UIView) -> WireframeRole? {
-    guard isReactNativeApp else { return nil }
-    if let paragraphComponentViewClass, view.isKind(of: paragraphComponentViewClass) {
-      return .text
+    /// The wireframe role for a React Native view, or `nil` if this is not one of the RN
+    /// views the UIKit checks miss.
+    static func role(for view: UIView) -> WireframeRole? {
+        guard isReactNativeApp else { return nil }
+        if let paragraphComponentViewClass, view.isKind(of: paragraphComponentViewClass) {
+            return .text
+        }
+        if let legacyTextViewClass, view.isKind(of: legacyTextViewClass) { return .text }
+        if let legacyImageViewClass, view.isKind(of: legacyImageViewClass) { return .image }
+        return nil
     }
-    if let legacyTextViewClass, view.isKind(of: legacyTextViewClass) { return .text }
-    if let legacyImageViewClass, view.isKind(of: legacyImageViewClass) { return .image }
-    return nil
-  }
 
-  /// The rendered text of a React Native paragraph, or `nil` when there is no exact
-  /// source for it.
-  ///
-  /// Tier 2 of the text precedence chain — the element's own rendered text — so it is
-  /// *not* gated by ``MPWireframesOptions/useAccessibilityLabelFallback``. Only Fabric
-  /// reaches it: `attributedText` is rebuilt from the same `AttributedString` the view
-  /// draws, so it is exactly what is on screen.
-  ///
-  /// **Paper deliberately returns `nil` here.** `RCTTextView` keeps its `NSTextStorage`
-  /// private and publishes the string only by overriding `accessibilityLabel`, and that
-  /// override prefers an explicitly-set label over the rendered text — so what comes back
-  /// may be a label describing the view rather than the text drawn in it, and which of the
-  /// two it is cannot be told from outside RN. That is precisely the uncertainty
-  /// `useAccessibilityLabelFallback` exists to govern, so Paper text is left to fall
-  /// through to the label tier in `extractWireframeText`, where the customer's setting
-  /// decides. With the fallback off, a legacy-architecture `<Text>` ships as a
-  /// `role + bounds` shell and `.mpWireframeText(_:)` is the way to describe it.
-  ///
-  /// (Reading the private `_textStorage` ivar by KVC would resolve the ambiguity exactly,
-  /// and is rejected for the same reason the SwiftUI reflection extractor was: the SDK
-  /// does not reach into another framework's internals.)
-  static func renderedText(for view: UIView) -> String? {
-    guard isReactNativeApp else { return nil }
+    /// The rendered text of a React Native paragraph, or `nil` when there is no exact
+    /// source for it.
+    ///
+    /// Tier 2 of the text precedence chain — the element's own rendered text — so it is
+    /// *not* gated by ``MPWireframesOptions/useAccessibilityLabelFallback``. Only Fabric
+    /// reaches it: `attributedText` is rebuilt from the same `AttributedString` the view
+    /// draws, so it is exactly what is on screen.
+    ///
+    /// **Paper deliberately returns `nil` here.** `RCTTextView` keeps its `NSTextStorage`
+    /// private and publishes the string only by overriding `accessibilityLabel`, and that
+    /// override prefers an explicitly-set label over the rendered text — so what comes back
+    /// may be a label describing the view rather than the text drawn in it, and which of the
+    /// two it is cannot be told from outside RN. That is precisely the uncertainty
+    /// `useAccessibilityLabelFallback` exists to govern, so Paper text is left to fall
+    /// through to the label tier in `extractWireframeText`, where the customer's setting
+    /// decides. With the fallback off, a legacy-architecture `<Text>` ships as a
+    /// `role + bounds` shell and `.mpWireframeText(_:)` is the way to describe it.
+    ///
+    /// (Reading the private `_textStorage` ivar by KVC would resolve the ambiguity exactly,
+    /// and is rejected for the same reason the SwiftUI reflection extractor was: the SDK
+    /// does not reach into another framework's internals.)
+    static func renderedText(for view: UIView) -> String? {
+        guard isReactNativeApp else { return nil }
 
-    guard let paragraphComponentViewClass, view.isKind(of: paragraphComponentViewClass),
-      view.responds(to: attributedTextSelector),
-      let attributed = view.value(forKey: "attributedText") as? NSAttributedString
-    else {
-      return nil
+        guard let paragraphComponentViewClass, view.isKind(of: paragraphComponentViewClass),
+            view.responds(to: attributedTextSelector),
+            let attributed = view.value(forKey: "attributedText") as? NSAttributedString
+        else {
+            return nil
+        }
+        return attributed.string.isEmpty ? nil : attributed.string
     }
-    return attributed.string.isEmpty ? nil : attributed.string
-  }
 }

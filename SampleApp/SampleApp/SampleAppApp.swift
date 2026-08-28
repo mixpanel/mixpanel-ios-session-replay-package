@@ -16,32 +16,32 @@ import SwiftUI
 
 @main
 struct SampleAppApp: App {
-  init() {
-    let config = MPSessionReplayConfig(
-      autoMaskedViews: [],
-      enableLogging: true,
-      enableSessionReplayOniOS26AndLater: true,
-      // `overlayColors: nil` keeps the mask overlay off — this test bed reads
-      // the wireframe payload in the console, not the grayed rectangles.
-      debugOptions: DebugOptions(
-        overlayColors: nil,
-        wireframeEmitter: { snapshot in
-          WireframeConsole.shared.push(snapshot)
-        }
-      ),
-      wireframesOptions: MPWireframesOptions(sensitiveRules: [])
-    )
+    init() {
+        let config = MPSessionReplayConfig(
+            autoMaskedViews: [],
+            enableLogging: true,
+            enableSessionReplayOniOS26AndLater: true,
+            // `overlayColors: nil` keeps the mask overlay off — this test bed reads
+            // the wireframe payload in the console, not the grayed rectangles.
+            debugOptions: DebugOptions(
+                overlayColors: nil,
+                wireframeEmitter: { snapshot in
+                    WireframeConsole.shared.push(snapshot)
+                }
+            ),
+            wireframesOptions: MPWireframesOptions(sensitiveRules: [])
+        )
 
-    MPSessionReplay.initialize(
-      token: "074759b3e946dbc6289ee8567cc557b3",
-      distinctId: "ios_wireframe",
-      config: config
-    )
-  }
-
-  var body: some Scene {
-    WindowGroup {
-      RootView()
+        MPSessionReplay.initialize(
+            token: "074759b3e946dbc6289ee8567cc557b3",
+            distinctId: "ios_wireframe",
+            config: config
+        )
     }
-  }
+
+    var body: some Scene {
+        WindowGroup {
+            RootView()
+        }
+    }
 }

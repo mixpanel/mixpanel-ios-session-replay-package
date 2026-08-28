@@ -992,13 +992,13 @@ class SensitiveViewManager {
     }
 
     // No text absorption, deliberately.
-  //
-  // An earlier pass borrowed a roled container's descendants' text so the control would not
-  // ship textless. It was wrong twice over: the goldens showed it swallowing nested controls
-  // (`role_nested_control` reported one `button: "Cupcake Add"` and lost the inner button), and
-  // once an accessibility-derived role stopped closing the subtree the label was already there
-  // as a sibling element with bounds inside the control. A summary can associate the two by
-  // geometry; it cannot recover an element that was never emitted.
+    //
+    // An earlier pass borrowed a roled container's descendants' text so the control would not
+    // ship textless. It was wrong twice over: the goldens showed it swallowing nested controls
+    // (`role_nested_control` reported one `button: "Cupcake Add"` and lost the inner button), and
+    // once an accessibility-derived role stopped closing the subtree the label was already there
+    // as a sibling element with bounds inside the control. A summary can associate the two by
+    // geometry; it cannot recover an element that was never emitted.
 
     /// Tier 1 of the text precedence chain: text the developer declared with
     /// `.mpWireframeText(_:)` (SwiftUI) or by setting `mpWireframeText`
@@ -1077,7 +1077,7 @@ class SensitiveViewManager {
         return (label?.isEmpty == false) ? label : nil
     }
 
-  func getFrame(for layer: CALayer, in window: UIView) -> CGRect? {
+    func getFrame(for layer: CALayer, in window: UIView) -> CGRect? {
         // Use presentation layer for accurate frame during animations
         let targetLayer = layer.presentation() ?? layer
 
