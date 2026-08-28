@@ -220,8 +220,20 @@ class ScreenRecorderTests: XCTestCase {
         window.isHidden = false
 
         EventPublisher.shared.resetSubscribers()
+        // The publisher calls back on the emitter's queue, so this array is mutated off the
+        // test thread and read on it. Guarded, and awaited through an expectation rather
+        // than a polled deadline: the 2s of RunLoop pumping it replaces was a bet on how
+        // soon the machine got round to the emit, and it lost intermittently on CI.
+        let publishedLock = NSLock()
         var published: [SessionEvent] = []
-        let subscriber = CapturingCustomEventSubscriber { published.append($0) }
+        let receivedWireframe = expectation(description: "mp_wireframe published")
+        receivedWireframe.assertForOverFulfill = false
+        let subscriber = CapturingCustomEventSubscriber {
+            publishedLock.lock()
+            published.append($0)
+            publishedLock.unlock()
+            receivedWireframe.fulfill()
+        }
         EventPublisher.shared.subscribe(subscriber)
 
         SensitiveViewManager.reset()
@@ -237,12 +249,13 @@ class ScreenRecorderTests: XCTestCase {
         let frame = try XCTUnwrap(recorder.renderViewHierarchyAsImage(window: window))
         let after = TimestampUtils.timestamp()
 
-        let deadline = Date().addingTimeInterval(2)
-        while published.isEmpty && Date() < deadline {
-            RunLoop.current.run(until: Date().addingTimeInterval(0.01))
-        }
+        wait(for: [receivedWireframe], timeout: 10.0)
 
-        let event = try XCTUnwrap(published.first, "expected an mp_wireframe event")
+        publishedLock.lock()
+        let firstPublished = published.first
+        publishedLock.unlock()
+
+        let event = try XCTUnwrap(firstPublished, "expected an mp_wireframe event")
         XCTAssertEqual(
             event.timestamp, frame.capturedAtMs,
             "wireframe must carry the same capture instant the frame reports")
@@ -266,8 +279,20 @@ class ScreenRecorderTests: XCTestCase {
         window.isHidden = false
 
         EventPublisher.shared.resetSubscribers()
+        // The publisher calls back on the emitter's queue, so this array is mutated off the
+        // test thread and read on it. Guarded, and awaited through an expectation rather
+        // than a polled deadline: the 2s of RunLoop pumping it replaces was a bet on how
+        // soon the machine got round to the emit, and it lost intermittently on CI.
+        let publishedLock = NSLock()
         var published: [SessionEvent] = []
-        let subscriber = CapturingCustomEventSubscriber { published.append($0) }
+        let receivedWireframe = expectation(description: "mp_wireframe published")
+        receivedWireframe.assertForOverFulfill = false
+        let subscriber = CapturingCustomEventSubscriber {
+            publishedLock.lock()
+            published.append($0)
+            publishedLock.unlock()
+            receivedWireframe.fulfill()
+        }
         EventPublisher.shared.subscribe(subscriber)
 
         SensitiveViewManager.reset()
@@ -281,12 +306,13 @@ class ScreenRecorderTests: XCTestCase {
 
         XCTAssertNotNil(recorder.renderViewHierarchyAsImage(window: window))
 
-        let deadline = Date().addingTimeInterval(2)
-        while published.isEmpty && Date() < deadline {
-            RunLoop.current.run(until: Date().addingTimeInterval(0.01))
-        }
+        wait(for: [receivedWireframe], timeout: 10.0)
 
-        let event = try XCTUnwrap(published.first, "an empty frame must still emit mp_wireframe")
+        publishedLock.lock()
+        let firstPublished = published.first
+        publishedLock.unlock()
+
+        let event = try XCTUnwrap(firstPublished, "an empty frame must still emit mp_wireframe")
         guard case .customData(let custom) = event.data else {
             return XCTFail("expected customData")
         }

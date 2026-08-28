@@ -147,14 +147,15 @@ class MPSessionReplayInstanceTests: BaseTests {
             ],
             viewport: (100, 100), maskBounds: [])
 
-        let primed = expectation(description: "dedup state primed")
-        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 0.2) {
-            primed.fulfill()
-        }
-        wait(for: [primed], timeout: 2.0)
-        XCTAssertNotNil(
-            emitter.lastPayloadHash,
-            "precondition: the primed emit should leave a payload hash behind")
+        // Wait on the condition, not on a guessed interval. The emitter hands the payload
+        // to its own queue, and a fixed 0.2s delay is a bet on how quickly a machine gets
+        // round to it — one this lost intermittently on CI, failing the precondition below
+        // rather than the behaviour under test. Polling the real state is faster in the
+        // common case and does not have to be re-tuned for slower hardware.
+        let primed = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in emitter.lastPayloadHash != nil },
+            object: nil)
+        wait(for: [primed], timeout: 10.0)
 
         instance.startRecording()
 

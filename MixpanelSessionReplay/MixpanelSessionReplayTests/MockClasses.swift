@@ -50,7 +50,14 @@ class MockFlushService: FlushService {
 
 class MockEventService: EventService {
     var clearEventsCalled = false
-    var enqueueEventCalled = false
+
+    /// Written from `EventHandler`'s queue, read from the test thread.
+    var enqueueEventCalled: Bool {
+        capturedEventsLock.lock()
+        defer { capturedEventsLock.unlock() }
+        return _enqueueEventCalled
+    }
+    private var _enqueueEventCalled = false
 
     /// Every event handed to `enqueueEvent`, in order. Guarded because `EventHandler`
     /// enqueues from its own serial queue.
@@ -62,24 +69,47 @@ class MockEventService: EventService {
         return _capturedEvents
     }
 
-    // Optional expectation for async testing
-    var enqueueEventExpectation: XCTestExpectation?
+    /// Optional expectation for async testing.
+    ///
+    /// Guarded by the same lock as `capturedEvents`, and for the same reason:
+    /// `enqueueEvent` runs on `EventHandler`'s serial queue while the test thread
+    /// installs the next expectation between waits. Left unsynchronized, the write
+    /// from the test thread is not guaranteed visible to the enqueueing thread, which
+    /// then reads the `nil` it stored itself on the previous call, fulfills nothing,
+    /// and the test waits out its full timeout. That is not a slow machine — it is a
+    /// data race, and it surfaced as an intermittent CI failure in
+    /// `EventHandlerTouchTests`, whose `encode` helper installs a fresh expectation on
+    /// each of three loop iterations.
+    var enqueueEventExpectation: XCTestExpectation? {
+        get {
+            capturedEventsLock.lock()
+            defer { capturedEventsLock.unlock() }
+            return _enqueueEventExpectation
+        }
+        set {
+            capturedEventsLock.lock()
+            defer { capturedEventsLock.unlock() }
+            _enqueueEventExpectation = newValue
+        }
+    }
+    private var _enqueueEventExpectation: XCTestExpectation?
 
     override func clearEvents() {
         clearEventsCalled = true
     }
 
     override func enqueueEvent(_ event: SessionEvent) {
-        enqueueEventCalled = true
         capturedEventsLock.lock()
+        _enqueueEventCalled = true
         _capturedEvents.append(event)
+        // Taken and cleared under the lock so a concurrent enqueue cannot fulfill the
+        // same expectation twice; fulfilled outside it so XCTest never runs a waiter's
+        // continuation while this lock is held.
+        let expectation = _enqueueEventExpectation
+        _enqueueEventExpectation = nil
         capturedEventsLock.unlock()
 
-        // Fulfill expectation if set (then clear to prevent multiple fulfillments)
-        if let expectation = enqueueEventExpectation {
-            expectation.fulfill()
-            enqueueEventExpectation = nil
-        }
+        expectation?.fulfill()
     }
 }
 
