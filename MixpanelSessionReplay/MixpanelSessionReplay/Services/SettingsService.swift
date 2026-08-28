@@ -21,18 +21,24 @@ class SettingsService {
     private let mpLib: String
     private let userDefaults: UserDefaults
     private let settingsEndPoint: String
+    private let bundleId: String?
+    private let buildNumber: String?
     static let settingsTimeoutMS = 5.0
 
     init(
         network: Network = Network(), version: String,
         mpLib: String,
         userDefaults: UserDefaults = UserDefaults(suiteName: ReplaySettings.userDefaultsName) ?? UserDefaults.standard,
-        serverURL: String = DataResidency.us
+        serverURL: String = DataResidency.us,
+        bundleId: String? = DeviceInfo.bundleId,
+        buildNumber: String? = DeviceInfo.buildNumber
     ) {
         self.network = network
         self.version = version
         self.userDefaults = userDefaults
         self.mpLib = mpLib
+        self.bundleId = bundleId
+        self.buildNumber = buildNumber
         settingsEndPoint = MPSessionReplayAPI.settingsEndpoint(for: serverURL)
     }
 
@@ -79,13 +85,21 @@ class SettingsService {
     {
         Logger.info(message: "Checking remote settings for project: \(token)")
 
-        let queryItems = [
+        var queryItems = [
             URLQueryItem(name: "recording", value: "1"),
             URLQueryItem(name: "sdk_config", value: "1"),
             URLQueryItem(name: "mp_lib", value: mpLib),
             URLQueryItem(name: "$lib_version", value: version),
             URLQueryItem(name: "$os", value: "iOS"),
         ]
+
+        // Include app bundle ID and build number so that server-side SDK blocking per app ID and app build version can be done if needed.
+        if let bundleId = bundleId {
+            queryItems.append(URLQueryItem(name: "bundleId", value: bundleId))
+        }
+        if let buildNumber = buildNumber {
+            queryItems.append(URLQueryItem(name: "buildNumber", value: buildNumber))
+        }
 
         var headers = [String: String]()
         if let data = "\(token):".data(using: .utf8) {

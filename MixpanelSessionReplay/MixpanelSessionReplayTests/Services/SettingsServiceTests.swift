@@ -1176,4 +1176,101 @@ class SettingsServiceTests: XCTestCase {
         XCTAssertTrue(retrieved1.recording?.isEnabled ?? false)
         XCTAssertFalse(retrieved2.recording?.isEnabled ?? true)
     }
+
+    // MARK: - Bundle Info Tests
+
+    func testRequestIncludesAllRequiredQueryParametersWithBundleInfo() {
+        // Configure mock to return JSON response
+        mockNetwork.responseJson = """
+            {
+                "code": 200,
+                "status": "OK",
+                "recording": {"is_enabled": true}
+            }
+            """
+
+        // Create service with custom bundle values for testing
+        let testBundleId = "com.test.app"
+        let testBuildNumber = "1.2.3"
+        let settingsServiceWithBundle = SettingsService(
+            network: mockNetwork,
+            version: version,
+            mpLib: mpLib,
+            userDefaults: mockDefaults!,
+            bundleId: testBundleId,
+            buildNumber: testBuildNumber
+        )
+
+        // Verify all required query parameters including bundle info
+        mockNetwork.sendRawRequestStub = { [weak self] apiRequest in
+            guard let self = self else { fatalError("self is nil") }
+            XCTAssertTrue(apiRequest.queryItems?.contains(URLQueryItem(name: "recording", value: "1")) ?? false)
+            XCTAssertTrue(apiRequest.queryItems?.contains(URLQueryItem(name: "sdk_config", value: "1")) ?? false)
+            XCTAssertTrue(apiRequest.queryItems?.contains(URLQueryItem(name: "mp_lib", value: "swift-sr")) ?? false)
+            XCTAssertTrue(
+                apiRequest.queryItems?.contains(URLQueryItem(name: "$lib_version", value: self.version)) ?? false)
+            XCTAssertTrue(apiRequest.queryItems?.contains(URLQueryItem(name: "$os", value: "iOS")) ?? false)
+            XCTAssertTrue(
+                apiRequest.queryItems?.contains(URLQueryItem(name: "bundleId", value: testBundleId)) ?? false)
+            XCTAssertTrue(
+                apiRequest.queryItems?.contains(URLQueryItem(name: "buildNumber", value: testBuildNumber)) ?? false)
+            return .success((self.mockNetwork.responseJson!.data(using: .utf8)!, HTTPURLResponse()))
+        }
+
+        let config = MPSessionReplayConfig()
+        let expectation = self.expectation(description: "Completion handler invoked")
+
+        settingsServiceWithBundle.getRemoteConfiguration(
+            token: testToken,
+            mode: .fallback,
+            originalConfig: config
+        ) { _, _ in
+            expectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 0.5, handler: nil)
+    }
+
+    func testRequestExcludesBundleInfoWhenNil() {
+        mockNetwork.responseJson = """
+            {
+                "code": 200,
+                "status": "OK",
+                "recording": {"is_enabled": true}
+            }
+            """
+
+        // Create service with nil bundle values (test environment scenario)
+        let settingsServiceNilBundle = SettingsService(
+            network: mockNetwork,
+            version: version,
+            mpLib: mpLib,
+            userDefaults: mockDefaults!,
+            bundleId: nil,
+            buildVersion: nil
+        )
+
+        mockNetwork.sendRawRequestStub = { [weak self] apiRequest in
+            guard let self = self else { fatalError("self is nil") }
+            // Verify bundle parameters are NOT included
+            XCTAssertFalse(apiRequest.queryItems?.contains(where: { $0.name == "bundleId" }) ?? false)
+            XCTAssertFalse(apiRequest.queryItems?.contains(where: { $0.name == "buildNumber" }) ?? false)
+            // Verify other required parameters are still present
+            XCTAssertTrue(apiRequest.queryItems?.contains(URLQueryItem(name: "recording", value: "1")) ?? false)
+            return .success((self.mockNetwork.responseJson!.data(using: .utf8)!, HTTPURLResponse()))
+        }
+
+        let config = MPSessionReplayConfig()
+        let expectation = self.expectation(description: "Completion handler invoked")
+
+        settingsServiceNilBundle.getRemoteConfiguration(
+            token: testToken,
+            mode: .fallback,
+            originalConfig: config
+        ) { _, _ in
+            expectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 0.5, handler: nil)
+    }
 }
