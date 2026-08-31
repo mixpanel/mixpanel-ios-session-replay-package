@@ -175,7 +175,7 @@ final class ReactNativeWireframeTests: XCTestCase {
         root.addSubview(paper)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
 
         XCTAssertEqual(elements.count, 1)
         XCTAssertEqual(elements[0].role, .text)
@@ -231,7 +231,7 @@ final class ReactNativeWireframeTests: XCTestCase {
         root.addSubview(total)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
 
         XCTAssertEqual(elements.count, 2)
         XCTAssertEqual(elements.map(\.role), [.text, .text])
@@ -253,7 +253,7 @@ final class ReactNativeWireframeTests: XCTestCase {
         root.addSubview(touchable)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
 
         XCTAssertEqual(elements.count, 1)
         XCTAssertEqual(elements[0].role, .text)
@@ -270,7 +270,7 @@ final class ReactNativeWireframeTests: XCTestCase {
         root.addSubview(paragraph)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
 
         XCTAssertEqual(elements.count, 1)
         XCTAssertEqual(elements[0].text, "Welcome")
@@ -296,7 +296,7 @@ final class ReactNativeWireframeTests: XCTestCase {
         root.addSubview(paragraph)
         window.addSubview(root)
 
-        let result = manager.collectFramesAndWireframes(in: root, window: window)
+        let result = manager.walkHierarchy(in: root, window: window)
         XCTAssertFalse(result.frames.isEmpty, "the drawn text must still paint a mask region")
         XCTAssertEqual(result.wireframes.count, 1)
 
@@ -320,7 +320,7 @@ final class ReactNativeWireframeTests: XCTestCase {
         root.addSubview(paragraph)
         window.addSubview(root)
 
-        let result = manager.collectFramesAndWireframes(in: root, window: window)
+        let result = manager.walkHierarchy(in: root, window: window)
         XCTAssertFalse(result.frames.isEmpty)
         XCTAssertEqual(result.wireframes.count, 1)
         XCTAssertEqual(result.wireframes[0].role, .text, "the shape of the screen is preserved")
@@ -340,7 +340,7 @@ final class ReactNativeWireframeTests: XCTestCase {
         root.addSubview(wrapper)
         window.addSubview(root)
 
-        let result = manager.collectFramesAndWireframes(in: root, window: window)
+        let result = manager.walkHierarchy(in: root, window: window)
         let emitter = WireframeEmitter(options: MPWireframesOptions())
         let processed = result.wireframes.map {
             emitter.applyMaskingPipeline($0, maskBounds: Set(result.frames.keys))
@@ -362,7 +362,7 @@ final class ReactNativeWireframeTests: XCTestCase {
         root.addSubview(paragraph)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
 
         XCTAssertEqual(elements.count, 1)
         XCTAssertEqual(elements[0].text, "Card number")

@@ -125,7 +125,7 @@ class SensitiveViewManagerTests: BaseTests {
         let textField = UITextField(frame: CGRect(x: 10, y: 10, width: 50, height: 20))
         rootView.addSubview(textField)
 
-        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+        let sensitiveFrames = manager.walkHierarchy(in: rootView, window: window).frames
         XCTAssertEqual(
             sensitiveFrames[HashableRect(textField.frame)], .textInput,
             "Text field frame should be in sensitive frames as textInput")
@@ -222,7 +222,7 @@ class SensitiveViewManagerTests: BaseTests {
         rootView.addSubview(label)
 
         manager.maskAllText = true
-        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+        let sensitiveFrames = manager.walkHierarchy(in: rootView, window: window).frames
 
         // Both should be in sensitive frames with correct types
         XCTAssertEqual(
@@ -387,7 +387,7 @@ class SensitiveViewManagerTests: BaseTests {
         rootView.addSubview(labelOutsideSafe)
 
         manager.maskAllText = true
-        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+        let sensitiveFrames = manager.walkHierarchy(in: rootView, window: window).frames
 
         // The label inside the safe container should be filtered out
         // The return value should only contain mask entries (no unmask)
@@ -427,7 +427,7 @@ class SensitiveViewManagerTests: BaseTests {
             listenerDecisions = decisions
         }
 
-        let returnValue = manager.getSensitiveFrames(in: rootView, window: window)
+        let returnValue = manager.walkHierarchy(in: rootView, window: window).frames
 
         // Return value should NOT contain unmask
         XCTAssertNil(
@@ -469,7 +469,7 @@ class SensitiveViewManagerTests: BaseTests {
         rootView.addSubview(invisibleLabel)
 
         manager.maskAllText = true
-        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+        let sensitiveFrames = manager.walkHierarchy(in: rootView, window: window).frames
 
         XCTAssertEqual(sensitiveFrames.count, 1, "Only visible label should be in sensitive frames")
         XCTAssertEqual(
@@ -508,7 +508,7 @@ class SensitiveViewManagerTests: BaseTests {
         containerView.layer.addSublayer(imageLayer)
 
         manager.maskAllImages = true
-        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+        let sensitiveFrames = manager.walkHierarchy(in: rootView, window: window).frames
 
         XCTAssertTrue(
             sensitiveFrames.count >= 1,
@@ -566,7 +566,7 @@ class SensitiveViewManagerTests: BaseTests {
         let field = UITextField(frame: CGRect(x: 10, y: 10, width: 100, height: 30))
         inner.addSubview(field)
 
-        let frames = manager.getSensitiveFrames(in: rootView, window: window)
+        let frames = manager.walkHierarchy(in: rootView, window: window).frames
 
         XCTAssertEqual(
             frames[HashableRect(CGRect(x: 15, y: 15, width: 100, height: 30))], .textInput,
@@ -588,7 +588,7 @@ class SensitiveViewManagerTests: BaseTests {
         secret.mpReplaySensitive = true
         safeContainer.addSubview(secret)
 
-        let frames = manager.getSensitiveFrames(in: rootView, window: window)
+        let frames = manager.walkHierarchy(in: rootView, window: window).frames
 
         XCTAssertEqual(
             frames[HashableRect(secret.frame)], .mask,
@@ -623,7 +623,7 @@ class SensitiveViewManagerTests: BaseTests {
         let field = UITextField(frame: CGRect(x: 10, y: 10, width: 100, height: 30))
         content.addSubview(field)
 
-        let frames = manager.getSensitiveFrames(in: rootView, window: window)
+        let frames = manager.walkHierarchy(in: rootView, window: window).frames
 
         XCTAssertEqual(
             frames[HashableRect(field.frame)], .textInput,

@@ -471,7 +471,7 @@ final class WireframeGoldenTests: XCTestCase {
     /// Compose's `composeLoginForm_matchesGolden`. A login form is rendered
     /// through a live `UIHostingController` hosted in a real `UIWindow`, laid out
     /// by SwiftUI's own engine, then run through the exact production pipeline
-    /// (`collectFramesAndWireframes` → `WireframeEmitter`).
+    /// (`walkHierarchy` → `WireframeEmitter`).
     ///
     /// Only **declared** elements are asserted. SwiftUI does not expose its
     /// rendered strings, so scraped content emits null-text shells whose bounds
@@ -493,8 +493,7 @@ final class WireframeGoldenTests: XCTestCase {
         host.view.layoutIfNeeded()
         RunLoop.current.run(until: Date().addingTimeInterval(0.1))
 
-        let (frames, elements) = manager.collectFramesAndWireframes(
-            in: host.view, window: swiftUIWindow)
+        let (frames, elements) = manager.walkHierarchy(in: host.view, window: swiftUIWindow)
         let emitter = WireframeEmitter(options: MPWireframesOptions(sensitiveRules: []))
         let processed = emitter.processedElements(
             elements: elements, maskBounds: Set(frames.keys))

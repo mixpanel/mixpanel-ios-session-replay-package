@@ -43,7 +43,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(label)
         window.addSubview(root)
 
-        let result = manager.collectFramesAndWireframes(in: root, window: window)
+        let result = manager.walkHierarchy(in: root, window: window)
         XCTAssertTrue(result.wireframes.isEmpty)
     }
 
@@ -54,7 +54,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(label)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         XCTAssertEqual(elements.count, 1)
         XCTAssertEqual(elements[0].role, .text)
         XCTAssertEqual(elements[0].text, "Hello")
@@ -71,7 +71,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(label)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         XCTAssertEqual(elements.count, 1)
         XCTAssertEqual(elements[0].role, .text)
         XCTAssertNil(elements[0].text)
@@ -85,7 +85,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(button)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         let buttons = elements.filter { $0.role == .button }
         let texts = elements.filter { $0.role == .text }
         XCTAssertEqual(buttons.count, 1, "should emit exactly one button element")
@@ -100,7 +100,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(field)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         XCTAssertEqual(elements.count, 1)
         XCTAssertEqual(elements[0].role, .input)
         XCTAssertNil(elements[0].text)
@@ -114,7 +114,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(iv)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         XCTAssertEqual(elements.count, 1)
         XCTAssertEqual(elements[0].role, .image)
         XCTAssertEqual(elements[0].decision, .auto)
@@ -131,7 +131,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(iv)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         XCTAssertEqual(elements.count, 1, "the role + bounds shell is always kept")
         XCTAssertEqual(elements[0].role, .image)
         XCTAssertNil(elements[0].text)
@@ -149,7 +149,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(button)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         let buttons = elements.filter { $0.role == .button }
         XCTAssertEqual(buttons.count, 1)
         XCTAssertEqual(buttons[0].text, "Continue")
@@ -164,7 +164,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(button)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         let buttons = elements.filter { $0.role == .button }
         XCTAssertEqual(buttons.count, 1)
         XCTAssertEqual(buttons[0].text, "Open settings")
@@ -181,7 +181,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(button)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         let buttons = elements.filter { $0.role == .button }
         XCTAssertEqual(buttons.count, 1)
         XCTAssertEqual(buttons[0].text, "checkout action", "declared text outranks the title")
@@ -199,7 +199,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(field)
         window.addSubview(root)
 
-        let result = manager.collectFramesAndWireframes(in: root, window: window)
+        let result = manager.walkHierarchy(in: root, window: window)
         XCTAssertFalse(result.frames.isEmpty, "a text field must still paint a mask region")
         XCTAssertEqual(result.wireframes.count, 1)
         XCTAssertEqual(result.wireframes[0].role, .input)
@@ -215,7 +215,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(iv)
         window.addSubview(root)
 
-        let result = manager.collectFramesAndWireframes(in: root, window: window)
+        let result = manager.walkHierarchy(in: root, window: window)
         XCTAssertFalse(result.frames.isEmpty, "the image must still be masked")
         XCTAssertEqual(result.wireframes.count, 1)
         XCTAssertEqual(result.wireframes[0].role, .image)
@@ -235,7 +235,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(container)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         XCTAssertEqual(elements.count, 2)
         XCTAssertTrue(elements.contains { $0.text == "checkout summary" && $0.decision == .declared })
         XCTAssertTrue(elements.contains { $0.text == "Order total" && $0.decision == .none })
@@ -251,7 +251,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(iv)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         XCTAssertEqual(elements.count, 1)
         XCTAssertEqual(elements[0].role, .image)
         XCTAssertEqual(elements[0].text, "avatar")
@@ -265,7 +265,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(label)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         XCTAssertEqual(elements.count, 1)
         XCTAssertEqual(elements[0].decision, .explicit)
         XCTAssertNil(elements[0].text)
@@ -277,7 +277,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(web)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         let webElements = elements.filter { $0.role == .text }
         XCTAssertGreaterThanOrEqual(webElements.count, 1)
         XCTAssertNil(webElements[0].text)
@@ -303,7 +303,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         host.view.layoutIfNeeded()
         RunLoop.current.run(until: Date().addingTimeInterval(0.1))
 
-        let result = manager.collectFramesAndWireframes(in: host.view, window: window)
+        let result = manager.walkHierarchy(in: host.view, window: window)
 
         // The rendered string must never appear on any emitted element.
         XCTAssertFalse(
@@ -330,7 +330,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         host.view.layoutIfNeeded()
         RunLoop.current.run(until: Date().addingTimeInterval(0.1))
 
-        let result = manager.collectFramesAndWireframes(in: host.view, window: window)
+        let result = manager.walkHierarchy(in: host.view, window: window)
         let declared = result.wireframes.filter { $0.isDeclared }
         XCTAssertEqual(
             declared.count, 1, "the .mpReplay modifier must plant exactly one declared element")
@@ -354,7 +354,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(wrapper)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         let texts = elements.filter { $0.role == .text }
         XCTAssertEqual(texts.count, 1)
         XCTAssertEqual(texts[0].text, "Welcome")
@@ -380,7 +380,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(wrapper)
         window.addSubview(root)
 
-        let result = manager.collectFramesAndWireframes(in: root, window: window)
+        let result = manager.walkHierarchy(in: root, window: window)
         XCTAssertFalse(result.frames.isEmpty, "sensitive wrapper must produce a mask region")
         let texts = result.wireframes.filter { $0.role == .text }
         XCTAssertEqual(texts.count, 1)
@@ -403,7 +403,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(wrapper)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         let texts = elements.filter { $0.role == .text }
         XCTAssertEqual(texts.count, 1, "empty sibling shell should be deduped away")
         XCTAssertEqual(texts[0].text, "Hello")
@@ -423,7 +423,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(wrapper)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         let texts = elements.filter { $0.role == .text }
         // Declared text element + the masked (.auto, nil text) shell both survive.
         XCTAssertEqual(texts.count, 2)
@@ -438,7 +438,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(label)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         XCTAssertEqual(elements.count, 1)
         // label frame (10,20,100,30) inside root at (50,100) → window (60,120,100,30)
         XCTAssertEqual(elements[0].x, 60)
@@ -471,7 +471,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
             card.text = "4111 1111 1111 1111"
             root.addSubview(card)
             win.addSubview(root)
-            return Set(mgr.collectFramesAndWireframes(in: root, window: win).frames.keys)
+            return Set(mgr.walkHierarchy(in: root, window: win).frames.keys)
         }
 
         let viaClass = maskRects(registerClass: true)
@@ -491,7 +491,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         root.addSubview(card)
         window.addSubview(root)
 
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         XCTAssertEqual(elements.count, 1)
         XCTAssertEqual(elements[0].decision, .explicit)
         XCTAssertNil(elements[0].text)
@@ -540,18 +540,14 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         manager.maskAllText = true
 
         manager.wireframeCollectionEnabled = false
-        let withoutWireframes = manager.collectFramesAndWireframes(
-            in: makeUnmaskedSubtree(), window: window
-        ).frames
+        let withoutWireframes = manager.walkHierarchy(in: makeUnmaskedSubtree(), window: window).frames
 
         SensitiveViewManager.reset()
         manager = SensitiveViewManager.shared
         manager.maskAllText = true
         manager.wireframeCollectionEnabled = true
         window = UIView(frame: CGRect(x: 0, y: 0, width: 500, height: 800))
-        let withWireframes = manager.collectFramesAndWireframes(
-            in: makeUnmaskedSubtree(), window: window
-        ).frames
+        let withWireframes = manager.walkHierarchy(in: makeUnmaskedSubtree(), window: window).frames
 
         XCTAssertFalse(
             withoutWireframes.isEmpty,
@@ -566,9 +562,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     /// developer positively vouched for, so it is described rather than skipped.
     func testUnmaskSubtree_emitsChildrenWithText() {
         manager.maskAllText = true
-        let elements = manager.collectFramesAndWireframes(
-            in: makeUnmaskedSubtree(), window: window
-        ).wireframes
+        let elements = manager.walkHierarchy(in: makeUnmaskedSubtree(), window: window).wireframes
 
         // The vouched label ships its real text even though maskAllText is on —
         // an unmask overrides auto-masking for the pixels, so it does here too.
@@ -582,9 +576,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     /// A nested text field keeps the always-masked guarantee in the wireframe: the
     /// shell ships so the form's structure is legible, the typed value never does.
     func testUnmaskSubtree_nestedTextFieldStaysTextless() {
-        let elements = manager.collectFramesAndWireframes(
-            in: makeUnmaskedSubtree(), window: window
-        ).wireframes
+        let elements = manager.walkHierarchy(in: makeUnmaskedSubtree(), window: window).wireframes
 
         let inputs = elements.filter { $0.role == .input }
         XCTAssertEqual(inputs.count, 1)
@@ -599,9 +591,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     /// shell — matching Android, where an explicit mask keeps `shouldMask` set
     /// under a safe ancestor.
     func testUnmaskSubtree_nestedExplicitMaskStaysTextless() {
-        let elements = manager.collectFramesAndWireframes(
-            in: makeUnmaskedSubtree(), window: window
-        ).wireframes
+        let elements = manager.walkHierarchy(in: makeUnmaskedSubtree(), window: window).wireframes
 
         XCTAssertFalse(
             elements.contains { $0.text == "still private" },

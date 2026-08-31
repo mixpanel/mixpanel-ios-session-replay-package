@@ -204,7 +204,7 @@ final class WireframeLayoutGoldenTests: XCTestCase {
     /// comment there. This test is the regression guard.
     func test_layout_uiButtonEmitsExactlyOneElement() {
         layout([button(title: "Submit")])
-        let elements = manager.collectFramesAndWireframes(in: root, window: window).wireframes
+        let elements = manager.walkHierarchy(in: root, window: window).wireframes
         XCTAssertEqual(
             elements.filter { $0.role == .button }.count, 1, "exactly one button element")
         XCTAssertEqual(
@@ -282,7 +282,7 @@ final class WireframeLayoutGoldenTests: XCTestCase {
         // Through the full pipeline: the walk describes it, Layer 2 redacts it against
         // the container's mask rect. Asserting on the raw walk would see the text still
         // present, which is the emitter's job to strip, not the walk's.
-        let collected = manager.collectFramesAndWireframes(in: root, window: window)
+        let collected = manager.walkHierarchy(in: root, window: window)
         let processed = WireframeEmitter(options: MPWireframesOptions())
             .processedElements(
                 elements: collected.wireframes, maskBounds: Set(collected.frames.keys))
@@ -310,7 +310,7 @@ final class WireframeLayoutGoldenTests: XCTestCase {
         form.mpReplaySensitive = true
         layout([form])
 
-        let result = manager.collectFramesAndWireframes(in: root, window: window)
+        let result = manager.walkHierarchy(in: root, window: window)
         XCTAssertFalse(result.frames.isEmpty, "the region is still masked")
         XCTAssertEqual(
             result.wireframes.map(\.role), [.text, .input, .button],

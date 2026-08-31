@@ -102,7 +102,7 @@ class SensitiveViewManager {
     var maskAllWebViews: Bool = true
     var maskAllMapViews: Bool = true
 
-    /// When true, `collectFramesAndWireframes(in:window:)` returns a populated
+    /// When true, `walkHierarchy(in:window:)` returns a populated
     /// wireframe element list. When false, wireframe collection is a no-op
     /// (the existing masking pass runs unchanged).
     var wireframeCollectionEnabled: Bool = false
@@ -364,30 +364,22 @@ class SensitiveViewManager {
         }
     }
 
-    /// Returns visible sensitive regions within a view hierarchy that should be masked during session replay.
+    /// Walks `rootView` once and returns both the regions the screenshot pass must
+    /// mask and, when `wireframeCollectionEnabled` is true, the wireframe elements
+    /// describing the same screen. The elements list is always empty when wireframes
+    /// are off.
     ///
-    /// Performs a unified traversal of both UIView and CALayer hierarchies to detect:
-    /// - Text views and labels (UILabel, UITextView, iOS 26+ SwiftUI Text)
-    /// - Images (UIImageView, iOS 26+ SwiftUI Image)
-    /// - Input fields (UITextField, text editors)
-    /// - Web views and map views
-    /// - Custom sensitive classes
-    ///
-    /// Respects views explicitly marked as safe via `mpReplaySensitive = false`.
+    /// Detects text and labels (UILabel, UITextView, SwiftUI Text), images
+    /// (UIImageView, SwiftUI Image, SF Symbols), input fields, web and map views, and
+    /// classes registered via `addSensitiveClass`. Respects views marked safe with
+    /// `mpReplaySensitive = false`.
     ///
     /// - Parameters:
-    ///   - rootView: The root view to traverse
-    ///   - window: The window providing coordinate space for frame conversion
-    /// - Returns: Set of rectangles in window coordinates representing sensitive content to mask
-    func getSensitiveFrames(in rootView: UIView, window: UIView) -> [HashableRect: MaskDecision] {
-        return collectFramesAndWireframes(in: rootView, window: window).frames
-    }
-
-    /// Returns both the mask decisions used by the screenshot pass and, when
-    /// `wireframeCollectionEnabled` is true, a list of wireframe elements
-    /// captured in the same walk. When wireframes are disabled the elements
-    /// list is always empty.
-    func collectFramesAndWireframes(in rootView: UIView, window: UIView)
+    ///   - rootView: The root view to traverse.
+    ///   - window: The window providing the coordinate space for frame conversion.
+    /// - Returns: Mask decisions keyed by rect in window coordinates, and the
+    ///   wireframe elements collected in the same walk.
+    func walkHierarchy(in rootView: UIView, window: UIView)
         -> (frames: [HashableRect: MaskDecision], wireframes: [WireframeElement])
     {
         let walk = HierarchyWalk(

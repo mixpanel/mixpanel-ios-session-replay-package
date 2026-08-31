@@ -221,7 +221,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
             }
             .mpReplaySensitive(true)
         )
-        let result = manager.collectFramesAndWireframes(in: root, window: window)
+        let result = manager.walkHierarchy(in: root, window: window)
         XCTAssertFalse(
             result.frames.isEmpty,
             "a mask on a container is not cancelled by unmasking part of its contents")
@@ -246,7 +246,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
             VStack { Text("Inner unmasked").mpReplaySensitive(false) }
                 .mpReplaySensitive(true)
         )
-        let result = manager.collectFramesAndWireframes(in: root, window: window)
+        let result = manager.walkHierarchy(in: root, window: window)
         XCTAssertFalse(
             result.frames.isEmpty,
             "an unmask must not delete an enclosing explicit mask, even at identical bounds")
@@ -276,7 +276,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
                 .mpReplaySensitive(false)
         )
         XCTAssertFalse(
-            manager.collectFramesAndWireframes(in: root, window: window).frames.isEmpty,
+            manager.walkHierarchy(in: root, window: window).frames.isEmpty,
             "an unmask does not override an explicit mask")
         assertGolden("swiftui_nested_mask_in_unmask.json")
     }
@@ -456,7 +456,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
                 "This label is far too long to ship intact and must therefore exceed the "
                     + "fifty character wireframe cap")
         )
-        let element = manager.collectFramesAndWireframes(in: root, window: window)
+        let element = manager.walkHierarchy(in: root, window: window)
             .wireframes.first { $0.isDeclared }
         XCTAssertNotNil(element)
         assertGolden("swiftui_declared_truncated.json")
@@ -508,7 +508,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
     /// because the point is that the two OS families agree.
     func test_swiftui_imageIsDescribedOnEveryOS() {
         layoutSwiftUI(image())
-        let result = manager.collectFramesAndWireframes(in: root, window: window)
+        let result = manager.walkHierarchy(in: root, window: window)
         XCTAssertEqual(
             result.wireframes.map(\.role), [.image],
             "a SwiftUI Image must be described regardless of which walk finds it")
@@ -530,7 +530,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
     func test_swiftui_sfSymbolIsMaskedLikeAnyImage() {
         manager.maskAllImages = true
         layoutSwiftUI(Image(systemName: "star.fill").resizable().frame(width: 80, height: 80))
-        let result = manager.collectFramesAndWireframes(in: root, window: window)
+        let result = manager.walkHierarchy(in: root, window: window)
         XCTAssertFalse(result.frames.isEmpty, "an SF Symbol must be masked under maskAllImages")
         XCTAssertEqual(result.wireframes.map(\.role), [.image], "and described as an image")
         assertGolden("swiftui_sf_symbol_auto_masked.json")
@@ -549,7 +549,7 @@ final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
                 RoundedRectangle(cornerRadius: 12).fill(Color.blue).frame(width: 60, height: 60)
             }
         )
-        let result = manager.collectFramesAndWireframes(in: root, window: window)
+        let result = manager.walkHierarchy(in: root, window: window)
         XCTAssertTrue(
             result.frames.isEmpty,
             "plain colors and shapes are not images and must not be masked")

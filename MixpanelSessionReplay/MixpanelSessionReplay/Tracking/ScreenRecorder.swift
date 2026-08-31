@@ -193,8 +193,7 @@ class ScreenRecorder {
                 context.cgContext.fill(viewBounds)
             }
 
-            let (frames, elements) = SensitiveViewManager.shared.collectFramesAndWireframes(
-                in: view, window: window)
+            let (frames, elements) = SensitiveViewManager.shared.walkHierarchy(in: view, window: window)
             sensitiveFrames = frames
             wireframes = elements
 

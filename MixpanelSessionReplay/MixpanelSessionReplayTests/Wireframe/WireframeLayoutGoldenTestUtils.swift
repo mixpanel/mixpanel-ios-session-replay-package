@@ -97,7 +97,7 @@ func assertWireframeLayoutGolden(
     line: UInt = #line
 ) {
     manager.useAccessibilityLabelFallback = useAccessibilityLabelFallback
-    let (frames, elements) = manager.collectFramesAndWireframes(in: root, window: window)
+    let (frames, elements) = manager.walkHierarchy(in: root, window: window)
     let emitter = WireframeEmitter(
         options: MPWireframesOptions(
             sensitiveRules: rules,
@@ -169,7 +169,7 @@ func assertWireframeMaskGolden(
     file: StaticString = #filePath,
     line: UInt = #line
 ) {
-    let (frames, _) = manager.collectFramesAndWireframes(in: root, window: window)
+    let (frames, _) = manager.walkHierarchy(in: root, window: window)
     // Sorted so the golden does not depend on dictionary ordering.
     let rows =
         frames
