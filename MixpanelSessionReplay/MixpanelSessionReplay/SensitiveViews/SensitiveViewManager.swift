@@ -376,6 +376,39 @@ class SensitiveViewManager {
         }
     }
 
+    /// Masks text inputs within a safe view hierarchy.
+    ///
+    /// When a view is marked as safe, we still need to mask any text inputs within it for security.
+    /// This method performs a stack-based traversal to find and mask all text inputs (UITextField,
+    /// UITextView, SwiftUI TextEditor) at any nesting level within the safe view.
+    ///
+    /// - Parameters:
+    ///   - safeView: The view marked as safe
+    ///   - window: The window for coordinate conversion
+    ///   - maskDecisions: Dictionary to update with text input mask decisions
+    private func maskTextInputsInSafeView(
+        _ safeView: UIView,
+        window: UIView,
+        maskDecisions: inout [HashableRect: MaskDecision]
+    ) {
+        // Stack-based traversal to find text inputs at any depth
+        var safeViewStack: [UIView] = [safeView]
+        while !safeViewStack.isEmpty {
+            let currentView = safeViewStack.removeLast()
+
+            // Skip invisible views (hidden or transparent)
+            guard currentView.isVisible() else { continue }
+
+            // Mask text inputs found within the safe view
+            if isTextInput(view: currentView), let rect = hashableFrame(for: currentView.layer, in: window) {
+                addOrUpdate(&maskDecisions, rect: rect, decision: .textInput)
+            }
+
+            // Continue traversing children
+            safeViewStack.append(contentsOf: currentView.subviews)
+        }
+    }
+
     /// Unified traversal that handles both UIView hierarchy and CALayer hierarchy in a single pass
     ///
     /// This method efficiently combines:
@@ -400,21 +433,13 @@ class SensitiveViewManager {
         switch isSensitiveView(view: view) {
             case .safe:
                 // View is explicitly marked as safe - but we still need to mask text inputs within it
-                // Check if text input (textfield or textview) is present inside a view that is marked as safe,
-                // if found, mask the text input
-                var safeViewStack: [UIView] = [view]
-                while !safeViewStack.isEmpty {
-                    let currentView = safeViewStack.removeLast()
+                maskTextInputsInSafeView(
+                    view,
+                    window: window,
+                    maskDecisions: &maskDecisions
+                )
 
-                    // Skip invisible views (hidden or transparent) to avoid masking visible content
-                    guard currentView.isVisible() else { continue }
-
-                    if isTextInput(view: currentView), let rect = hashableFrame(for: currentView.layer, in: window) {
-                        addOrUpdate(&maskDecisions, rect: rect, decision: .textInput)
-                    }
-                    safeViewStack.append(contentsOf: currentView.subviews)
-                }
-                // Capture the safe view frame
+                // Capture the safe view frame for filtering
                 if let hashableRect = hashableFrame(for: view.layer, in: window) {
                     safeFrames.insert(hashableRect)
                 }
