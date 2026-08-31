@@ -86,7 +86,7 @@ func assertWireframeGolden(
     file: StaticString = #filePath,
     line: UInt = #line
 ) {
-    manager.useAccessibilityLabelFallback = useAccessibilityLabelFallback
+    manager.wireframeClassifier.useAccessibilityLabelFallback = useAccessibilityLabelFallback
     let (frames, elements) = manager.walkHierarchy(in: root, window: window)
     let emitter = WireframeEmitter(
         options: MPWireframesOptions(

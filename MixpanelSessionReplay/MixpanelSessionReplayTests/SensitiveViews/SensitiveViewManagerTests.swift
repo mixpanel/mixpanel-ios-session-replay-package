@@ -519,7 +519,7 @@ class SensitiveViewManagerTests: BaseTests {
     }
 
     func test_decodedCharCodes_matchExpectedMangledName() {
-        let decoded = manager.swiftUIDrawingLayerCodes.decodedString() ?? nil
+        let decoded = SwiftUIRenderClasses.drawingLayerCodes.decodedString() ?? nil
         XCTAssertEqual(
             decoded,
             "_TtC7SwiftUIP33_863CCF9D49B535DAEB1C7D61BEE53B5914CGDrawingLayer",
@@ -538,7 +538,8 @@ class SensitiveViewManagerTests: BaseTests {
             "CGDrawingLayer only exists on iOS 26+"
         )
 
-        let resolvedClass: AnyClass? = ObfuscatedClassLookup.resolveClass(from: manager.swiftUIDrawingLayerCodes)
+        let resolvedClass: AnyClass? = ObfuscatedClassLookup.resolveClass(
+            from: SwiftUIRenderClasses.drawingLayerCodes)
 
         XCTAssertNotNil(
             resolvedClass,

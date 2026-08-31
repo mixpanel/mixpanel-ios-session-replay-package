@@ -90,17 +90,17 @@ final class ReactNativeWireframeTests: XCTestCase {
 
     func test_fabricParagraph_classifiesAsText() {
         XCTAssertEqual(ReactNativeWireframeSupport.role(for: FakeParagraphComponentView()), .text)
-        XCTAssertEqual(manager.classifyForWireframe(view: FakeParagraphComponentView()), .text)
+        XCTAssertEqual(manager.wireframeClassifier.role(for: FakeParagraphComponentView()), .text)
     }
 
     func test_legacyTextView_classifiesAsText() {
-        XCTAssertEqual(manager.classifyForWireframe(view: FakeLegacyTextView()), .text)
+        XCTAssertEqual(manager.wireframeClassifier.role(for: FakeLegacyTextView()), .text)
     }
 
     /// Paper's `<Image>` is an `RCTView`, so the `UIImageView` check misses it. Fabric's
     /// is backed by a real `UIImageView` subclass and is already handled without help.
     func test_legacyImageView_classifiesAsImage() {
-        XCTAssertEqual(manager.classifyForWireframe(view: FakeLegacyImageView()), .image)
+        XCTAssertEqual(manager.wireframeClassifier.role(for: FakeLegacyImageView()), .image)
     }
 
     /// The support table must not widen classification for anything else. A plain
@@ -108,7 +108,7 @@ final class ReactNativeWireframeTests: XCTestCase {
     /// out of the wireframe.
     func test_plainView_isStillUnclassified() {
         XCTAssertNil(ReactNativeWireframeSupport.role(for: UIView()))
-        XCTAssertNil(manager.classifyForWireframe(view: UIView()))
+        XCTAssertNil(manager.wireframeClassifier.role(for: UIView()))
     }
 
     // MARK: - Text extraction
@@ -117,18 +117,18 @@ final class ReactNativeWireframeTests: XCTestCase {
         let view = FakeParagraphComponentView()
         view.attributedText = NSAttributedString(string: "Order total")
 
-        XCTAssertEqual(manager.extractWireframeText(view: view, role: .text), "Order total")
+        XCTAssertEqual(manager.wireframeClassifier.text(for: view, role: .text), "Order total")
     }
 
     /// Fabric's `attributedText` is nil until the component has state, and empty for an
     /// empty `<Text>`. Both must produce a textless shell, not `""`, so the element
     /// reads the same as any other role + bounds shell.
     func test_fabricParagraph_withoutText_yieldsNoText() {
-        XCTAssertNil(manager.extractWireframeText(view: FakeParagraphComponentView(), role: .text))
+        XCTAssertNil(manager.wireframeClassifier.text(for: FakeParagraphComponentView(), role: .text))
 
         let empty = FakeParagraphComponentView()
         empty.attributedText = NSAttributedString(string: "")
-        XCTAssertNil(manager.extractWireframeText(view: empty, role: .text))
+        XCTAssertNil(manager.wireframeClassifier.text(for: empty, role: .text))
     }
 
     /// Fabric's text is tier 2, not the accessibility-label tier: `attributedText` is the
@@ -136,12 +136,12 @@ final class ReactNativeWireframeTests: XCTestCase {
     /// `useAccessibilityLabelFallback` — off by default — would ship every New Architecture
     /// screen with no text at all.
     func test_fabricText_isNotGatedByTheLabelFallback() {
-        XCTAssertFalse(manager.useAccessibilityLabelFallback, "precondition: the default")
+        XCTAssertFalse(manager.wireframeClassifier.useAccessibilityLabelFallback, "precondition: the default")
 
         let fabric = FakeParagraphComponentView()
         fabric.attributedText = NSAttributedString(string: "Continue")
 
-        XCTAssertEqual(manager.extractWireframeText(view: fabric, role: .text), "Continue")
+        XCTAssertEqual(manager.wireframeClassifier.text(for: fabric, role: .text), "Continue")
     }
 
     /// Paper's text *is* the label tier, and waits on the customer's setting.
@@ -152,17 +152,17 @@ final class ReactNativeWireframeTests: XCTestCase {
     /// outside RN. That is exactly the uncertainty `useAccessibilityLabelFallback` governs,
     /// so the decision is the customer's rather than ours.
     func test_paperText_isGatedByTheLabelFallback() {
-        XCTAssertFalse(manager.useAccessibilityLabelFallback, "precondition: the default")
+        XCTAssertFalse(manager.wireframeClassifier.useAccessibilityLabelFallback, "precondition: the default")
 
         let paper = FakeLegacyTextView()
         paper.accessibilityLabel = "Continue"
 
         XCTAssertNil(
-            manager.extractWireframeText(view: paper, role: .text),
+            manager.wireframeClassifier.text(for: paper, role: .text),
             "legacy-architecture text is the label tier, and the fallback is off")
 
-        manager.useAccessibilityLabelFallback = true
-        XCTAssertEqual(manager.extractWireframeText(view: paper, role: .text), "Continue")
+        manager.wireframeClassifier.useAccessibilityLabelFallback = true
+        XCTAssertEqual(manager.wireframeClassifier.text(for: paper, role: .text), "Continue")
     }
 
     /// The two architectures differ only in the tier, never in whether the element ships.
@@ -189,18 +189,18 @@ final class ReactNativeWireframeTests: XCTestCase {
         let fabric = FakeParagraphComponentView()
         fabric.accessibilityLabel = "Continue"
 
-        XCTAssertNil(manager.extractWireframeText(view: fabric, role: .text))
+        XCTAssertNil(manager.wireframeClassifier.text(for: fabric, role: .text))
 
-        manager.useAccessibilityLabelFallback = true
-        XCTAssertEqual(manager.extractWireframeText(view: fabric, role: .text), "Continue")
+        manager.wireframeClassifier.useAccessibilityLabelFallback = true
+        XCTAssertEqual(manager.wireframeClassifier.text(for: fabric, role: .text), "Continue")
     }
 
     /// An unlabelled Paper view has no text source at all, at either setting.
     func test_legacyTextView_withoutLabel_yieldsNoText() {
-        XCTAssertNil(manager.extractWireframeText(view: FakeLegacyTextView(), role: .text))
+        XCTAssertNil(manager.wireframeClassifier.text(for: FakeLegacyTextView(), role: .text))
 
-        manager.useAccessibilityLabelFallback = true
-        XCTAssertNil(manager.extractWireframeText(view: FakeLegacyTextView(), role: .text))
+        manager.wireframeClassifier.useAccessibilityLabelFallback = true
+        XCTAssertNil(manager.wireframeClassifier.text(for: FakeLegacyTextView(), role: .text))
     }
 
     /// An RN image is described by role and bounds. Its label follows the same rule every
@@ -210,11 +210,11 @@ final class ReactNativeWireframeTests: XCTestCase {
         image.accessibilityLabel = "profile photo"
 
         XCTAssertNil(
-            manager.extractWireframeText(view: image, role: .image),
+            manager.wireframeClassifier.text(for: image, role: .image),
             "an image's label is the fallback tier, and the fallback is off")
 
-        manager.useAccessibilityLabelFallback = true
-        XCTAssertEqual(manager.extractWireframeText(view: image, role: .image), "profile photo")
+        manager.wireframeClassifier.useAccessibilityLabelFallback = true
+        XCTAssertEqual(manager.wireframeClassifier.text(for: image, role: .image), "profile photo")
     }
 
     // MARK: - The walk

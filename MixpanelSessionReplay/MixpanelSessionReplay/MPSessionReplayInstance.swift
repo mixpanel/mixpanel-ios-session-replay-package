@@ -66,7 +66,7 @@ open class MPSessionReplayInstance: MPSessionReplaying {
             ScreenRecorder.shared.wireframeEmitter = WireframeEmitter(
                 options: wireframesOptions,
                 debugEmitter: config.debugOptions?.wireframeEmitter)
-            SensitiveViewManager.shared.useAccessibilityLabelFallback =
+            SensitiveViewManager.shared.wireframeClassifier.useAccessibilityLabelFallback =
                 wireframesOptions.useAccessibilityLabelFallback
             SensitiveViewManager.shared.wireframeCollectionEnabled = true
         }

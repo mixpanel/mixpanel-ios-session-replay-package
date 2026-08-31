@@ -86,6 +86,9 @@
 		AB00000000000000000000F8 /* WireframePayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F7 /* WireframePayload.swift */; };
 		AB00000000000000000000FA /* WireframeEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F9 /* WireframeEmitter.swift */; };
 		AB0000000000000000000701 /* ReactNativeWireframeSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000700 /* ReactNativeWireframeSupport.swift */; };
+		AB0000000000000000000805 /* WireframeClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000804 /* WireframeClassifier.swift */; };
+		AB0000000000000000000803 /* SensitiveViewManager+HierarchyWalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000802 /* SensitiveViewManager+HierarchyWalk.swift */; };
+		AB0000000000000000000801 /* SwiftUIRenderClasses.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000800 /* SwiftUIRenderClasses.swift */; };
 		AB0000000000000000000711 /* ReactNativeWireframeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000710 /* ReactNativeWireframeTests.swift */; };
 		AB0000000000000000000721 /* MPWireframesOptionsCodableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000720 /* MPWireframesOptionsCodableTests.swift */; };
 		AB0000000000000000000101 /* WireframeEmitterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000100 /* WireframeEmitterTests.swift */; };
@@ -190,6 +193,9 @@
 		AB00000000000000000000F7 /* WireframePayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframePayload.swift; sourceTree = "<group>"; };
 		AB00000000000000000000F9 /* WireframeEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeEmitter.swift; sourceTree = "<group>"; };
 		AB0000000000000000000700 /* ReactNativeWireframeSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactNativeWireframeSupport.swift; sourceTree = "<group>"; };
+		AB0000000000000000000804 /* WireframeClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeClassifier.swift; sourceTree = "<group>"; };
+		AB0000000000000000000802 /* SensitiveViewManager+HierarchyWalk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SensitiveViewManager+HierarchyWalk.swift"; sourceTree = "<group>"; };
+		AB0000000000000000000800 /* SwiftUIRenderClasses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIRenderClasses.swift; sourceTree = "<group>"; };
 		AB0000000000000000000710 /* ReactNativeWireframeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactNativeWireframeTests.swift; sourceTree = "<group>"; };
 		AB0000000000000000000720 /* MPWireframesOptionsCodableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPWireframesOptionsCodableTests.swift; sourceTree = "<group>"; };
 		AB0000000000000000000100 /* WireframeEmitterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeEmitterTests.swift; sourceTree = "<group>"; };
@@ -361,6 +367,7 @@
 				AB00000000000000000000F7 /* WireframePayload.swift */,
 				AB00000000000000000000F9 /* WireframeEmitter.swift */,
 				AB0000000000000000000700 /* ReactNativeWireframeSupport.swift */,
+				AB0000000000000000000804 /* WireframeClassifier.swift */,
 			);
 			path = Wireframe;
 			sourceTree = "<group>";
@@ -499,6 +506,8 @@
 			isa = PBXGroup;
 			children = (
 				86E80E4F2C25008200515FD6 /* SensitiveViewManager.swift */,
+				AB0000000000000000000802 /* SensitiveViewManager+HierarchyWalk.swift */,
+				AB0000000000000000000800 /* SwiftUIRenderClasses.swift */,
 			);
 			path = SensitiveViews;
 			sourceTree = "<group>";
@@ -667,6 +676,9 @@
 				AB00000000000000000000F8 /* WireframePayload.swift in Sources */,
 				AB00000000000000000000FA /* WireframeEmitter.swift in Sources */,
 				AB0000000000000000000701 /* ReactNativeWireframeSupport.swift in Sources */,
+				AB0000000000000000000805 /* WireframeClassifier.swift in Sources */,
+				AB0000000000000000000803 /* SensitiveViewManager+HierarchyWalk.swift in Sources */,
+				AB0000000000000000000801 /* SwiftUIRenderClasses.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -124,7 +124,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     // MARK: - useAccessibilityLabelFallback
 
     func test_accessibilityFallbackOff_imageShipsAsTextlessShell() {
-        manager.useAccessibilityLabelFallback = false
+        manager.wireframeClassifier.useAccessibilityLabelFallback = false
         let root = UIView(frame: window.bounds)
         let iv = UIImageView(frame: CGRect(x: 0, y: 0, width: 64, height: 64))
         iv.accessibilityLabel = "avatar"
@@ -141,7 +141,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     func test_accessibilityFallbackOff_buttonKeepsItsOwnTitle() {
         // Tier 2 (the view's own rendered text) is unaffected by the flag — only
         // tier 3 is gated.
-        manager.useAccessibilityLabelFallback = false
+        manager.wireframeClassifier.useAccessibilityLabelFallback = false
         let root = UIView(frame: window.bounds)
         let button = UIButton(frame: CGRect(x: 0, y: 0, width: 120, height: 44))
         button.setTitle("Continue", for: .normal)
@@ -156,7 +156,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     }
 
     func test_accessibilityFallbackOff_declaredTextStillWins() {
-        manager.useAccessibilityLabelFallback = false
+        manager.wireframeClassifier.useAccessibilityLabelFallback = false
         let root = UIView(frame: window.bounds)
         let button = UIButton(frame: CGRect(x: 0, y: 0, width: 48, height: 48))
         button.accessibilityLabel = "settings"
@@ -244,7 +244,7 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
     func test_uiimageview_notMasked_emitsAccessibilityLabelAsText() {
         // Opted in explicitly — the shipped default is off, and this case is about
         // tier 3 of the text chain.
-        manager.useAccessibilityLabelFallback = true
+        manager.wireframeClassifier.useAccessibilityLabelFallback = true
         let root = UIView(frame: window.bounds)
         let iv = UIImageView(frame: CGRect(x: 0, y: 0, width: 64, height: 64))
         iv.accessibilityLabel = "avatar"
