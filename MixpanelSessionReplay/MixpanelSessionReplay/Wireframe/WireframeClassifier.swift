@@ -37,7 +37,10 @@ struct WireframeClassifier {
         // titleLabel; we want the button, not its inner label).
         if view is UIButton { return .button }
         if view is UITextField { return .input }
-        if let textView = view as? UITextView { return textView.isEditable ? .input : .text }
+        // Every `UITextView` is an input, editable or not — see
+        // ``SensitiveViewManager/isTextInput(view:)`` for why, and for the Android and
+        // Flutter behaviour this matches.
+        if view is UITextView { return .input }
         if view is UILabel { return .text }
         if view is UIImageView { return .image }
         if view is WKWebView { return .text }
@@ -138,9 +141,6 @@ struct WireframeClassifier {
             case .text:
                 if let label = view as? UILabel {
                     if let text = label.text, !text.isEmpty { return text }
-                }
-                if let textView = view as? UITextView {
-                    if !textView.text.isEmpty { return textView.text }
                 }
                 // SwiftUI text (iOS <=18 `SwiftUI.CGDrawingView`): emit the
                 // role + bounds shell with no text. SwiftUI doesn't expose its

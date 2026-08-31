@@ -192,6 +192,18 @@ final class WireframeGoldenTests: XCTestCase {
             manager: manager, root: root, window: window, golden: "wireframe_input_always_masked.json")
     }
 
+    /// Fixed-frame counterpart to `test_layout_textViewNonEditableAlwaysTextEntry`, so
+    /// the two suites stay comparable case for case.
+    func test_golden_textViewNonEditableAlwaysMasked() {
+        let notes = UITextView(frame: CGRect(x: 20, y: 60, width: 240, height: 80))
+        notes.text = "Saved note the user typed earlier"
+        notes.isEditable = false
+        root.addSubview(notes)
+        assertWireframeGolden(
+            manager: manager, root: root, window: window,
+            golden: "wireframe_textview_noneditable_masked.json")
+    }
+
     /// A text field nested inside an ordinary (non-safe) container is still
     /// reached by the walker and masked to `textEntry` — nesting must not lose
     /// the always-mask guarantee for inputs.

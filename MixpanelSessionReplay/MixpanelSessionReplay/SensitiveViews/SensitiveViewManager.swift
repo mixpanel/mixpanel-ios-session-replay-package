@@ -110,7 +110,7 @@ class SensitiveViewManager {
     var sensitiveClasses: [AnyClass] = []
 
     private(set) var knownSensitiveViews: WeakViewsMap!
-    var sensitiveTextFieldViews: WeakViewsMap!
+    var sensitiveTextInputViews: WeakViewsMap!
     var sensitiveClassViews: WeakViewsMap!
 
     /// The private SwiftUI/UIKit render classes the type predicates below match
@@ -123,7 +123,7 @@ class SensitiveViewManager {
     var wireframeClassifier: WireframeClassifier
 
     enum SensitiveViewState {
-        case sensitiveTextField
+        case sensitiveTextInput
         case sensitive
         case safe
         case unknown
@@ -132,7 +132,7 @@ class SensitiveViewManager {
     private init() {
         knownSensitiveViews = WeakViewsMap.weakToWeakObjects()
         sensitiveClassViews = WeakViewsMap.weakToWeakObjects()
-        sensitiveTextFieldViews = WeakViewsMap.weakToWeakObjects()
+        sensitiveTextInputViews = WeakViewsMap.weakToWeakObjects()
         wireframeClassifier = WireframeClassifier(renderClasses: renderClasses)
     }
 
@@ -143,7 +143,7 @@ class SensitiveViewManager {
     func clearCache() {
         knownSensitiveViews.removeAllObjects()
         sensitiveClassViews.removeAllObjects()
-        sensitiveTextFieldViews.removeAllObjects()
+        sensitiveTextInputViews.removeAllObjects()
     }
 
     func isSensitiveView(view: UIView) -> SensitiveViewState {
@@ -151,19 +151,19 @@ class SensitiveViewManager {
             return .sensitive
         }
 
-        // Check text field cache first to maintain .sensitiveTextField return type
-        if sensitiveTextFieldViews.contains(view) {
-            return .sensitiveTextField
+        // Check the text-input cache first so the .sensitiveTextInput state survives
+        if sensitiveTextInputViews.contains(view) {
+            return .sensitiveTextInput
         }
 
         if knownSensitiveViews.contains(view) || sensitiveClassViews.contains(view) {
             return .sensitive
         }
 
-        // Text fields are always sensitive, so check before !isSensitive
-        if isTextField(view: view) {
-            sensitiveTextFieldViews.insert(view)
-            return .sensitiveTextField
+        // Text inputs are always sensitive, so check before the safe/auto branches
+        if isTextInput(view: view) {
+            sensitiveTextInputViews.insert(view)
+            return .sensitiveTextInput
         }
 
         // If mpReplaySensitive is false, view is manually marked as safe
@@ -201,7 +201,7 @@ class SensitiveViewManager {
 
     // Legacy text/label detection
     func isLabel(view: UIView) -> Bool {
-        if view.isKind(of: UILabel.self) || view.isKind(of: UITextView.self) {
+        if view.isKind(of: UILabel.self) {
             return true
         }
 
@@ -232,13 +232,34 @@ class SensitiveViewManager {
         return false
     }
 
-    func isTextField(view: UIView) -> Bool {
-        if view.isKind(of: UITextField.self) {
+    /// Whether `view` is a text input, and therefore always masked.
+    ///
+    /// Classified by *type*, never by `isEditable`. `UITextView` is iOS's multi-line
+    /// text input, and a read-only one very often holds text the user themselves typed
+    /// — a saved note, a message body, a bio rendered back for review. Reading its
+    /// `isEditable` flag would make masking depend on a presentation detail the
+    /// developer can flip at runtime, so the safe default is to treat every
+    /// `UITextView` as an input.
+    ///
+    /// This matches the other platforms, which also key on type alone: Android tests
+    /// `EditText::class.java.isAssignableFrom(view)` with no editability check (a
+    /// disabled or `TYPE_NULL` field is still `TEXT_ENTRY`), and Flutter tests
+    /// `renderObject is RenderEditable`, which catches a read-only `SelectableText`.
+    ///
+    /// Being a text input rather than auto-masked text, the result survives both
+    /// escape hatches — `maskAllText = false` and an `mpReplaySensitive = false`
+    /// ancestor — because neither was meant to expose what a user typed. Android
+    /// enforces the same thing by seeding `EditText` into its sensitive classes
+    /// permanently.
+    func isTextInput(view: UIView) -> Bool {
+        if view.isKind(of: UITextField.self) || view.isKind(of: UITextView.self) {
             return true
         }
 
-        // Check for SwiftUI text editor text view
-        if let textEditorTextView = renderClasses.textEditorTextView, view.isKind(of: textEditorTextView) {
+        // SwiftUI `TextEditor` renders into a private text view.
+        if let textEditorTextView = renderClasses.textEditorTextView,
+            view.isKind(of: textEditorTextView)
+        {
             return true
         }
 

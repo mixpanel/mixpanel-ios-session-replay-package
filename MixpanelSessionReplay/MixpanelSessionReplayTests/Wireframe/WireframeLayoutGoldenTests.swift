@@ -94,6 +94,20 @@ final class WireframeLayoutGoldenTests: XCTestCase {
         return view
     }
 
+    /// A `UITextView` sized by its own content: `isScrollEnabled = false` gives it a
+    /// real intrinsic height, so the golden's coordinates come out of text measurement
+    /// rather than a hardcoded frame — the same property the rest of this suite relies
+    /// on.
+    private func textView(_ text: String?, editable: Bool) -> UITextView {
+        let view = UITextView()
+        view.text = text
+        view.font = .systemFont(ofSize: 17)
+        view.isEditable = editable
+        view.isScrollEnabled = false
+        NSLayoutConstraint.activate([view.widthAnchor.constraint(equalToConstant: 260)])
+        return view
+    }
+
     /// Installs `views` in a top-left-pinned vertical stack, lays the tree out for
     /// real, and returns the walk root.
     @discardableResult
@@ -188,6 +202,55 @@ final class WireframeLayoutGoldenTests: XCTestCase {
         ])
         layout([container])
         assertGolden("layout_input_in_unmask_still_masked.json")
+    }
+
+    // MARK: - UITextView is an input, editable or not
+
+    /// A `UITextView` is iOS's multi-line text input and is classified by type, not by
+    /// `isEditable` — so it ships as a textless `input` shell at `TEXT_ENTRY`.
+    ///
+    /// The mask golden is the load-bearing half here: this suite runs with
+    /// `maskAllText = false`, so a view that were merely auto-masked text would record
+    /// no mask rect at all. Seeing `textInput` in the mask golden is what proves the
+    /// flag cannot expose it. Matches Android (`EditText` survives `autoMaskedViews`
+    /// being emptied) and Flutter (`RenderEditable` is checked before the unmask).
+    func test_layout_textViewNonEditableAlwaysTextEntry() {
+        layout([textView("Saved note the user typed earlier", editable: false)])
+        assertGolden("layout_textview_noneditable_masked.json")
+    }
+
+    func test_layout_textViewEditableAlwaysTextEntry() {
+        layout([textView("password123", editable: true)])
+        assertGolden("layout_textview_editable_masked.json")
+    }
+
+    /// An unmask cannot override the security decision on a read-only text view, the
+    /// case most likely to hold text the user themselves authored.
+    func test_layout_textViewNonEditableInsideUnmaskStillTextEntry() {
+        let notes = textView("Delivery instructions", editable: false)
+        let container = UIView()
+        container.mpReplaySensitive = false
+        container.addSubview(notes)
+        notes.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            notes.topAnchor.constraint(equalTo: container.topAnchor),
+            notes.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            notes.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            notes.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+        ])
+        layout([container])
+        assertGolden("layout_textview_noneditable_in_unmask_still_masked.json")
+    }
+
+    /// The escape hatch for a read-only text view whose content the developer knows is
+    /// safe to describe. Reclassifying `UITextView` as an input means its rendered text
+    /// is never scraped, so `mpWireframeText` is how a summary hears about it — authored
+    /// copy, still masked in the pixels.
+    func test_layout_textViewDeclaredTextIsDescribed() {
+        let notes = textView("Order #1234 shipped on Tuesday", editable: false)
+        notes.mpWireframeText = "Order status"
+        layout([notes])
+        assertGolden("layout_textview_declared_text.json")
     }
 
     // MARK: - Buttons

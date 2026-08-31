@@ -25,7 +25,7 @@ extension SensitiveViewManager {
     /// describing the same screen. The elements list is always empty when wireframes
     /// are off.
     ///
-    /// Detects text and labels (UILabel, UITextView, SwiftUI Text), images
+    /// Detects text and labels (UILabel, SwiftUI Text), images
     /// (UIImageView, SwiftUI Image, SF Symbols), input fields, web and map views, and
     /// classes registered via `addSensitiveClass`. Respects views marked safe with
     /// `mpReplaySensitive = false`.
@@ -234,7 +234,7 @@ extension SensitiveViewManager {
                 walk.recordSafe(hashableFrame(for: view.layer, in: walk.window), in: context)
                 context.insideSafeSubtree = true
 
-            case .sensitiveTextField:
+            case .sensitiveTextInput:
                 // Declared text labels the field ("Card number"); the value the user
                 // typed is never emitted.
                 let rect = hashableFrame(for: view.layer, in: walk.window)

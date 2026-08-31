@@ -29,7 +29,111 @@ class SensitiveViewManagerTests: BaseTests {
     func testSensitiveViewDetection_TextField() {
         let textField = UITextField()
         let result = manager.isSensitiveView(view: textField)
-        XCTAssertEqual(result, .sensitiveTextField, "UITextField should be detected as sensitiveTextField")
+        XCTAssertEqual(result, .sensitiveTextInput, "UITextField should be detected as sensitiveTextField")
+    }
+
+    // MARK: - UITextView is a text input, editable or not
+
+    /// `UITextView` is iOS's multi-line text input, and it is classified by *type*
+    /// rather than by `isEditable` — matching Android (`EditText::class.isAssignableFrom`,
+    /// with no editability check) and Flutter (`renderObject is RenderEditable`, which
+    /// catches a read-only `SelectableText`).
+    ///
+    /// A read-only `UITextView` very often holds text the user themselves typed — a
+    /// saved note, a message body, a bio rendered back for review — so the safe default
+    /// is to treat it as an input. Being a text input, it survives both escape hatches:
+    /// `maskAllText = false` and an `mpReplaySensitive = false` ancestor.
+    func testTextView_editable_isTextInput() {
+        let textView = UITextView()
+        textView.isEditable = true
+        XCTAssertEqual(manager.isSensitiveView(view: textView), .sensitiveTextInput)
+    }
+
+    func testTextView_nonEditable_isStillTextInput() {
+        let textView = UITextView()
+        textView.isEditable = false
+        XCTAssertEqual(
+            manager.isSensitiveView(view: textView), .sensitiveTextInput,
+            "A read-only UITextView still commonly holds user-authored text")
+    }
+
+    func testTextView_isNotClassifiedAsALabel() {
+        XCTAssertFalse(
+            manager.isLabel(view: UITextView()),
+            "UITextView is an input, not a label — otherwise maskAllText would gate it")
+    }
+
+    func testTextView_maskedEvenWhenMaskAllTextIsOff() {
+        let root = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let textView = UITextView(frame: CGRect(x: 10, y: 10, width: 200, height: 60))
+        textView.isEditable = false
+        textView.text = "user typed this"
+        root.addSubview(textView)
+
+        manager.maskAllText = false
+        let frames = manager.walkHierarchy(in: root, window: window).frames
+
+        XCTAssertEqual(
+            frames[HashableRect(textView.frame)], .textInput,
+            "maskAllText = false must not expose a text input")
+    }
+
+    func testTextView_maskedInsideUnmaskedAncestor() {
+        let root = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        safeContainer.mpReplaySensitive = false
+        let textView = UITextView(frame: CGRect(x: 10, y: 10, width: 200, height: 60))
+        textView.isEditable = false
+        textView.text = "user typed this"
+        safeContainer.addSubview(textView)
+        root.addSubview(safeContainer)
+
+        let frames = manager.walkHierarchy(in: root, window: window).frames
+
+        XCTAssertEqual(
+            frames[HashableRect(textView.convert(textView.bounds, to: window))], .textInput,
+            "An unmasked ancestor must not expose a text input")
+    }
+
+    func testTextView_maskedWhenNestedDeeplyInsideUnmaskedAncestor() {
+        let root = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        safeContainer.mpReplaySensitive = false
+        let mid = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let inner = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let textView = UITextView(frame: CGRect(x: 10, y: 10, width: 200, height: 60))
+        textView.isEditable = false
+        inner.addSubview(textView)
+        mid.addSubview(inner)
+        safeContainer.addSubview(mid)
+        root.addSubview(safeContainer)
+
+        let frames = manager.walkHierarchy(in: root, window: window).frames
+
+        XCTAssertEqual(
+            frames[HashableRect(textView.convert(textView.bounds, to: window))], .textInput,
+            "Depth must not matter — the walk records the input wherever it sits")
+    }
+
+    func testTextView_wireframeRoleIsInputAndTextIsNeverScraped() {
+        let editable = UITextView()
+        editable.isEditable = true
+        editable.text = "typed secret"
+        let readOnly = UITextView()
+        readOnly.isEditable = false
+        readOnly.text = "saved note"
+
+        XCTAssertEqual(manager.wireframeClassifier.role(for: editable), .input)
+        XCTAssertEqual(manager.wireframeClassifier.role(for: readOnly), .input)
+        XCTAssertNil(
+            manager.wireframeClassifier.text(for: editable, role: .input),
+            "An input's text is never scraped")
+        XCTAssertNil(
+            manager.wireframeClassifier.text(for: readOnly, role: .input),
+            "An input's text is never scraped, editable or not")
     }
 
     func testSensitiveViewDetection_Label() {
@@ -164,11 +268,11 @@ class SensitiveViewManagerTests: BaseTests {
 
         manager.knownSensitiveViews.insert(label)
         manager.sensitiveClassViews.insert(customView)
-        manager.sensitiveTextFieldViews.insert(textField)
+        manager.sensitiveTextInputViews.insert(textField)
 
         XCTAssertTrue(manager.knownSensitiveViews.contains(label))
         XCTAssertTrue(manager.sensitiveClassViews.contains(customView))
-        XCTAssertTrue(manager.sensitiveTextFieldViews.contains(textField))
+        XCTAssertTrue(manager.sensitiveTextInputViews.contains(textField))
 
         // Clear cache
         manager.clearCache()
@@ -176,15 +280,15 @@ class SensitiveViewManagerTests: BaseTests {
         // Verify all caches are cleared
         XCTAssertFalse(manager.knownSensitiveViews.contains(label))
         XCTAssertFalse(manager.sensitiveClassViews.contains(customView))
-        XCTAssertFalse(manager.sensitiveTextFieldViews.contains(textField))
+        XCTAssertFalse(manager.sensitiveTextInputViews.contains(textField))
     }
 
     func testSensitiveViewDetection_TextField_ReturnsSensitiveTextField() {
         let textField = UITextField()
         let result = manager.isSensitiveView(view: textField)
         XCTAssertEqual(
-            result, .sensitiveTextField,
-            "UITextField should return .sensitiveTextField enum case")
+            result, .sensitiveTextInput,
+            "UITextField should return .sensitiveTextInput enum case")
     }
 
     func testSensitiveViewDetection_TextField_ConsistentOnMultipleChecks() {
@@ -193,20 +297,20 @@ class SensitiveViewManagerTests: BaseTests {
         // First check - not in cache
         let firstResult = manager.isSensitiveView(view: textField)
         XCTAssertEqual(
-            firstResult, .sensitiveTextField,
-            "UITextField should return .sensitiveTextField on first check")
+            firstResult, .sensitiveTextInput,
+            "UITextField should return .sensitiveTextInput on first check")
 
         // Second check - now in cache
         let secondResult = manager.isSensitiveView(view: textField)
         XCTAssertEqual(
-            secondResult, .sensitiveTextField,
-            "UITextField should still return .sensitiveTextField on subsequent checks (cached)")
+            secondResult, .sensitiveTextInput,
+            "UITextField should still return .sensitiveTextInput on subsequent checks (cached)")
 
         // Third check - verify consistency
         let thirdResult = manager.isSensitiveView(view: textField)
         XCTAssertEqual(
-            thirdResult, .sensitiveTextField,
-            "UITextField should consistently return .sensitiveTextField")
+            thirdResult, .sensitiveTextInput,
+            "UITextField should consistently return .sensitiveTextInput")
     }
 
     func testGetSensitiveFrames_TextFieldsSeparatelyTracked() {
