@@ -78,9 +78,3 @@ struct WireframeElement: Hashable {
         )
     }
 }
-
-/// Mutable buffer carried through the view walker so subviews can append.
-/// Present only when the caller opted into wireframe collection.
-final class WireframeCollector {
-    var elements: [WireframeElement] = []
-}
