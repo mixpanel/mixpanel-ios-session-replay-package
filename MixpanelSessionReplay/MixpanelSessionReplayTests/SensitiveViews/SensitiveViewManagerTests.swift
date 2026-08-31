@@ -29,7 +29,14 @@ class SensitiveViewManagerTests: BaseTests {
     func testSensitiveViewDetection_TextField() {
         let textField = UITextField()
         let result = manager.isSensitiveView(view: textField)
-        XCTAssertEqual(result, .sensitiveTextField, "UITextField should be detected as sensitiveTextField")
+        XCTAssertEqual(result, .sensitiveTextInput, "UITextField should be detected as sensitiveTextInput")
+    }
+
+    func testSensitiveViewDetection_EditableTextView() {
+        let textView = UITextView()
+        textView.isEditable = true
+        let result = manager.isSensitiveView(view: textView)
+        XCTAssertEqual(result, .sensitiveTextInput, "Editable UITextView should be detected as sensitiveTextInput")
     }
 
     func testSensitiveViewDetection_Label() {
@@ -37,6 +44,15 @@ class SensitiveViewManagerTests: BaseTests {
         let result = manager.isSensitiveView(view: label)
         XCTAssertEqual(
             result, .sensitive, "UILabel should be detected as sensitive when maskAllText is enabled")
+    }
+
+    func testSensitiveViewDetection_NonEditableTextView() {
+        let textView = UITextView()
+        textView.isEditable = false
+        let result = manager.isSensitiveView(view: textView)
+        XCTAssertEqual(
+            result, .sensitiveTextInput,
+            "Non-editable UITextView should still be masked as text input for security (conservative approach)")
     }
 
     func testSensitiveViewDetection_ImageView() {
@@ -164,11 +180,11 @@ class SensitiveViewManagerTests: BaseTests {
 
         manager.knownSensitiveViews.insert(label)
         manager.sensitiveClassViews.insert(customView)
-        manager.sensitiveTextFieldViews.insert(textField)
+        manager.sensitiveTextInputViews.insert(textField)
 
         XCTAssertTrue(manager.knownSensitiveViews.contains(label))
         XCTAssertTrue(manager.sensitiveClassViews.contains(customView))
-        XCTAssertTrue(manager.sensitiveTextFieldViews.contains(textField))
+        XCTAssertTrue(manager.sensitiveTextInputViews.contains(textField))
 
         // Clear cache
         manager.clearCache()
@@ -176,15 +192,15 @@ class SensitiveViewManagerTests: BaseTests {
         // Verify all caches are cleared
         XCTAssertFalse(manager.knownSensitiveViews.contains(label))
         XCTAssertFalse(manager.sensitiveClassViews.contains(customView))
-        XCTAssertFalse(manager.sensitiveTextFieldViews.contains(textField))
+        XCTAssertFalse(manager.sensitiveTextInputViews.contains(textField))
     }
 
-    func testSensitiveViewDetection_TextField_ReturnsSensitiveTextField() {
+    func testSensitiveViewDetection_TextField_ReturnsSensitiveTextInput() {
         let textField = UITextField()
         let result = manager.isSensitiveView(view: textField)
         XCTAssertEqual(
-            result, .sensitiveTextField,
-            "UITextField should return .sensitiveTextField enum case")
+            result, .sensitiveTextInput,
+            "UITextField should return .sensitiveTextInput enum case")
     }
 
     func testSensitiveViewDetection_TextField_ConsistentOnMultipleChecks() {
@@ -193,20 +209,20 @@ class SensitiveViewManagerTests: BaseTests {
         // First check - not in cache
         let firstResult = manager.isSensitiveView(view: textField)
         XCTAssertEqual(
-            firstResult, .sensitiveTextField,
-            "UITextField should return .sensitiveTextField on first check")
+            firstResult, .sensitiveTextInput,
+            "UITextField should return .sensitiveTextInput on first check")
 
         // Second check - now in cache
         let secondResult = manager.isSensitiveView(view: textField)
         XCTAssertEqual(
-            secondResult, .sensitiveTextField,
-            "UITextField should still return .sensitiveTextField on subsequent checks (cached)")
+            secondResult, .sensitiveTextInput,
+            "UITextField should still return .sensitiveTextInput on subsequent checks (cached)")
 
         // Third check - verify consistency
         let thirdResult = manager.isSensitiveView(view: textField)
         XCTAssertEqual(
-            thirdResult, .sensitiveTextField,
-            "UITextField should consistently return .sensitiveTextField")
+            thirdResult, .sensitiveTextInput,
+            "UITextField should consistently return .sensitiveTextInput")
     }
 
     func testGetSensitiveFrames_TextFieldsSeparatelyTracked() {
@@ -322,7 +338,7 @@ class SensitiveViewManagerTests: BaseTests {
             manager.isImageLayer(layer), "Layer without delegate should not be detected as image layer")
     }
 
-    // MARK: - Layer Frame Detection Tests
+    // MARK: - Layer Frame Detection Testsx
 
     func testGetFrame_ForVisibleLayer() {
         let window = UIView(frame: CGRect(x: 0, y: 0, width: 375, height: 667))
@@ -536,5 +552,497 @@ class SensitiveViewManagerTests: BaseTests {
             "NSClassFromString failed to resolve the decoded name to an actual class on this OS. "
                 + "SwiftUI may have renamed/removed CGDrawingLayer in this iOS version — "
         )
+    }
+
+    // MARK: UIKit TextField Masking in Safe Views
+
+    func testTextFieldInSafeView_IsMasked() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        // Create a container marked as safe
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        // Add a textfield inside the safe container
+        let textField = UITextField(frame: CGRect(x: 10, y: 10, width: 80, height: 30))
+        safeContainer.addSubview(textField)
+
+        // Add a regular label inside safe container (should not be masked)
+        let label = UILabel(frame: CGRect(x: 10, y: 50, width: 80, height: 20))
+        safeContainer.addSubview(label)
+
+        manager.maskAllText = true
+        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // The textfield should be masked even though its parent is safe
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField.frame)], .textInput,
+            "TextField inside safe container should still be masked as textInput")
+
+        // The label should not be masked (parent is safe)
+        XCTAssertNil(
+            sensitiveFrames[HashableRect(label.frame)],
+            "Label inside safe container should not be masked")
+    }
+
+    func testNestedTextFieldsInSafeView_AllMasked() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
+
+        // Create a safe container
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        // Add a nested container inside safe view
+        let nestedContainer = UIView(frame: CGRect(x: 10, y: 10, width: 180, height: 180))
+        safeContainer.addSubview(nestedContainer)
+
+        // Add textfield at level 1 (direct child of safe view)
+        let textField1 = UITextField(frame: CGRect(x: 10, y: 10, width: 80, height: 30))
+        safeContainer.addSubview(textField1)
+
+        // Add UITextView at level 1
+        let textView1 = UITextView(frame: CGRect(x: 10, y: 50, width: 80, height: 30))
+        safeContainer.addSubview(textView1)
+
+        // Add textfield at level 2 (nested inside another view)
+        let textField2 = UITextField(frame: CGRect(x: 10, y: 10, width: 80, height: 30))
+        nestedContainer.addSubview(textField2)
+
+        // Add UITextView at level 2
+        let textView2 = UITextView(frame: CGRect(x: 10, y: 50, width: 40, height: 30))
+        nestedContainer.addSubview(textView2)
+
+        // Add deeply nested textfield at level 3
+        let deepContainer = UIView(frame: CGRect(x: 10, y: 50, width: 160, height: 120))
+        nestedContainer.addSubview(deepContainer)
+        let textField3 = UITextField(frame: CGRect(x: 10, y: 10, width: 80, height: 30))
+        deepContainer.addSubview(textField3)
+        // Add UITextView at level 3
+        let textView3 = UITextView(frame: CGRect(x: 10, y: 54, width: 90, height: 30))
+        deepContainer.addSubview(textView3)
+        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // Convert frames to window coordinates for lookup (getSensitiveFrames returns window coordinates)
+        let textField1WindowFrame = textField1.convert(textField1.bounds, to: window)
+        let textView1WindowFrame = textView1.convert(textView1.bounds, to: window)
+        let textField2WindowFrame = textField2.convert(textField2.bounds, to: window)
+        let textView2WindowFrame = textView2.convert(textView2.bounds, to: window)
+        let textField3WindowFrame = textField3.convert(textField3.bounds, to: window)
+        let textView3WindowFrame = textView3.convert(textView3.bounds, to: window)
+
+        // All textfields should be masked via stack-based traversal
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField1WindowFrame)], .textInput,
+            "TextField at level 1 should be masked")
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textView1WindowFrame)], .textInput,
+            "TextView at level 1 should be masked")
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField2WindowFrame)], .textInput,
+            "TextField at level 2 should be masked")
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textView2WindowFrame)], .textInput,
+            "TextView at level 2 should be masked")
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField3WindowFrame)], .textInput,
+            "Deeply nested textfield at level 3 should be masked")
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textView3WindowFrame)], .textInput,
+            "Deeply nested TextView at level 3 should be masked")
+
+    }
+
+    func testSafeView_WithoutTextFields_BehavesNormally() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        // Create a safe container with no textfields
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        // Add regular views inside (should not be masked)
+        let label = UILabel(frame: CGRect(x: 10, y: 10, width: 80, height: 20))
+        safeContainer.addSubview(label)
+
+        let imageView = UIImageView(frame: CGRect(x: 10, y: 40, width: 80, height: 40))
+        safeContainer.addSubview(imageView)
+
+        manager.maskAllText = true
+        manager.maskAllImages = true
+        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // Nothing should be masked (all inside safe container, no textfields)
+        XCTAssertNil(
+            sensitiveFrames[HashableRect(label.frame)],
+            "Label inside safe container should not be masked")
+        XCTAssertNil(
+            sensitiveFrames[HashableRect(imageView.frame)],
+            "ImageView inside safe container should not be masked")
+    }
+
+    func testMultipleSafeViews_WithTextFields() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+
+        // First safe container with textfield
+        let safeContainer1 = UIView(frame: CGRect(x: 0, y: 0, width: 140, height: 100))
+        safeContainer1.mpReplaySensitive = false
+        rootView.addSubview(safeContainer1)
+
+        let textField1 = UITextField(frame: CGRect(x: 10, y: 10, width: 120, height: 30))
+        safeContainer1.addSubview(textField1)
+
+        // Second safe container with textfield
+        let safeContainer2 = UIView(frame: CGRect(x: 150, y: 0, width: 140, height: 100))
+        safeContainer2.mpReplaySensitive = false
+        rootView.addSubview(safeContainer2)
+
+        let textField2 = UITextField(frame: CGRect(x: 10, y: 10, width: 120, height: 30))
+        safeContainer2.addSubview(textField2)
+
+        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // Both textfields should be masked
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField1.frame)], .textInput,
+            "TextField in first safe container should be masked")
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField2.frame)], .textInput,
+            "TextField in second safe container should be masked")
+    }
+
+    func testSafeViewWithTextFieldAndSensitiveView_BothHandledCorrectly() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        // Safe container
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        // Textfield inside safe view (should be masked)
+        let textField = UITextField(frame: CGRect(x: 10, y: 10, width: 80, height: 30))
+        safeContainer.addSubview(textField)
+
+        // Regular sensitive view outside safe container (should be masked)
+        let sensitiveView = UIView(frame: CGRect(x: 120, y: 10, width: 70, height: 70))
+        sensitiveView.mpReplaySensitive = true
+        rootView.addSubview(sensitiveView)
+
+        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // TextField should be masked
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField.frame)], .textInput,
+            "TextField inside safe container should be masked")
+
+        // Sensitive view should be masked
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(sensitiveView.frame)], .mask,
+            "Explicitly sensitive view should be masked as .mask")
+    }
+
+    func testSafeView_InvisibleTextFieldsNotMasked() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        // Safe container
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        // Hidden textfield (should NOT be masked)
+        let hiddenTextField = UITextField(frame: CGRect(x: 10, y: 10, width: 80, height: 30))
+        hiddenTextField.isHidden = true
+        safeContainer.addSubview(hiddenTextField)
+
+        // Transparent textfield (should NOT be masked)
+        let transparentTextField = UITextField(frame: CGRect(x: 10, y: 50, width: 80, height: 30))
+        transparentTextField.alpha = 0
+        safeContainer.addSubview(transparentTextField)
+
+        // Visible textfield (should be masked)
+        let visibleTextField = UITextField(frame: CGRect(x: 10, y: 90, width: 80, height: 30))
+        safeContainer.addSubview(visibleTextField)
+
+        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // Hidden and transparent textfields should NOT be in sensitive frames
+        XCTAssertNil(
+            sensitiveFrames[HashableRect(hiddenTextField.frame)],
+            "Hidden textfield should not be masked")
+        XCTAssertNil(
+            sensitiveFrames[HashableRect(transparentTextField.frame)],
+            "Transparent textfield should not be masked")
+
+        // Visible textfield SHOULD be masked
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(visibleTextField.frame)], .textInput,
+            "Visible textfield should be masked")
+    }
+
+    // MARK: - SwiftUI TextEditor TextField Masking in Safe Views
+
+    func testSwiftUITextEditor_DetectedAsTextInput() throws {
+        // SwiftUI.TextEditorTextView is the internal class used by SwiftUI TextEditor
+        guard let swiftUITextEditorClass = NSClassFromString("SwiftUI.TextEditorTextView") else {
+            throw XCTSkip("SwiftUI.TextEditorTextView class not available on this OS version")
+        }
+
+        // Create an instance using the class
+        guard let textEditor = (swiftUITextEditorClass as? NSObject.Type)?.init() as? UIView else {
+            XCTFail("Failed to create SwiftUI.TextEditorTextView instance")
+            return
+        }
+
+        let result = manager.isSensitiveView(view: textEditor)
+        XCTAssertEqual(
+            result, .sensitiveTextInput,
+            "SwiftUI TextEditor should be detected as sensitiveTextInput")
+    }
+
+    func testSwiftUITextEditor_IsTextInput() throws {
+        guard let swiftUITextEditorClass = NSClassFromString("SwiftUI.TextEditorTextView") else {
+            throw XCTSkip("SwiftUI.TextEditorTextView class not available on this OS version")
+        }
+
+        guard let textEditor = (swiftUITextEditorClass as? NSObject.Type)?.init() as? UIView else {
+            XCTFail("Failed to create SwiftUI.TextEditorTextView instance")
+            return
+        }
+
+        XCTAssertTrue(
+            manager.isTextInput(view: textEditor),
+            "SwiftUI TextEditor should be recognized as text input")
+    }
+
+    func testSwiftUITextEditor_InSafeView_IsMasked() throws {
+        guard let swiftUITextEditorClass = NSClassFromString("SwiftUI.TextEditorTextView") else {
+            throw XCTSkip("SwiftUI.TextEditorTextView class not available on this OS version")
+        }
+
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        // Create a safe container
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        // Add SwiftUI TextEditor inside safe container
+        guard let textEditor = (swiftUITextEditorClass as? NSObject.Type)?.init() as? UIView else {
+            XCTFail("Failed to create SwiftUI.TextEditorTextView instance")
+            return
+        }
+        textEditor.frame = CGRect(x: 10, y: 10, width: 80, height: 30)
+        safeContainer.addSubview(textEditor)
+
+        // Add a regular label inside safe container (should not be masked)
+        let label = UILabel(frame: CGRect(x: 10, y: 50, width: 80, height: 20))
+        safeContainer.addSubview(label)
+
+        manager.maskAllText = true
+        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // SwiftUI TextEditor should be masked even though its parent is safe
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textEditor.frame)], .textInput,
+            "SwiftUI TextEditor inside safe container should still be masked as textInput")
+
+        // The label should not be masked (parent is safe)
+        XCTAssertNil(
+            sensitiveFrames[HashableRect(label.frame)],
+            "Label inside safe container should not be masked")
+    }
+
+    func testSwiftUITextEditor_NestedInSafeViews_IsMasked() throws {
+        guard let swiftUITextEditorClass = NSClassFromString("SwiftUI.TextEditorTextView") else {
+            throw XCTSkip("SwiftUI.TextEditorTextView class not available on this OS version")
+        }
+
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
+
+        // Create a safe container
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        // Add nested container inside safe view
+        let nestedContainer = UIView(frame: CGRect(x: 10, y: 10, width: 180, height: 180))
+        safeContainer.addSubview(nestedContainer)
+
+        // Add SwiftUI TextEditor at level 1
+        guard let textEditor1 = (swiftUITextEditorClass as? NSObject.Type)?.init() as? UIView else {
+            XCTFail("Failed to create SwiftUI.TextEditorTextView instance")
+            return
+        }
+        textEditor1.frame = CGRect(x: 10, y: 10, width: 80, height: 30)
+        safeContainer.addSubview(textEditor1)
+
+        // Add SwiftUI TextEditor at level 2
+        guard let textEditor2 = (swiftUITextEditorClass as? NSObject.Type)?.init() as? UIView else {
+            XCTFail("Failed to create SwiftUI.TextEditorTextView instance")
+            return
+        }
+        textEditor2.frame = CGRect(x: 10, y: 10, width: 80, height: 30)
+        nestedContainer.addSubview(textEditor2)
+
+        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // Both SwiftUI TextEditors should be masked
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textEditor1.frame)], .textInput,
+            "SwiftUI TextEditor at level 1 should be masked")
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textEditor2.frame)], .textInput,
+            "SwiftUI TextEditor at level 2 should be masked")
+    }
+
+    func testMixedTextInputs_InSafeView_AllMasked() throws {
+        guard let swiftUITextEditorClass = NSClassFromString("SwiftUI.TextEditorTextView") else {
+            throw XCTSkip("SwiftUI.TextEditorTextView class not available on this OS version")
+        }
+
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
+
+        // Create a safe container
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 250, height: 250))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        // Add UITextField
+        let textField = UITextField(frame: CGRect(x: 10, y: 10, width: 80, height: 30))
+        safeContainer.addSubview(textField)
+
+        // Add UITextView
+        let textView = UITextView(frame: CGRect(x: 10, y: 50, width: 80, height: 30))
+        safeContainer.addSubview(textView)
+
+        // Add SwiftUI TextEditor
+        guard let textEditor = (swiftUITextEditorClass as? NSObject.Type)?.init() as? UIView else {
+            XCTFail("Failed to create SwiftUI.TextEditorTextView instance")
+            return
+        }
+        textEditor.frame = CGRect(x: 10, y: 90, width: 80, height: 30)
+        safeContainer.addSubview(textEditor)
+
+        // Add regular label (should not be masked)
+        let label = UILabel(frame: CGRect(x: 10, y: 130, width: 80, height: 20))
+        safeContainer.addSubview(label)
+
+        manager.maskAllText = true
+        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // All text inputs should be masked
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textField.frame)], .textInput,
+            "UITextField inside safe container should be masked")
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textView.frame)], .textInput,
+            "UITextView inside safe container should be masked")
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(textEditor.frame)], .textInput,
+            "SwiftUI TextEditor inside safe container should be masked")
+
+        // Label should not be masked
+        XCTAssertNil(
+            sensitiveFrames[HashableRect(label.frame)],
+            "Label inside safe container should not be masked")
+    }
+
+    func testSwiftUITextEditor_Cache_ConsistentAcrossChecks() throws {
+        guard let swiftUITextEditorClass = NSClassFromString("SwiftUI.TextEditorTextView") else {
+            throw XCTSkip("SwiftUI.TextEditorTextView class not available on this OS version")
+        }
+
+        guard let textEditor = (swiftUITextEditorClass as? NSObject.Type)?.init() as? UIView else {
+            XCTFail("Failed to create SwiftUI.TextEditorTextView instance")
+            return
+        }
+
+        // First check - not in cache
+        let firstResult = manager.isSensitiveView(view: textEditor)
+        XCTAssertEqual(
+            firstResult, .sensitiveTextInput,
+            "SwiftUI TextEditor should return .sensitiveTextInput on first check")
+
+        // Verify it's now in the text input cache
+        XCTAssertTrue(
+            manager.sensitiveTextInputViews.contains(textEditor),
+            "SwiftUI TextEditor should be added to sensitiveTextInputViews cache")
+
+        // Second check - now in cache
+        let secondResult = manager.isSensitiveView(view: textEditor)
+        XCTAssertEqual(
+            secondResult, .sensitiveTextInput,
+            "SwiftUI TextEditor should still return .sensitiveTextInput on subsequent checks (cached)")
+
+        // Third check - verify consistency
+        let thirdResult = manager.isSensitiveView(view: textEditor)
+        XCTAssertEqual(
+            thirdResult, .sensitiveTextInput,
+            "SwiftUI TextEditor should consistently return .sensitiveTextInput")
+    }
+
+    func testSwiftUITextEditor_InvisibleInSafeView_NotMasked() throws {
+        guard let swiftUITextEditorClass = NSClassFromString("SwiftUI.TextEditorTextView") else {
+            throw XCTSkip("SwiftUI.TextEditorTextView class not available on this OS version")
+        }
+
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        // Create a safe container
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        // Hidden SwiftUI TextEditor
+        guard let hiddenTextEditor = (swiftUITextEditorClass as? NSObject.Type)?.init() as? UIView else {
+            XCTFail("Failed to create SwiftUI.TextEditorTextView instance")
+            return
+        }
+        hiddenTextEditor.frame = CGRect(x: 10, y: 10, width: 80, height: 30)
+        hiddenTextEditor.isHidden = true
+        safeContainer.addSubview(hiddenTextEditor)
+
+        // Transparent SwiftUI TextEditor
+        guard let transparentTextEditor = (swiftUITextEditorClass as? NSObject.Type)?.init() as? UIView else {
+            XCTFail("Failed to create SwiftUI.TextEditorTextView instance")
+            return
+        }
+        transparentTextEditor.frame = CGRect(x: 10, y: 50, width: 80, height: 30)
+        transparentTextEditor.alpha = 0
+        safeContainer.addSubview(transparentTextEditor)
+
+        // Visible SwiftUI TextEditor
+        guard let visibleTextEditor = (swiftUITextEditorClass as? NSObject.Type)?.init() as? UIView else {
+            XCTFail("Failed to create SwiftUI.TextEditorTextView instance")
+            return
+        }
+        visibleTextEditor.frame = CGRect(x: 10, y: 90, width: 80, height: 30)
+        safeContainer.addSubview(visibleTextEditor)
+
+        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+
+        // Hidden and transparent SwiftUI TextEditors should NOT be masked
+        XCTAssertNil(
+            sensitiveFrames[HashableRect(hiddenTextEditor.frame)],
+            "Hidden SwiftUI TextEditor should not be masked")
+        XCTAssertNil(
+            sensitiveFrames[HashableRect(transparentTextEditor.frame)],
+            "Transparent SwiftUI TextEditor should not be masked")
+
+        // Visible SwiftUI TextEditor SHOULD be masked
+        XCTAssertEqual(
+            sensitiveFrames[HashableRect(visibleTextEditor.frame)], .textInput,
+            "Visible SwiftUI TextEditor should be masked")
     }
 }

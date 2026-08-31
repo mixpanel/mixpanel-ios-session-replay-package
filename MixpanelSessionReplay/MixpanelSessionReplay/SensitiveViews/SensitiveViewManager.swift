@@ -105,11 +105,11 @@ class SensitiveViewManager {
     var sensitiveClasses: [AnyClass] = []
 
     private(set) var knownSensitiveViews: WeakViewsMap!
-    var sensitiveTextFieldViews: WeakViewsMap!
+    var sensitiveTextInputViews: WeakViewsMap!
     var sensitiveClassViews: WeakViewsMap!
 
     // MARK: Liquid glass UI unaffected SwiftUI Classes
-    private let swiftUITextFieldClass: AnyClass? = NSClassFromString("SwiftUI.TextEditorTextView")
+    private let swiftUITextInputClass: AnyClass? = NSClassFromString("SwiftUI.TextEditorTextView")
     private let swiftUIImageLayer: AnyClass? = NSClassFromString("SwiftUI.ImageLayer")
 
     // MARK: - Legacy SwiftUI Classes (iOS 18 and earlier)
@@ -133,7 +133,7 @@ class SensitiveViewManager {
     private let buttonLabelClass: AnyClass? = NSClassFromString("UIButtonLabel")
 
     enum SensitiveViewState {
-        case sensitiveTextField
+        case sensitiveTextInput
         case sensitive
         case safe
         case unknown
@@ -145,7 +145,7 @@ class SensitiveViewManager {
 
         knownSensitiveViews = WeakViewsMap.weakToWeakObjects()
         sensitiveClassViews = WeakViewsMap.weakToWeakObjects()
-        sensitiveTextFieldViews = WeakViewsMap.weakToWeakObjects()
+        sensitiveTextInputViews = WeakViewsMap.weakToWeakObjects()
         swiftUIiOS26TextLayerClass = ObfuscatedClassLookup.resolveClass(from: swiftUIDrawingLayerCodes)
     }
 
@@ -156,7 +156,7 @@ class SensitiveViewManager {
     func clearCache() {
         knownSensitiveViews.removeAllObjects()
         sensitiveClassViews.removeAllObjects()
-        sensitiveTextFieldViews.removeAllObjects()
+        sensitiveTextInputViews.removeAllObjects()
     }
 
     func isSensitiveView(view: UIView) -> SensitiveViewState {
@@ -164,19 +164,19 @@ class SensitiveViewManager {
             return .sensitive
         }
 
-        // Check text field cache first to maintain .sensitiveTextField return type
-        if sensitiveTextFieldViews.contains(view) {
-            return .sensitiveTextField
+        // Check text input cache first to maintain .sensitiveTextInput return type
+        if sensitiveTextInputViews.contains(view) {
+            return .sensitiveTextInput
         }
 
         if knownSensitiveViews.contains(view) || sensitiveClassViews.contains(view) {
             return .sensitive
         }
 
-        // Text fields are always sensitive, so check before !isSensitive
-        if isTextField(view: view) {
-            sensitiveTextFieldViews.insert(view)
-            return .sensitiveTextField
+        // Text inputs (UITextField / UITextView) are always sensitive, so check before !isSensitive
+        if isTextInput(view: view) {
+            sensitiveTextInputViews.insert(view)
+            return .sensitiveTextInput
         }
 
         // If mpReplaySensitive is false, view is manually marked as safe
@@ -214,7 +214,7 @@ class SensitiveViewManager {
 
     // Legacy text/label detection
     func isLabel(view: UIView) -> Bool {
-        if view.isKind(of: UILabel.self) || view.isKind(of: UITextView.self) {
+        if view.isKind(of: UILabel.self) {
             return true
         }
 
@@ -240,13 +240,13 @@ class SensitiveViewManager {
         return false
     }
 
-    func isTextField(view: UIView) -> Bool {
-        if view.isKind(of: UITextField.self) {
+    func isTextInput(view: UIView) -> Bool {
+        if view.isKind(of: UITextField.self) || view.isKind(of: UITextView.self) {
             return true
         }
 
         // Check for SwiftUI text editor text view
-        if let swiftUITextFieldClass, view.isKind(of: swiftUITextFieldClass) {
+        if let swiftUITextInputClass, view.isKind(of: swiftUITextInputClass) {
             return true
         }
 
@@ -376,6 +376,39 @@ class SensitiveViewManager {
         }
     }
 
+    /// Masks text inputs within a safe view hierarchy.
+    ///
+    /// When a view is marked as safe, we still need to mask any text inputs within it for security.
+    /// This method performs a stack-based traversal to find and mask all text inputs (UITextField,
+    /// UITextView, SwiftUI TextEditor) at any nesting level within the safe view.
+    ///
+    /// - Parameters:
+    ///   - safeView: The view marked as safe
+    ///   - window: The window for coordinate conversion
+    ///   - maskDecisions: Dictionary to update with text input mask decisions
+    private func maskTextInputsInSafeView(
+        _ safeView: UIView,
+        window: UIView,
+        maskDecisions: inout [HashableRect: MaskDecision]
+    ) {
+        // Stack-based traversal to find text inputs at any depth
+        var safeViewStack: [UIView] = [safeView]
+        while !safeViewStack.isEmpty {
+            let currentView = safeViewStack.removeLast()
+
+            // Skip invisible views (hidden or transparent)
+            guard currentView.isVisible() else { continue }
+
+            // Mask text inputs found within the safe view
+            if isTextInput(view: currentView), let rect = hashableFrame(for: currentView.layer, in: window) {
+                addOrUpdate(&maskDecisions, rect: rect, decision: .textInput)
+            }
+
+            // Continue traversing children
+            safeViewStack.append(contentsOf: currentView.subviews)
+        }
+    }
+
     /// Unified traversal that handles both UIView hierarchy and CALayer hierarchy in a single pass
     ///
     /// This method efficiently combines:
@@ -399,14 +432,21 @@ class SensitiveViewManager {
         // MARK: - Check UIView level first (UIKit + legacy SwiftUI)
         switch isSensitiveView(view: view) {
             case .safe:
-                // View is explicitly marked as safe - capture frame and stop traversal
+                // View is explicitly marked as safe - but we still need to mask text inputs within it
+                maskTextInputsInSafeView(
+                    view,
+                    window: window,
+                    maskDecisions: &maskDecisions
+                )
+
+                // Capture the safe view frame for filtering
                 if let hashableRect = hashableFrame(for: view.layer, in: window) {
                     safeFrames.insert(hashableRect)
                 }
                 return  // Don't process subviews or sublayers
 
-            case .sensitiveTextField:
-                // Text fields are always sensitive and cannot be overridden by safe parents
+            case .sensitiveTextInput:
+                // Text inputs (textfields/textviews) are always sensitive and cannot be overridden by safe parents
                 if let hashableRect = hashableFrame(for: view.layer, in: window) {
                     addOrUpdate(&maskDecisions, rect: hashableRect, decision: .textInput)
                 }
