@@ -105,8 +105,34 @@ extension SensitiveViewManager {
         /// An `mpReplaySensitive = false` ancestor was crossed.
         var insideSafeSubtree = false
 
+        /// The wire decision of the nearest masked ancestor, or `nil` when none was
+        /// crossed. Descendants inherit it: their scraped text is dropped and they
+        /// report the ancestor's provenance (`.explicit` / `.auto`) rather than
+        /// depending on a geometric overlap being noticed downstream.
+        ///
+        /// Provenance rather than geometry, because geometry is not reliable here.
+        /// Layer 2 strips text only where a mask rect intersects the element's
+        /// *emitted* bounds, and a descendant can be laid out clear of its masked
+        /// ancestor — clipped away, scrolled out, or simply positioned outside it —
+        /// and still resolve to a real rect, because ``getFrame(for:in:)`` converts
+        /// to window coordinates without consulting the ancestor clip chain. That
+        /// combination shipped a masked subtree's text in the clear; pinned by
+        /// `test_maskedSubtree_offsetChild_doesNotShipScrapedText`. Matches Flutter,
+        /// where `MaskContext.mask` propagates and `_wireframeDecision` resolves
+        /// every descendant to `explicit`.
+        var maskedAncestorDecision: MPMaskDecision?
+
         /// A masked ancestor was crossed. Its rect already covers everything below,
         /// so the walk continues only to *describe* the structure.
+        ///
+        /// Deliberately *not* derived from ``maskedAncestorDecision``. This one governs
+        /// the mask path — ``HierarchyWalk/record(_:at:in:)`` and
+        /// ``HierarchyWalk/recordSafe(_:in:)`` — and must stay set for the whole
+        /// subtree, including below an unmask. Deriving it let the unmask that clears
+        /// the wireframe's inheritance also clear this, which let a
+        /// `mask > unmask > mpReplaySensitive(true)` nesting record an inner rect the
+        /// enclosing mask had already settled. The two answer different questions: this
+        /// one is "has any mask claimed this region", the other is "whose text am I".
         var insideMaskedSubtree = false
     }
 
@@ -233,6 +259,21 @@ extension SensitiveViewManager {
                 // now that a safe subtree can still produce `.mask` / `.textInput`.
                 walk.recordSafe(hashableFrame(for: view.layer, in: walk.window), in: context)
                 context.insideSafeSubtree = true
+                // An unmask below a mask is honored for *description*: the developer
+                // named this subtree safe, so its text stops inheriting the enclosing
+                // mask's provenance and is scraped again. The pixels are unaffected —
+                // `recordSafe` above already refused to carve a hole in an explicit
+                // mask, and the sweep in `walkHierarchy` keeps `.mask` alive — so what
+                // reaches the wire is settled by Layer 2's geometric strip against the
+                // rect that is still painted. Reported `.geometric`, not `.explicit`.
+                // Matches Flutter, whose `MaskContext.unmask` resolves descendants to
+                // `none` for exactly this reason, and its
+                // `wireframe_nested_unmask_in_mask_geometric` fixture.
+                //
+                // Only the wireframe's inheritance is cleared. `insideMaskedSubtree`
+                // stays exactly as it was, so every mask write below still sees the
+                // enclosing mask and the frame set is untouched — see that property.
+                context.maskedAncestorDecision = nil
 
             case .sensitiveTextInput:
                 // Declared text labels the field ("Card number"); the value the user
@@ -310,11 +351,20 @@ extension SensitiveViewManager {
     ///
     /// Stopping at the container left a masked form invisible to the summarizer
     /// rather than merely redacted, where Android and Flutter emit its children as
-    /// textless shells (`GEOMETRIC`, stripped by Layer 2 against the mask rect).
-    /// Existence and position are not customer content; the text is what must not
-    /// escape, and Layer 2 already guarantees that. `insideMaskedSubtree` keeps the
-    /// frame set identical to stopping here, and with wireframes off there is nothing
-    /// to gain, so those integrations pay no traversal cost.
+    /// textless shells. Existence and position are not customer content; the text is
+    /// what must not escape.
+    ///
+    /// The descent is also the only way a descendant's `mpWireframeText` is ever seen
+    /// — authored copy is the developer's way of labelling a redacted region, and in
+    /// SwiftUI the declaration is planted as a background view that nothing else
+    /// reaches. Pinned by `test_maskedSubtree_descendantDeclaredText_survives`.
+    ///
+    /// Children inherit this view's decision through
+    /// ``WalkContext/maskedAncestorDecision``, so their scraped text is dropped here
+    /// rather than left for Layer 2 to strip geometrically — see that property for why
+    /// geometry was not enough. The mask writes below are still suppressed, so the
+    /// frame set is identical to stopping here, and with wireframes off there is
+    /// nothing to gain, so those integrations pay no traversal cost.
     private func describeMaskedSubtree(
         _ view: UIView, declaredText: String?, walk: HierarchyWalk, context: WalkContext
     ) {
@@ -336,19 +386,22 @@ extension SensitiveViewManager {
         let rect = hashableFrame(for: view.layer, in: walk.window)
         let role = walk.collectingWireframes ? wireframeClassifier.role(for: view) : nil
 
+        // The provenance every descendant inherits: what made *this* view masked.
+        let inheritedDecision: MPMaskDecision = decision == .mask ? .explicit : .auto
+
         walk.record(decision, at: rect, in: context)
         if let declaredText {
             // Emitted even for a view that maps to no role (falling back to `.text`) —
             // the developer explicitly opted this view in.
             walk.describe(role ?? .text, text: declaredText, at: rect, decision: .declared, in: context)
         } else if let role {
-            walk.describe(
-                role, at: rect, decision: decision == .mask ? .explicit : .auto, in: context)
+            walk.describe(role, at: rect, decision: inheritedDecision, in: context)
         }
 
         guard walk.collectingWireframes else { return }
         var childContext = context
         childContext.insideMaskedSubtree = true
+        childContext.maskedAncestorDecision = inheritedDecision
         childContext.insideWireframeLeaf = context.insideWireframeLeaf || role != nil
         for subview in view.subviews {
             traverse(subview, walk: walk, context: childContext)
@@ -368,10 +421,24 @@ extension SensitiveViewManager {
             let rect = hashableFrame(for: view.layer, in: walk.window)
         else { return context }
 
-        let text = declaredText ?? role.flatMap { wireframeClassifier.text(for: view, role: $0) }
-        walk.describe(
-            role ?? .text, text: text, at: rect,
-            decision: declaredText != nil ? .declared : .none, in: context)
+        // Three tiers, highest first. Declared text is authored rather than scraped, so
+        // it outranks a masked ancestor — the documented contract for
+        // `.mpWireframeText(_:)`, which is how a developer labels a redacted region.
+        // Below that, a masked ancestor drops the scraped text outright: the text is
+        // never read, let alone emitted, so nothing downstream has to catch it.
+        let text: String?
+        let decision: MPMaskDecision
+        if let declaredText {
+            text = declaredText
+            decision = .declared
+        } else if let inherited = context.maskedAncestorDecision {
+            text = nil
+            decision = inherited
+        } else {
+            text = role.flatMap { wireframeClassifier.text(for: view, role: $0) }
+            decision = .none
+        }
+        walk.describe(role ?? .text, text: text, at: rect, decision: decision, in: context)
 
         // A *view-type* role closes the subtree — a `UIButton`'s inner `UILabel` must not
         // re-emit. An accessibility-derived role must not, because it lands on containers:
@@ -434,7 +501,12 @@ extension SensitiveViewManager {
             // layer the walk reaches — and we do not read it via private reflection.
             // SwiftUI text ships as a role + bounds shell; developers supply readable
             // text with `.mpWireframeText(_:)`.
-            if walk.describe(role, at: rect, decision: .none, in: context) {
+            // Carries no text either way, but a layer under a masked ancestor still
+            // reports that ancestor's provenance rather than reading as ordinary
+            // unmasked content.
+            if walk.describe(
+                role, at: rect, decision: context.maskedAncestorDecision ?? .none, in: context)
+            {
                 context.insideWireframeLeaf = true
             }
         }

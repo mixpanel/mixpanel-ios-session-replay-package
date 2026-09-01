@@ -612,6 +612,226 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
             elements.contains { $0.role == .text && $0.text == nil && $0.decision == .explicit },
             "it should still ship as a textless shell so the layout survives")
     }
+
+    // MARK: - Masked subtree: text is stripped on provenance, not geometry
+
+    /// A small masked parent whose child is laid out entirely OUTSIDE its bounds.
+    ///
+    /// No scrolling is involved: the child simply has a frame beyond the parent, which
+    /// is all it takes. `getFrame(for:in:)` converts the layer's bounds to *window*
+    /// coordinates and intersects only with the window — it never consults the ancestor
+    /// clip chain — and `isVisible()` checks only `isHidden`/`alpha`/`frame == .zero`.
+    /// So the child resolves to a real rect that lies clear of the parent's mask rect,
+    /// and Layer 2's geometric strip has nothing to catch it with.
+    ///
+    /// `clipsToBounds` is a parameter because it makes no difference to the walk: with
+    /// it on, the child is not drawn at all, and the wireframe still reports content
+    /// there. Both are pinned so a future clip-aware change to `getFrame` has to
+    /// confront this case rather than silently alter it.
+    ///
+    /// A `UIButton` is deliberately the leaf. Under shipped defaults `maskAllText` is
+    /// on, so a `UILabel` here would be auto-masked in its own right and never reach
+    /// the ancestor-dependent path; a button is not text-classified, so it depends
+    /// entirely on the masked ancestor — which is the case that actually shipped text.
+    private func makeOffsetChildOfMaskedParent(clipsToBounds: Bool) -> UIView {
+        let root = UIView(frame: window.bounds)
+        let masked = UIView(frame: CGRect(x: 50, y: 50, width: 100, height: 100))
+        masked.clipsToBounds = clipsToBounds
+        masked.mpReplaySensitive = true
+
+        let inside = UIButton(type: .custom)
+        inside.frame = CGRect(x: 0, y: 0, width: 90, height: 40)
+        inside.setTitle("Inside control", for: .normal)
+
+        let outside = UIButton(type: .custom)
+        outside.frame = CGRect(x: 200, y: 200, width: 200, height: 30)
+        outside.setTitle("Transfer $12,345 to Chase", for: .normal)
+
+        masked.addSubview(inside)
+        masked.addSubview(outside)
+        root.addSubview(masked)
+        window.addSubview(root)
+        return root
+    }
+
+    private func processed(_ root: UIView) -> [WireframeElement] {
+        let (frames, elements) = manager.walkHierarchy(in: root, window: window)
+        return WireframeEmitter(options: MPWireframesOptions())
+            .processedElements(elements: elements, maskBounds: Set(frames.keys))
+    }
+
+    /// The premise, asserted separately so a failure below cannot be misread as the
+    /// fixture drifting: the offset child really does land outside every mask rect, so
+    /// Layer 2 cannot be what protects it.
+    func test_maskedSubtree_offsetChild_isNotCoveredByAnyMaskRect() {
+        manager.maskAllText = true
+        let root = makeOffsetChildOfMaskedParent(clipsToBounds: true)
+        let (frames, elements) = manager.walkHierarchy(in: root, window: window)
+
+        XCTAssertTrue(
+            frames.keys.contains { $0.cgRect == CGRect(x: 50, y: 50, width: 100, height: 100) },
+            "the container the developer marked sensitive must still produce a mask rect")
+
+        guard
+            let offset = elements.first(where: {
+                $0.role == .button && $0.x == 250 && $0.y == 250
+            })
+        else {
+            return XCTFail("the offset child should still be walked and emitted")
+        }
+        let offsetRect = CGRect(x: offset.x, y: offset.y, width: offset.w, height: offset.h)
+        XCTAssertFalse(
+            frames.keys.contains { $0.cgRect.intersects(offsetRect) },
+            "no mask rect covers the offset child — Layer 2 cannot strip it")
+    }
+
+    /// Text scraped inside an explicitly masked subtree must never reach the wire,
+    /// whether or not a mask rect happens to overlap it.
+    ///
+    /// Matches Flutter, which resolves every descendant of a `MixpanelMask` to
+    /// `explicit` with null text at the walk rather than relying on the geometric pass.
+    func test_maskedSubtree_offsetChild_doesNotShipScrapedText() {
+        for clips in [true, false] {
+            manager.maskAllText = true
+            let elements = processed(makeOffsetChildOfMaskedParent(clipsToBounds: clips))
+
+            XCTAssertFalse(
+                elements.contains { $0.text == "Transfer $12,345 to Chase" },
+                "content inside an mpReplaySensitive subtree must not be scraped "
+                    + "(clipsToBounds: \(clips))")
+            XCTAssertTrue(
+                elements.allSatisfy { $0.text == nil },
+                "nothing in a masked subtree carries text (clipsToBounds: \(clips))")
+
+            let offset = elements.first { $0.role == .button && $0.x == 250 }
+            XCTAssertEqual(
+                offset?.decision, .explicit,
+                "the ancestor's decision is the provenance, not a geometric coincidence "
+                    + "(clipsToBounds: \(clips))")
+
+            SensitiveViewManager.reset()
+            manager = SensitiveViewManager.shared
+            manager.wireframeCollectionEnabled = true
+            window = UIView(frame: CGRect(x: 0, y: 0, width: 500, height: 800))
+        }
+    }
+
+    /// The exemption that has to survive the strip: `mpWireframeText` on a *descendant*
+    /// of a masked view is authored copy, not scraped pixels, so it is still emitted.
+    ///
+    /// This is the whole reason the walk descends into a masked subtree rather than
+    /// stopping at the container, and it had no coverage before: every other
+    /// declared-under-mask test puts the declaration on the masked view itself or on an
+    /// overlapping sibling.
+    func test_maskedSubtree_descendantDeclaredText_survives() {
+        manager.maskAllText = true
+        let root = UIView(frame: window.bounds)
+        let masked = UIView(frame: CGRect(x: 50, y: 50, width: 200, height: 200))
+        masked.mpReplaySensitive = true
+
+        let scraped = UILabel(frame: CGRect(x: 10, y: 10, width: 150, height: 30))
+        scraped.text = "4111 1111 1111 1111"
+        scraped.mpWireframeText = "Card number"
+        masked.addSubview(scraped)
+        root.addSubview(masked)
+        window.addSubview(root)
+
+        let elements = processed(root)
+        XCTAssertTrue(
+            elements.contains { $0.text == "Card number" && $0.decision == .declared },
+            "declared text on a descendant of a masked view must still be emitted")
+        XCTAssertFalse(
+            elements.contains { $0.text == "4111 1111 1111 1111" },
+            "the scraped value it labels must not be")
+    }
+
+
+    // MARK: - The mask set is untouched by wireframe collection
+
+    /// `mask > unmask > mpReplaySensitive(true)` must record only the enclosing mask.
+    ///
+    /// The inner explicit mask is inside a region an ancestor already settled, so it
+    /// adds nothing — `HierarchyWalk.record` refuses it on `insideMaskedSubtree`. That
+    /// flag has to stay set for the whole subtree *including below the unmask*, which
+    /// is why it is stored rather than derived from `maskedAncestorDecision`: the
+    /// unmask clears the wireframe's text inheritance, and deriving the two from one
+    /// field let it clear this as well, adding an inner rect the mask set never had.
+    ///
+    /// No existing case covered three levels, so the goldens stayed green through it.
+    /// Asserted on the frame dictionary directly, because that dictionary *is* the
+    /// screenshot.
+    func test_maskSet_maskThenUnmaskThenExplicitMask_recordsOnlyTheOuterMask() {
+        manager.maskAllText = true
+        manager.maskAllImages = true
+
+        let root = UIView(frame: window.bounds)
+        let masked = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
+        masked.mpReplaySensitive = true
+        let safe = UIView(frame: CGRect(x: 10, y: 10, width: 200, height: 200))
+        safe.mpReplaySensitive = false
+        let inner = UIView(frame: CGRect(x: 5, y: 5, width: 100, height: 50))
+        inner.mpReplaySensitive = true
+        safe.addSubview(inner)
+        masked.addSubview(safe)
+        root.addSubview(masked)
+        window.addSubview(root)
+
+        let frames = manager.walkHierarchy(in: root, window: window).frames
+        XCTAssertEqual(
+            frames, [HashableRect(CGRect(x: 0, y: 0, width: 300, height: 300)): .mask],
+            "only the enclosing mask may be recorded — the inner one adds nothing")
+    }
+
+    /// The same shape one level deeper, so a fix that only special-cased a single
+    /// unmask would still fail.
+    func test_maskSet_maskThenTwoUnmasksThenExplicitMask_recordsOnlyTheOuterMask() {
+        manager.maskAllText = true
+
+        let root = UIView(frame: window.bounds)
+        let masked = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
+        masked.mpReplaySensitive = true
+        let safeOuter = UIView(frame: CGRect(x: 10, y: 10, width: 200, height: 200))
+        safeOuter.mpReplaySensitive = false
+        let safeInner = UIView(frame: CGRect(x: 5, y: 5, width: 150, height: 150))
+        safeInner.mpReplaySensitive = false
+        let inner = UIView(frame: CGRect(x: 2, y: 2, width: 80, height: 40))
+        inner.mpReplaySensitive = true
+        safeInner.addSubview(inner)
+        safeOuter.addSubview(safeInner)
+        masked.addSubview(safeOuter)
+        root.addSubview(masked)
+        window.addSubview(root)
+
+        let frames = manager.walkHierarchy(in: root, window: window).frames
+        XCTAssertEqual(
+            frames, [HashableRect(CGRect(x: 0, y: 0, width: 300, height: 300)): .mask])
+    }
+
+    /// A `UITextField` is the one decision nothing above it can settle, so it still
+    /// earns its own rect in the same nesting. Guards against "fix" the leak above by
+    /// refusing every nested write.
+    func test_maskSet_maskThenUnmaskThenTextField_stillRecordsTextInput() {
+        let root = UIView(frame: window.bounds)
+        let masked = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
+        masked.mpReplaySensitive = true
+        let safe = UIView(frame: CGRect(x: 10, y: 10, width: 200, height: 200))
+        safe.mpReplaySensitive = false
+        let field = UITextField(frame: CGRect(x: 5, y: 5, width: 100, height: 50))
+        safe.addSubview(field)
+        masked.addSubview(safe)
+        root.addSubview(masked)
+        window.addSubview(root)
+
+        let frames = manager.walkHierarchy(in: root, window: window).frames
+        XCTAssertEqual(
+            frames,
+            [
+                HashableRect(CGRect(x: 0, y: 0, width: 300, height: 300)): .mask,
+                HashableRect(CGRect(x: 15, y: 15, width: 100, height: 50)): .textInput,
+            ],
+            "a text input is never overridden by anything above it")
+    }
+
 }
 
 /// Stand-in for a customer's own view class registered via `addSensitiveClass`.

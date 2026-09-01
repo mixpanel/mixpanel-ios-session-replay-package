@@ -13,7 +13,7 @@
         51,
         20
       ],
-      "maskDecision": "GEOMETRIC"
+      "maskDecision": "EXPLICIT"
     },
     {
       "role": "input",
@@ -35,7 +35,7 @@
         46,
         33
       ],
-      "maskDecision": "GEOMETRIC"
+      "maskDecision": "EXPLICIT"
     }
   ]
 }
