@@ -248,8 +248,8 @@ public struct MPSessionReplayConfig: Codable {
     ///   - flushInterval: Specifies the flush interval in seconds.
     ///   - enableSessionReplayOniOS26AndLater: Forces Session Replay to be enabled on iOS 26 and later.
     ///   - debugOptions: Debug feature configuration. When not nil, enables debug features (debug builds only).
-    ///   - wireframesOptions: Wireframe capture configuration. When not nil, enables wireframe emission.
     ///   - serverURL: The data residency base URL. Use `DataResidency.us` (default), `DataResidency.eu`, `DataResidency.in`, or a custom URL.
+    ///   - wireframesOptions: Wireframe capture configuration. When not nil, enables wireframe emission.
     public init(
         wifiOnly: Bool = true,
         autoMaskedViews: Set<MPAutoMaskedViews> = [.image, .text, .web, .map],
@@ -260,8 +260,8 @@ public struct MPSessionReplayConfig: Codable {
         flushInterval: TimeInterval = 10,
         enableSessionReplayOniOS26AndLater: Bool = false,
         debugOptions: DebugOptions? = nil,
-        wireframesOptions: MPWireframesOptions? = nil,
-        serverURL: String = DataResidency.us
+        serverURL: String = DataResidency.us,
+        wireframesOptions: MPWireframesOptions? = nil
     ) {
         self.wifiOnly = wifiOnly
         self.autoMaskedViews = autoMaskedViews
@@ -272,8 +272,8 @@ public struct MPSessionReplayConfig: Codable {
         self.flushInterval = flushInterval
         self.enableSessionReplayOniOS26AndLater = enableSessionReplayOniOS26AndLater
         self.debugOptions = debugOptions
-        self.wireframesOptions = wireframesOptions
         self.serverURL = getTrimmedServerURL(urlString: serverURL)
+        self.wireframesOptions = wireframesOptions
     }
 
     enum CodingKeys: String, CodingKey {
