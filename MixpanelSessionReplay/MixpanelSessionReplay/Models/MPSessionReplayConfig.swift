@@ -169,6 +169,27 @@ public struct MPSessionReplayConfig: Codable {
     /// - SeeAlso: ``DebugOptions``, ``DebugOverlayColors``
     public var debugOptions: DebugOptions?
 
+    /// Specifies the data residency base URL for sending session replay data.
+    ///
+    /// Use the predefined data residency constants:
+    /// - `DataResidency.us` - US data residency (default): "https://api.mixpanel.com"
+    /// - `DataResidency.eu` - EU data residency: "https://api-eu.mixpanel.com"
+    /// - `DataResidency.in` - India data residency: "https://api-in.mixpanel.com"
+    ///
+    /// Example:
+    /// ```swift
+    /// let config = MPSessionReplayConfig(serverURL: DataResidency.eu)
+    /// ```
+    ///
+    /// - Note: The URL is trimmed and validated when SDK is getting initialized. If url validation fails, SDK will not be initialized.
+    ///
+    /// - Default: `DataResidency.us` (US data residency)
+    public var serverURL: String = DataResidency.us {
+        didSet {
+            serverURL = getTrimmedServerURL(urlString: serverURL)
+        }
+    }
+
     /// Enables wireframe capture: a per-frame structured list of visible UI
     /// elements (role, text, bounds) shipped as an rrweb Custom event alongside
     /// the screenshot stream.
@@ -212,27 +233,6 @@ public struct MPSessionReplayConfig: Codable {
     ///   the key entirely leaves capture off.
     /// - SeeAlso: ``MPWireframesOptions``, ``MPSensitiveRule``
     public var wireframesOptions: MPWireframesOptions?
-
-    /// Specifies the data residency base URL for sending session replay data.
-    ///
-    /// Use the predefined data residency constants:
-    /// - `DataResidency.us` - US data residency (default): "https://api.mixpanel.com"
-    /// - `DataResidency.eu` - EU data residency: "https://api-eu.mixpanel.com"
-    /// - `DataResidency.in` - India data residency: "https://api-in.mixpanel.com"
-    ///
-    /// Example:
-    /// ```swift
-    /// let config = MPSessionReplayConfig(serverURL: DataResidency.eu)
-    /// ```
-    ///
-    /// - Note: The URL is trimmed and validated when SDK is getting initialized. If url validation fails, SDK will not be initialized.
-    ///
-    /// - Default: `DataResidency.us` (US data residency)
-    public var serverURL: String = DataResidency.us {
-        didSet {
-            serverURL = getTrimmedServerURL(urlString: serverURL)
-        }
-    }
 
     /// Initializes a new `MPSessionReplayConfig` with the provided settings.
     ///
