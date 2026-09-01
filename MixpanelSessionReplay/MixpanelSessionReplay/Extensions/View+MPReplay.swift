@@ -39,15 +39,31 @@ import UIKit
 /// Marker UIView planted behind SwiftUI content by `.mpReplaySensitive(_:)` and
 /// `.mpWireframeText(_:)`. Identified by class so the walker can distinguish a
 /// Mixpanel annotation from an ordinary background and read its declared text.
-class MPReplayWrapper: UIView {}
+///
+/// Non-interactive by construction: this is planted as a `.background`, so it must
+/// never absorb a touch meant for the content it annotates or for anything behind
+/// it. `final` because the walker keys on this class — a subclass would be a second
+/// thing claiming to be a Mixpanel annotation.
+final class MPReplayWrapper: UIView {
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        isUserInteractionEnabled = false
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        isUserInteractionEnabled = false
+    }
+}
 
 struct MPReplayWrapperRepresentable: UIViewRepresentable {
     let onUpdate: (MPReplayWrapper) -> Void
 
+    // No `onUpdate` here: SwiftUI calls `updateUIView` immediately after
+    // `makeUIView` on first insertion, so configuring in both places was doing the
+    // same work twice.
     func makeUIView(context: Context) -> MPReplayWrapper {
-        let wrapper = MPReplayWrapper()
-        onUpdate(wrapper)
-        return wrapper
+        MPReplayWrapper()
     }
 
     func updateUIView(_ uiView: MPReplayWrapper, context: Context) {
