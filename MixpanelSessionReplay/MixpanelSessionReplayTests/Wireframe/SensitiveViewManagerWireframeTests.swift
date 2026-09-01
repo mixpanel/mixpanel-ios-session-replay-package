@@ -271,16 +271,28 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
         XCTAssertNil(elements[0].text)
     }
 
-    func test_webview_emitsTextRoleWithNilText() {
+    /// A `WKWebView` contributes no wireframe element at all.
+    ///
+    /// Web content renders out of process, so the SDK can read none of it and any role would
+    /// be a guess. An earlier pass classified it `.text`, which shipped a textless full-screen
+    /// `text` shell — that reads to a summary as "text we failed to extract" rather than "not
+    /// our content". Android's `classifyAndroidView` has no `WebView` branch and Flutter does
+    /// not classify platform views, so emitting nothing is also the parity behaviour.
+    ///
+    /// Masking is a separate concern and unaffected: see
+    /// `SensitiveViewManagerTests.testSensitiveViewDetection_WebView`.
+    func test_webview_emitsNoWireframeElement() {
         let root = UIView(frame: window.bounds)
         let web = WKWebView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
         root.addSubview(web)
         window.addSubview(root)
 
         let elements = manager.walkHierarchy(in: root, window: window).wireframes
-        let webElements = elements.filter { $0.role == .text }
-        XCTAssertGreaterThanOrEqual(webElements.count, 1)
-        XCTAssertNil(webElements[0].text)
+
+        XCTAssertTrue(
+            elements.isEmpty,
+            "a web view and its WebKit internals must contribute no elements, got "
+                + "\(elements.map(\.role))")
     }
 
     /// End-to-end SwiftUI check: real `Text` inside a `UIHostingController`,

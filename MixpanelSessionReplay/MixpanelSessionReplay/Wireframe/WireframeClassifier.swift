@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import WebKit
 
 /// Answers the two questions a wireframe element is made of: *what kind of thing is
 /// this view* (``role(for:)``) and *what does it say* (``text(for:role:)``).
@@ -43,7 +42,12 @@ struct WireframeClassifier {
         if view is UITextView { return .input }
         if view is UILabel { return .text }
         if view is UIImageView { return .image }
-        if view is WKWebView { return .text }
+        // No role for a `WKWebView`, deliberately. Web content renders out of process and the
+        // SDK can read none of it, so any role here would be a guess: `.text` shipped a textless
+        // full-screen `text` shell, which reads as "text we failed to extract" rather than "not
+        // our content". Android's `classifyAndroidView` has no `WebView` branch either, and
+        // Flutter does not classify platform views, so emitting nothing is also the parity
+        // behaviour. Masking is unaffected — `maskAllWebViews` still paints over the pixels.
         if let textEditorTextView = renderClasses.textEditorTextView,
             view.isKind(of: textEditorTextView)
         {
