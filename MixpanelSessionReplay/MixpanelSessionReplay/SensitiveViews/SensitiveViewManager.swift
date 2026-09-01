@@ -199,6 +199,31 @@ class SensitiveViewManager {
         return .unknown
     }
 
+    /// *Why* `view` is masked, once ``isSensitiveView(view:)`` has already said that it
+    /// is. Reporting only: the painter fills every rect without reading its decision, so
+    /// the pixels are identical either way. What this changes is the wireframe element's
+    /// `maskDecision` and the debug overlay's fill colour.
+    ///
+    /// A class registered via `addSensitiveClass` counts as *manually marked* and reports
+    /// `.mask` (wire `EXPLICIT`) rather than `.auto`: per the ERD's Layer 1 table it is a
+    /// developer opt-in, alongside `mpReplaySensitive(true)`. Only the
+    /// `maskAllText`/`maskAllImages`/`maskAllWebViews`/`maskAllMapViews` type matches are
+    /// `AUTO`. Matches Android's `isViewClassCustomerSensitive` branch.
+    ///
+    /// Asked of the *view* rather than of which cache it landed in, and that is the whole
+    /// reason this is a method rather than an extra payload on ``SensitiveViewState``:
+    /// ``isSensitiveView(view:)`` tests auto-detection before `sensitiveClasses`, so a
+    /// `UILabel` that is also a registered class caches as auto-detected and never reaches
+    /// the class branch. Reading the reason off the cache would report it `AUTO` and
+    /// contradict the ERD; reordering the checks to fix that would move a class scan onto
+    /// the masking path, which runs with wireframes off too, to serve a wireframe-only
+    /// field.
+    func reportedMaskDecision(for view: UIView) -> MaskDecision {
+        if view.mpReplaySensitive == true { return .mask }
+        if sensitiveClasses.contains(where: { view.isKind(of: $0) }) { return .mask }
+        return .auto
+    }
+
     // Legacy text/label detection
     func isLabel(view: UIView) -> Bool {
         if view.isKind(of: UILabel.self) {

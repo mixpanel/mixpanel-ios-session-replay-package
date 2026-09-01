@@ -241,21 +241,9 @@ extension SensitiveViewManager {
     private func describeMaskedSubtree(
         _ view: UIView, declaredText: String?, walk: HierarchyWalk, context: WalkContext
     ) {
-        // A class registered via `addSensitiveClass` counts as *manually marked* and
-        // reports `.mask` (wire `EXPLICIT`) rather than `.auto`: per the ERD's Layer 1
-        // table it is a developer opt-in, alongside `mpReplaySensitive(true)`. Only the
-        // `maskAllText`/`maskAllImages`/`maskAllWebViews`/`maskAllMapViews` type matches
-        // are `AUTO`. Matches Android's `isViewClassCustomerSensitive` branch.
-        //
-        // Reporting only — the pixels are identical either way, since the painter fills
-        // every rect without reading its decision. What changes is the wireframe's
-        // `maskDecision` and the debug overlay's fill. Tested by class membership rather
-        // than by which cache the view landed in, because `isSensitiveView` checks
-        // auto-detection *before* `sensitiveClasses`, so a `UILabel` that is also a
-        // registered class never reaches the class branch.
-        let isCustomerClass = sensitiveClasses.contains { view.isKind(of: $0) }
-        let decision: MaskDecision =
-            (view.mpReplaySensitive == true || isCustomerClass) ? .mask : .auto
+        // Explicit or auto — see ``reportedMaskDecision(for:)``, which owns that rule and
+        // the reason it is asked of the view rather than of the classification cache.
+        let decision = reportedMaskDecision(for: view)
         let rect = hashableFrame(for: view.layer, in: walk.window)
         let role = walk.collectingWireframes ? wireframeClassifier.role(for: view) : nil
 
