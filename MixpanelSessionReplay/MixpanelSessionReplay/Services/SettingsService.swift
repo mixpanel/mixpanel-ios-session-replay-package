@@ -95,10 +95,10 @@ class SettingsService {
 
         // Include app bundle ID and build number so that server-side SDK blocking per app ID and app build version can be done if needed.
         if let bundleId = bundleId {
-            queryItems.append(URLQueryItem(name: "bundleId", value: bundleId))
+            queryItems.append(URLQueryItem(name: "bundle_id", value: bundleId))
         }
         if let buildNumber = buildNumber {
-            queryItems.append(URLQueryItem(name: "buildNumber", value: buildNumber))
+            queryItems.append(URLQueryItem(name: "build_number", value: buildNumber))
         }
 
         var headers = [String: String]()

@@ -1211,9 +1211,9 @@ class SettingsServiceTests: XCTestCase {
                 apiRequest.queryItems?.contains(URLQueryItem(name: "$lib_version", value: self.version)) ?? false)
             XCTAssertTrue(apiRequest.queryItems?.contains(URLQueryItem(name: "$os", value: "iOS")) ?? false)
             XCTAssertTrue(
-                apiRequest.queryItems?.contains(URLQueryItem(name: "bundleId", value: testBundleId)) ?? false)
+                apiRequest.queryItems?.contains(URLQueryItem(name: "bundle_id", value: testBundleId)) ?? false)
             XCTAssertTrue(
-                apiRequest.queryItems?.contains(URLQueryItem(name: "buildNumber", value: testBuildNumber)) ?? false)
+                apiRequest.queryItems?.contains(URLQueryItem(name: "build_number", value: testBuildNumber)) ?? false)
             return .success((self.mockNetwork.responseJson!.data(using: .utf8)!, HTTPURLResponse()))
         }
 
@@ -1253,8 +1253,8 @@ class SettingsServiceTests: XCTestCase {
         mockNetwork.sendRawRequestStub = { [weak self] apiRequest in
             guard let self = self else { fatalError("self is nil") }
             // Verify bundle parameters are NOT included
-            XCTAssertFalse(apiRequest.queryItems?.contains(where: { $0.name == "bundleId" }) ?? false)
-            XCTAssertFalse(apiRequest.queryItems?.contains(where: { $0.name == "buildNumber" }) ?? false)
+            XCTAssertFalse(apiRequest.queryItems?.contains(where: { $0.name == "bundle_id" }) ?? false)
+            XCTAssertFalse(apiRequest.queryItems?.contains(where: { $0.name == "build_number" }) ?? false)
             // Verify other required parameters are still present
             XCTAssertTrue(apiRequest.queryItems?.contains(URLQueryItem(name: "recording", value: "1")) ?? false)
             return .success((self.mockNetwork.responseJson!.data(using: .utf8)!, HTTPURLResponse()))
