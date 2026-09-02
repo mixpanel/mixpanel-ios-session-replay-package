@@ -1247,7 +1247,7 @@ class SettingsServiceTests: XCTestCase {
             mpLib: mpLib,
             userDefaults: mockDefaults!,
             bundleId: nil,
-            buildVersion: nil
+            buildNumber: nil
         )
 
         mockNetwork.sendRawRequestStub = { [weak self] apiRequest in
