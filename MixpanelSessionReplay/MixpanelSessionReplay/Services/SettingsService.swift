@@ -131,9 +131,21 @@ class SettingsService {
         response: SettingsResponse, token: String, completion: @escaping (Result<SettingsResponse, Error>) -> Void
     ) {
         Logger.debug(message: "Remote Settings API Success response: \(response)")
-        //Save the response for later use
-        cacheSettingsState(settingConfig: response, token: token)
-        completion(.success(response))
+        // A missing wireframe field is not an explicit re-enable. Preserve a cached disable so
+        // only a future `is_enabled: true` response can clear the remote kill switch. Do not carry
+        // a cached enabled/default value forward; absence with no cached disable remains allowed.
+        let cachedWireframe = getCachedSettingsState(token: token).wireframe
+        let effectiveWireframe = response.wireframe
+            ?? (cachedWireframe?.isEnabled == false ? cachedWireframe : nil)
+        let effectiveResponse = SettingsResponse(
+            sdkConfig: response.sdkConfig,
+            recording: response.recording,
+            wireframe: effectiveWireframe
+        )
+
+        // Save the effective response for later use.
+        cacheSettingsState(settingConfig: effectiveResponse, token: token)
+        completion(.success(effectiveResponse))
     }
 
     private func handleErrorResponse(
@@ -209,8 +221,8 @@ class SettingsService {
     ///
     /// `wireframesOptions` is the single switch the wireframe pipeline reads, so clearing it here —
     /// before the instance is built — turns wireframe capture off wholesale while leaving replay
-    /// recording untouched. A missing `wireframe` field means "not asked for" or "allowed", both of
-    /// which leave the config alone.
+    /// recording untouched. Before this is called, a missing `wireframe` field inherits any cached
+    /// disable; with no cached disable it remains allowed for backward compatibility.
     static func applyWireframeKillSwitch(
         to config: MPSessionReplayConfig,
         remote: SettingsResponse?

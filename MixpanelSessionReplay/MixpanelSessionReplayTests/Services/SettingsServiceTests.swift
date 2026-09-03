@@ -1026,6 +1026,39 @@ class SettingsServiceTests: XCTestCase {
         XCTAssertNotNil(resultConfig?.wireframesOptions, "Wireframe capture should stay on")
     }
 
+    func testMissingWireframeFieldPreservesCachedKillSwitch() {
+        let cachedResponse = SettingsResponse(
+            sdkConfig: nil,
+            recording: RecordingSettings(isEnabled: true, error: nil),
+            wireframe: WireframeSettings(isEnabled: false, error: "organization is blocked from wireframe capture.")
+        )
+        settingsService.cacheSettingsState(settingConfig: cachedResponse, token: testToken)
+        mockNetwork.responseJson = """
+            {
+                "code": 200,
+                "status": "OK",
+                "recording": {"is_enabled": true}
+            }
+            """
+
+        let config = MPSessionReplayConfig(wireframesOptions: MPWireframesOptions())
+        let expectation = self.expectation(description: "Completion handler invoked")
+        var resultSettings: SettingsResponse?
+        var resultConfig: MPSessionReplayConfig?
+
+        settingsService.getRemoteConfiguration(token: testToken, mode: .fallback, originalConfig: config) {
+            settings, updatedConfig in
+            resultSettings = settings
+            resultConfig = updatedConfig
+            expectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 0.5, handler: nil)
+
+        XCTAssertFalse(resultSettings?.wireframe?.isEnabled ?? true)
+        XCTAssertNil(resultConfig?.wireframesOptions, "Cached kill switch should remain active when the field is absent")
+    }
+
     func testWireframeKillSwitchSurvivesNetworkFailureViaCache() {
         // An earlier launch cached the kill switch
         let cachedResponse = SettingsResponse(
