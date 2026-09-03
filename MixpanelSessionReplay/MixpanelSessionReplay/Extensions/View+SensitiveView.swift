@@ -47,42 +47,34 @@ extension UIView: SensitiveView {
     }
 }
 
-struct SensitiveViewWrapperRepresentable: UIViewRepresentable {
-    let onCreate: (SensitiveViewWrapper) -> Void
-
-    func makeUIView(context: Context) -> SensitiveViewWrapper {
-        let wrapper = SensitiveViewWrapper()
-        onCreate(wrapper)
-        return wrapper
-    }
-
-    func updateUIView(_ uiView: SensitiveViewWrapper, context: Context) {}
-}
-
-struct SensitiveModifier: ViewModifier {
-    let isSensitive: Bool
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                SensitiveViewWrapperRepresentable { wrapper in
-                    wrapper.mpReplaySensitive = self.isSensitive
-                }
-            )
-    }
-}
-
 extension View {
+    /// Marks a SwiftUI view as sensitive (masked) or explicitly safe.
+    ///
+    /// - Parameter isSensitive: Pass `true` to mask the view — an opaque
+    ///   rectangle is drawn over it in the recording and its pixels are not
+    ///   captured. Pass `false` to explicitly opt the view out of automatic
+    ///   masking.
+    ///
+    /// This controls **pixels only**. To declare the text recorded for the view
+    /// in the `mp_wireframe` event, use ``SwiftUI/View/mpWireframeText(_:)`` —
+    /// the two concerns are orthogonal and chain:
+    ///
+    /// ```swift
+    /// Image("avatar").mpReplaySensitive(true).mpWireframeText("profile photo")
+    /// ```
     public func mpReplaySensitive(_ isSensitive: Bool) -> some View {
-        self.modifier(SensitiveModifier(isSensitive: isSensitive))
+        self.modifier(MPReplayModifier(sensitive: isSensitive, wireframeText: nil))
     }
 }
-
-class SensitiveViewWrapper: UIView {}
 
 private var mpReplaySensitiveKey: UInt8 = 0
 
 extension UIView {
+    /// Marks this view as sensitive (masked) or explicitly safe.
+    ///
+    /// Controls **pixels only**. To declare the text recorded for the view in
+    /// the `mp_wireframe` event, set ``mpWireframeText`` — the two concerns are
+    /// orthogonal.
     public var mpReplaySensitive: Bool? {
         get { objc_getAssociatedObject(self, &mpReplaySensitiveKey) as? Bool }
         set {

@@ -848,6 +848,246 @@ class SettingsServiceTests: XCTestCase {
         waitForExpectations(timeout: 0.5, handler: nil)
     }
 
+    // MARK: - Wireframe Kill Switch Tests
+
+    func testWireframeQueryParameterOmittedWhenWireframesOff() {
+        mockNetwork.responseJson = """
+            {
+                "code": 200,
+                "status": "OK",
+                "recording": {"is_enabled": true}
+            }
+            """
+
+        mockNetwork.sendRawRequestStub = { [weak self] apiRequest in
+            guard let self = self else { fatalError("self is nil") }
+            XCTAssertFalse(
+                apiRequest.queryItems?.contains(where: { $0.name == "wireframe" }) ?? false,
+                "wireframe should not be requested when wireframes are off")
+            return .success((self.mockNetwork.responseJson!.data(using: .utf8)!, HTTPURLResponse()))
+        }
+
+        let config = MPSessionReplayConfig()
+        let expectation = self.expectation(description: "Completion handler invoked")
+
+        settingsService.getRemoteConfiguration(token: testToken, mode: .fallback, originalConfig: config) { _, _ in
+            expectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 0.5, handler: nil)
+    }
+
+    func testWireframeQueryParameterSentWhenWireframesOn() {
+        mockNetwork.responseJson = """
+            {
+                "code": 200,
+                "status": "OK",
+                "recording": {"is_enabled": true},
+                "wireframe": {"is_enabled": true}
+            }
+            """
+
+        mockNetwork.sendRawRequestStub = { [weak self] apiRequest in
+            guard let self = self else { fatalError("self is nil") }
+            XCTAssertTrue(apiRequest.queryItems?.contains(URLQueryItem(name: "wireframe", value: "1")) ?? false)
+            return .success((self.mockNetwork.responseJson!.data(using: .utf8)!, HTTPURLResponse()))
+        }
+
+        let config = MPSessionReplayConfig(wireframesOptions: MPWireframesOptions())
+        let expectation = self.expectation(description: "Completion handler invoked")
+
+        settingsService.getRemoteConfiguration(token: testToken, mode: .fallback, originalConfig: config) { _, _ in
+            expectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 0.5, handler: nil)
+    }
+
+    func testWireframeDisabledClearsWireframesOptionsInFallbackMode() {
+        mockNetwork.responseJson = """
+            {
+                "code": 200,
+                "status": "OK",
+                "recording": {"is_enabled": true},
+                "wireframe": {
+                    "is_enabled": false,
+                    "error": "organization is blocked from wireframe capture."
+                }
+            }
+            """
+
+        let config = MPSessionReplayConfig(wireframesOptions: MPWireframesOptions())
+        let expectation = self.expectation(description: "Completion handler invoked")
+        var resultSettings: SettingsResponse?
+        var resultConfig: MPSessionReplayConfig?
+
+        settingsService.getRemoteConfiguration(token: testToken, mode: .fallback, originalConfig: config) {
+            settings, updatedConfig in
+            resultSettings = settings
+            resultConfig = updatedConfig
+            expectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 0.5, handler: nil)
+
+        XCTAssertNil(resultConfig?.wireframesOptions, "Wireframe capture should be turned off")
+        XCTAssertEqual(resultSettings?.wireframe?.error, "organization is blocked from wireframe capture.")
+        // Only wireframes are killed - replay still records
+        XCTAssertTrue(resultSettings?.recording?.isEnabled ?? false, "Recording should stay enabled")
+    }
+
+    func testWireframeDisabledClearsWireframesOptionsInDisabledMode() {
+        // The kill switch is an enablement switch, not remote config, so disabled mode honors it too
+        mockNetwork.responseJson = """
+            {
+                "code": 200,
+                "status": "OK",
+                "recording": {"is_enabled": true},
+                "wireframe": {"is_enabled": false},
+                "sdk_config": {
+                    "config": {"record_sessions_percent": 25}
+                }
+            }
+            """
+
+        let config = MPSessionReplayConfig(
+            recordingSessionsPercent: 100,
+            wireframesOptions: MPWireframesOptions()
+        )
+        let expectation = self.expectation(description: "Completion handler invoked")
+        var resultSettings: SettingsResponse?
+        var resultConfig: MPSessionReplayConfig?
+
+        settingsService.getRemoteConfiguration(token: testToken, mode: .disabled, originalConfig: config) {
+            settings, updatedConfig in
+            resultSettings = settings
+            resultConfig = updatedConfig
+            expectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 0.5, handler: nil)
+
+        XCTAssertNil(resultConfig?.wireframesOptions, "Wireframe capture should be turned off")
+        XCTAssertFalse(resultSettings?.wireframe?.isEnabled ?? true)
+        // Remote SDK config is still ignored in disabled mode
+        XCTAssertNil(resultSettings?.sdkConfig)
+        XCTAssertEqual(resultConfig?.recordingSessionsPercent, 100)
+    }
+
+    func testWireframeEnabledKeepsWireframesOptions() {
+        mockNetwork.responseJson = """
+            {
+                "code": 200,
+                "status": "OK",
+                "recording": {"is_enabled": true},
+                "wireframe": {"is_enabled": true}
+            }
+            """
+
+        let config = MPSessionReplayConfig(wireframesOptions: MPWireframesOptions())
+        let expectation = self.expectation(description: "Completion handler invoked")
+        var resultConfig: MPSessionReplayConfig?
+
+        settingsService.getRemoteConfiguration(token: testToken, mode: .fallback, originalConfig: config) {
+            _, updatedConfig in
+            resultConfig = updatedConfig
+            expectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 0.5, handler: nil)
+
+        XCTAssertNotNil(resultConfig?.wireframesOptions, "Wireframe capture should stay on")
+    }
+
+    func testMissingWireframeFieldKeepsWireframesOptions() {
+        mockNetwork.responseJson = """
+            {
+                "code": 200,
+                "status": "OK",
+                "recording": {"is_enabled": true}
+            }
+            """
+
+        let config = MPSessionReplayConfig(wireframesOptions: MPWireframesOptions())
+        let expectation = self.expectation(description: "Completion handler invoked")
+        var resultSettings: SettingsResponse?
+        var resultConfig: MPSessionReplayConfig?
+
+        settingsService.getRemoteConfiguration(token: testToken, mode: .fallback, originalConfig: config) {
+            settings, updatedConfig in
+            resultSettings = settings
+            resultConfig = updatedConfig
+            expectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 0.5, handler: nil)
+
+        XCTAssertNil(resultSettings?.wireframe)
+        XCTAssertNotNil(resultConfig?.wireframesOptions, "Wireframe capture should stay on")
+    }
+
+    func testMissingWireframeFieldPreservesCachedKillSwitch() {
+        let cachedResponse = SettingsResponse(
+            sdkConfig: nil,
+            recording: RecordingSettings(isEnabled: true, error: nil),
+            wireframe: WireframeSettings(isEnabled: false, error: "organization is blocked from wireframe capture.")
+        )
+        settingsService.cacheSettingsState(settingConfig: cachedResponse, token: testToken)
+        mockNetwork.responseJson = """
+            {
+                "code": 200,
+                "status": "OK",
+                "recording": {"is_enabled": true}
+            }
+            """
+
+        let config = MPSessionReplayConfig(wireframesOptions: MPWireframesOptions())
+        let expectation = self.expectation(description: "Completion handler invoked")
+        var resultSettings: SettingsResponse?
+        var resultConfig: MPSessionReplayConfig?
+
+        settingsService.getRemoteConfiguration(token: testToken, mode: .fallback, originalConfig: config) {
+            settings, updatedConfig in
+            resultSettings = settings
+            resultConfig = updatedConfig
+            expectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 0.5, handler: nil)
+
+        XCTAssertFalse(resultSettings?.wireframe?.isEnabled ?? true)
+        XCTAssertNil(resultConfig?.wireframesOptions, "Cached kill switch should remain active when the field is absent")
+    }
+
+    func testWireframeKillSwitchSurvivesNetworkFailureViaCache() {
+        // An earlier launch cached the kill switch
+        let cachedResponse = SettingsResponse(
+            sdkConfig: nil,
+            recording: RecordingSettings(isEnabled: true, error: nil),
+            wireframe: WireframeSettings(isEnabled: false, error: "organization is blocked from wireframe capture.")
+        )
+        settingsService.cacheSettingsState(settingConfig: cachedResponse, token: testToken)
+
+        let error = NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Network error"])
+        mockNetwork.sendRawRequestStub = { _ in
+            return .failure(error)
+        }
+
+        let config = MPSessionReplayConfig(wireframesOptions: MPWireframesOptions())
+        let expectation = self.expectation(description: "Completion handler invoked")
+        var resultConfig: MPSessionReplayConfig?
+
+        settingsService.getRemoteConfiguration(token: testToken, mode: .fallback, originalConfig: config) {
+            _, updatedConfig in
+            resultConfig = updatedConfig
+            expectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 0.5, handler: nil)
+
+        XCTAssertNil(resultConfig?.wireframesOptions, "Cached kill switch should still turn wireframes off")
+    }
+
     // MARK: - Legacy Recording Field Tests
 
     func testLegacyRecordingFieldDisabled() {

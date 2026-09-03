@@ -160,7 +160,10 @@ public struct MPSessionReplayConfig: Codable {
 
     /// Debug feature configuration. When not nil, debug features are enabled.
     ///
-    /// Only works in debug builds to prevent accidental exposure in production.
+    /// Its two members differ in where they take effect: ``DebugOptions/overlayColors``
+    /// draws on the user's screen and is compiled out of release builds, while
+    /// ``DebugOptions/wireframeEmitter`` renders nothing and hands your own code a
+    /// description of a frame the SDK already built, so it is delivered in any build.
     ///
     /// - Default: `nil` (disabled)
     /// - SeeAlso: ``DebugOptions``, ``DebugOverlayColors``
@@ -187,6 +190,50 @@ public struct MPSessionReplayConfig: Codable {
         }
     }
 
+    /// Enables wireframe capture: a per-frame structured list of visible UI
+    /// elements (role, text, bounds) shipped as an rrweb Custom event alongside
+    /// the screenshot stream.
+    ///
+    /// **Beta.** Wireframes are in beta. Before shipping to production, inspect
+    /// the wireframes your app produces and confirm that no sensitive
+    /// information is captured; see ``MPWireframesOptions``.
+    ///
+    /// - When `nil` (the default), no wireframe events are emitted and the SDK
+    ///   behaves exactly as it did before wireframes were introduced.
+    /// - When non-nil, wireframes are captured on every screenshot pass. The
+    ///   same masking guarantees the screenshot honors are enforced on the
+    ///   wireframe (view-level, geometric leak-prevention, and content rules).
+    ///
+    /// ## Example
+    /// ```swift
+    /// var config = MPSessionReplayConfig()
+    ///
+    /// // Turn wireframes on with the defaults.
+    /// config.wireframesOptions = MPWireframesOptions()
+    ///
+    /// // Or opt into content rules and the accessibility-label fallback.
+    /// config.wireframesOptions = MPWireframesOptions(
+    ///     sensitiveRules: [
+    ///         // Drop the text of any element mentioning an account number.
+    ///         .strip(text: "Account #"),
+    ///         // Replace anything that looks like an email address.
+    ///         .redactRegex(
+    ///             try! NSRegularExpression(pattern: #"[\w.+-]+@[\w-]+\.[\w.]+"#),
+    ///             replacement: "[EMAIL]"),
+    ///     ],
+    ///     useAccessibilityLabelFallback: true
+    /// )
+    /// ```
+    ///
+    /// - Default: `nil`
+    /// - Note: Carried through `Codable`, so cross-platform bridges (React
+    ///   Native) can turn wireframes on through the config JSON they already
+    ///   send. Both of ``MPWireframesOptions``'s fields are optional in JSON,
+    ///   so `"wireframesOptions": {}` means "on, with the defaults"; omitting
+    ///   the key entirely leaves capture off.
+    /// - SeeAlso: ``MPWireframesOptions``, ``MPSensitiveRule``
+    public var wireframesOptions: MPWireframesOptions?
+
     /// Initializes a new `MPSessionReplayConfig` with the provided settings.
     ///
     /// - Parameters:
@@ -202,6 +249,7 @@ public struct MPSessionReplayConfig: Codable {
     ///   - enableSessionReplayOniOS26AndLater: Forces Session Replay to be enabled on iOS 26 and later.
     ///   - debugOptions: Debug feature configuration. When not nil, enables debug features (debug builds only).
     ///   - serverURL: The data residency base URL. Use `DataResidency.us` (default), `DataResidency.eu`, `DataResidency.in`, or a custom URL.
+    ///   - wireframesOptions: Wireframe capture configuration. When not nil, enables wireframe emission.
     public init(
         wifiOnly: Bool = true,
         autoMaskedViews: Set<MPAutoMaskedViews> = [.image, .text, .web, .map],
@@ -212,7 +260,8 @@ public struct MPSessionReplayConfig: Codable {
         flushInterval: TimeInterval = 10,
         enableSessionReplayOniOS26AndLater: Bool = false,
         debugOptions: DebugOptions? = nil,
-        serverURL: String = DataResidency.us
+        serverURL: String = DataResidency.us,
+        wireframesOptions: MPWireframesOptions? = nil
     ) {
         self.wifiOnly = wifiOnly
         self.autoMaskedViews = autoMaskedViews
@@ -224,6 +273,21 @@ public struct MPSessionReplayConfig: Codable {
         self.enableSessionReplayOniOS26AndLater = enableSessionReplayOniOS26AndLater
         self.debugOptions = debugOptions
         self.serverURL = getTrimmedServerURL(urlString: serverURL)
+        self.wireframesOptions = wireframesOptions
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case wifiOnly
+        case autoMaskedViews
+        case autoStartRecording
+        case recordingSessionsPercent
+        case remoteSettingsMode
+        case enableLogging
+        case flushInterval
+        case enableSessionReplayOniOS26AndLater
+        case debugOptions
+        case serverURL
+        case wireframesOptions
     }
 
     /// Validates the serverURL and logs errors if invalid

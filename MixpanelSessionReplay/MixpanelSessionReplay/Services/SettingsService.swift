@@ -42,16 +42,22 @@ class SettingsService {
         originalConfig: MPSessionReplayConfig,
         completion: @escaping (SettingsResponse?, MPSessionReplayConfig) -> Void
     ) {
-        fetchSettingsFromServer(token: token) { [weak self] result in
+        fetchSettingsFromServer(token: token, wireframesRequested: originalConfig.wireframesOptions != nil) {
+            [weak self] result in
             switch result {
                 case .success(let settings):
                     // Handle disabled mode: If the remote settings are disabled, we still fetch the remote settings
                     // to get the isRecording(remote enablement switch) flag, but we do not merge the configs with the original config.
                     if mode == .disabled {
                         Logger.info(message: "Remote settings mode is disabled, using original config")
-                        // Remove the sdkConfig from the settings response to prevent any accidental usage of remote sdk config values in disabled mode, but keep the recording settings to respect remote enablement switch if present in remote settings
-                        let updatedSettings = SettingsResponse(sdkConfig: nil, recording: settings.recording)
-                        completion(updatedSettings, originalConfig)
+                        // Remove the sdkConfig from the settings response to prevent any accidental usage of remote sdk config values in disabled mode, but keep the recording and wireframe settings to respect the remote kill switches if present in remote settings
+                        let updatedSettings = SettingsResponse(
+                            sdkConfig: nil, recording: settings.recording, wireframe: settings.wireframe)
+                        // The wireframe kill switch is an enablement switch, not remote config, so it is
+                        // honored in every mode.
+                        completion(
+                            updatedSettings,
+                            Self.applyWireframeKillSwitch(to: originalConfig, remote: updatedSettings))
                         return
                     }
                     // Merge remote settings with original config
@@ -75,17 +81,25 @@ class SettingsService {
         }
     }
 
-    private func fetchSettingsFromServer(token: String, completion: @escaping (Result<SettingsResponse, Error>) -> Void)
-    {
+    private func fetchSettingsFromServer(
+        token: String,
+        wireframesRequested: Bool,
+        completion: @escaping (Result<SettingsResponse, Error>) -> Void
+    ) {
         Logger.info(message: "Checking remote settings for project: \(token)")
 
-        let queryItems = [
+        var queryItems = [
             URLQueryItem(name: "recording", value: "1"),
             URLQueryItem(name: "sdk_config", value: "1"),
             URLQueryItem(name: "mp_lib", value: mpLib),
             URLQueryItem(name: "$lib_version", value: version),
             URLQueryItem(name: "$os", value: "iOS"),
         ]
+
+        // Only ask for the wireframe kill switch when this app opted in to wireframes.
+        if wireframesRequested {
+            queryItems.append(URLQueryItem(name: "wireframe", value: "1"))
+        }
 
         var headers = [String: String]()
         if let data = "\(token):".data(using: .utf8) {
@@ -117,9 +131,21 @@ class SettingsService {
         response: SettingsResponse, token: String, completion: @escaping (Result<SettingsResponse, Error>) -> Void
     ) {
         Logger.debug(message: "Remote Settings API Success response: \(response)")
-        //Save the response for later use
-        cacheSettingsState(settingConfig: response, token: token)
-        completion(.success(response))
+        // A missing wireframe field is not an explicit re-enable. Preserve a cached disable so
+        // only a future `is_enabled: true` response can clear the remote kill switch. Do not carry
+        // a cached enabled/default value forward; absence with no cached disable remains allowed.
+        let cachedWireframe = getCachedSettingsState(token: token).wireframe
+        let effectiveWireframe = response.wireframe
+            ?? (cachedWireframe?.isEnabled == false ? cachedWireframe : nil)
+        let effectiveResponse = SettingsResponse(
+            sdkConfig: response.sdkConfig,
+            recording: response.recording,
+            wireframe: effectiveWireframe
+        )
+
+        // Save the effective response for later use.
+        cacheSettingsState(settingConfig: effectiveResponse, token: token)
+        completion(.success(effectiveResponse))
     }
 
     private func handleErrorResponse(
@@ -155,8 +181,11 @@ class SettingsService {
                 let cachedSettings = getCachedSettingsState(token: token)
                 Logger.warn(message: "Disabled mode: Using cached setting for remote enablement switch check")
                 // Remove sdkConfig from settings response as Disabled mode does not use Remote configuration
-                let updatedSettings = SettingsResponse(sdkConfig: nil, recording: cachedSettings.recording)
-                completion(updatedSettings, originalConfig)
+                let updatedSettings = SettingsResponse(
+                    sdkConfig: nil, recording: cachedSettings.recording, wireframe: cachedSettings.wireframe)
+                completion(
+                    updatedSettings,
+                    Self.applyWireframeKillSwitch(to: originalConfig, remote: updatedSettings))
         }
     }
 
@@ -185,6 +214,27 @@ class SettingsService {
             Logger.warn(message: "No remote SDK config found to merge, error - \(remote?.sdkConfig?.error ?? "NA")")
         }
 
+        return Self.applyWireframeKillSwitch(to: updated, remote: remote)
+    }
+
+    /// Honors the server-side wireframe kill switch by clearing ``MPSessionReplayConfig/wireframesOptions``.
+    ///
+    /// `wireframesOptions` is the single switch the wireframe pipeline reads, so clearing it here —
+    /// before the instance is built — turns wireframe capture off wholesale while leaving replay
+    /// recording untouched. Before this is called, a missing `wireframe` field inherits any cached
+    /// disable; with no cached disable it remains allowed for backward compatibility.
+    static func applyWireframeKillSwitch(
+        to config: MPSessionReplayConfig,
+        remote: SettingsResponse?
+    ) -> MPSessionReplayConfig {
+        guard let wireframe = remote?.wireframe, !wireframe.isEnabled else { return config }
+        guard config.wireframesOptions != nil else { return config }
+
+        let reason = wireframe.error ?? "Wireframe capture is disabled by remote config setting."
+        PrintLogging.shared.log(.warning, "Wireframe capture is disabled via remote settings: \(reason)")
+
+        var updated = config
+        updated.wireframesOptions = nil
         return updated
     }
 

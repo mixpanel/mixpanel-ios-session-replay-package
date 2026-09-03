@@ -1,0 +1,30 @@
+{
+  "viewport": [
+    500,
+    800
+  ],
+  "elements": [
+    {
+      "role": "text",
+      "text": "checkout summary",
+      "bounds": [
+        10,
+        20,
+        300,
+        120
+      ],
+      "maskDecision": "DECLARED"
+    },
+    {
+      "role": "text",
+      "text": "Order total",
+      "bounds": [
+        20,
+        30,
+        240,
+        30
+      ],
+      "maskDecision": "NONE"
+    }
+  ]
+}

@@ -40,14 +40,23 @@ enum SessionEventData: Codable {
     case positionData(SessionPositionData)
     case detailedData(EventDataDetail)
     case attributesData(SessionAttributesData)
+    case customData(SessionCustomEventData)
 
     enum CodingKeys: String, CodingKey {
         case width, height, node, source, positions, type, id, x, y, textContent, childNodes, tagName,
-            attributes, isStyle, name, publicId, systemId, texts, removes, adds
+            attributes, isStyle, name, publicId, systemId, texts, removes, adds, tag, payload
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Wireframe custom events arrive as {tag, payload} — decode first
+        // because their shape doesn't overlap with any other case.
+        if let tag = try container.decodeIfPresent(String.self, forKey: .tag) {
+            let payload = try container.decode(WireframePayload.self, forKey: .payload)
+            self = .customData(SessionCustomEventData(tag: tag, payload: payload))
+            return
+        }
 
         if let width = try container.decodeIfPresent(Int.self, forKey: .width),
             let height = try container.decodeIfPresent(Int.self, forKey: .height)
@@ -109,8 +118,16 @@ enum SessionEventData: Codable {
                 try container.encode(data.attributes, forKey: .attributes)
                 try container.encode(data.removes, forKey: .removes)
                 try container.encode(data.adds, forKey: .adds)
+            case .customData(let data):
+                try container.encode(data.tag, forKey: .tag)
+                try container.encode(data.payload, forKey: .payload)
         }
     }
+}
+
+struct SessionCustomEventData: SessionEventDataProtocol {
+    let tag: String
+    let payload: WireframePayload
 }
 
 struct SessionDimensionData: SessionEventDataProtocol {

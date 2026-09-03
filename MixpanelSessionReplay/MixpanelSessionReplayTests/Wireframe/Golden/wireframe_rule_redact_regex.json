@@ -1,0 +1,19 @@
+{
+  "viewport": [
+    500,
+    800
+  ],
+  "elements": [
+    {
+      "role": "text",
+      "text": "card [####] [####] [####] [####]",
+      "bounds": [
+        10,
+        10,
+        360,
+        30
+      ],
+      "maskDecision": "RULE_REDACT"
+    }
+  ]
+}
