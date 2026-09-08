@@ -135,7 +135,8 @@ class SettingsService {
         // only a future `is_enabled: true` response can clear the remote kill switch. Do not carry
         // a cached enabled/default value forward; absence with no cached disable remains allowed.
         let cachedWireframe = getCachedSettingsState(token: token).wireframe
-        let effectiveWireframe = response.wireframe
+        let effectiveWireframe =
+            response.wireframe
             ?? (cachedWireframe?.isEnabled == false ? cachedWireframe : nil)
         let effectiveResponse = SettingsResponse(
             sdkConfig: response.sdkConfig,

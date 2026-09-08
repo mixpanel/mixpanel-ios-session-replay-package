@@ -1056,7 +1056,8 @@ class SettingsServiceTests: XCTestCase {
         waitForExpectations(timeout: 0.5, handler: nil)
 
         XCTAssertFalse(resultSettings?.wireframe?.isEnabled ?? true)
-        XCTAssertNil(resultConfig?.wireframesOptions, "Cached kill switch should remain active when the field is absent")
+        XCTAssertNil(
+            resultConfig?.wireframesOptions, "Cached kill switch should remain active when the field is absent")
     }
 
     func testWireframeKillSwitchSurvivesNetworkFailureViaCache() {

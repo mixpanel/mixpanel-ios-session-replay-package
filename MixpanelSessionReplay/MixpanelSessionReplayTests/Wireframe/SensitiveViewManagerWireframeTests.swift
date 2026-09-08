@@ -745,7 +745,6 @@ final class SensitiveViewManagerWireframeTests: XCTestCase {
             "the scraped value it labels must not be")
     }
 
-
     // MARK: - The mask set is untouched by wireframe collection
 
     /// `mask > unmask > mpReplaySensitive(true)` must record only the enclosing mask.
