@@ -33,7 +33,7 @@ struct SampleAppApp: App {
         )
 
         MPSessionReplay.initialize(
-            token: "074759b3e946dbc6289ee8567cc557b3",
+            token: "YOUR_PROJECT_TOKEN",
             distinctId: "ios_wireframe",
             config: config
         )
