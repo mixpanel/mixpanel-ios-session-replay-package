@@ -149,6 +149,13 @@ final class WireframeEmitter {
         }
     }
 
+    /// Waits until every emit submitted before this call has finished processing.
+    /// Used by tests that assert an event was suppressed, so they can observe the
+    /// completed queue state without relying on a timer or scheduler latency.
+    func waitUntilIdle() {
+        workQueue.sync {}
+    }
+
     // MARK: - Pipeline
 
     /// Runs Layers 2 and 4 (geometric leak-prevention + sensitive rules) over one

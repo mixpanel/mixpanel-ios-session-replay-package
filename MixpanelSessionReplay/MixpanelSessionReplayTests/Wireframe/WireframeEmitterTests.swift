@@ -403,7 +403,7 @@ final class WireframeEmitterTests: XCTestCase {
 
         publishedEvents.removeAll()
         emitter.emit(elements: [element], viewport: (100, 100), maskBounds: [])
-        assertNoPublishedEvent("identical emit should be deduped")
+        assertNoPublishedEvent(from: emitter, "identical emit should be deduped")
     }
 
     /// Dedup state is per *session*, not per SDK lifetime.
@@ -458,6 +458,7 @@ final class WireframeEmitterTests: XCTestCase {
         emitter.emit(elements: stale, viewport: (100, 100), maskBounds: [])
         emitter.resetDedup()
         assertNoPublishedEvent(
+            from: emitter,
             "a frame captured before the session boundary must not ship, and must not leave "
                 + "its hash behind")
         XCTAssertNil(
@@ -510,7 +511,7 @@ final class WireframeEmitterTests: XCTestCase {
         emitter.emit(
             elements: [element], viewport: (100, 100),
             maskBounds: [HashableRect(CGRect(x: 50, y: 50, width: 5, height: 5))])
-        assertNoPublishedEvent()
+        assertNoPublishedEvent(from: emitter)
     }
 
     func testDedup_viewportChangeReEmits() throws {
@@ -542,7 +543,7 @@ final class WireframeEmitterTests: XCTestCase {
         emitter.emit(
             elements: [WireframeElement.from(role: .text, text: nil, rect: rect, decision: .auto)],
             viewport: (100, 100), maskBounds: [])
-        assertNoPublishedEvent()
+        assertNoPublishedEvent(from: emitter)
     }
 
     // MARK: - Debug emitter
@@ -607,18 +608,16 @@ final class WireframeEmitterTests: XCTestCase {
         return publishedEvents[0]
     }
 
-    /// Asserts nothing lands on the event stream — i.e. the frame deduped. Emit is
-    /// asynchronous, so this has to wait out the work queue rather than check immediately.
+    /// Asserts nothing lands on the event stream — i.e. the frame deduped. Drain the
+    /// emitter first, then the publisher queue where it submits events, so the assertion
+    /// observes completed work without depending on a timer firing under CI load.
     private func assertNoPublishedEvent(
-        within delay: TimeInterval = 0.2,
+        from emitter: WireframeEmitter,
         _ message: String = "expected the frame to dedup",
         file: StaticString = #filePath, line: UInt = #line
     ) {
-        let exp = expectation(description: "quiet")
-        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + delay) {
-            exp.fulfill()
-        }
-        wait(for: [exp], timeout: delay + 1.0)
+        emitter.waitUntilIdle()
+        EventPublisher.shared.queue.sync {}
         XCTAssertEqual(publishedEvents.count, 0, message, file: file, line: line)
     }
 
