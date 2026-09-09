@@ -86,6 +86,30 @@ final class MPSessionReplayManager {
         Logger.addLogging(PrintLogging.shared)
     }
 
+    /// Printed once per `initialize` when an app turns wireframes on, in debug builds only.
+    ///
+    /// The ask is verification. An integrator who has just turned wireframes on is pointed at
+    /// the debug emitter and asked to confirm, against their own expectations of what may leave
+    /// the device, that nothing sensitive is captured — while it is still cheap to find out.
+    ///
+    /// Deliberately bypasses the `enableLogging` gate — the developer who needs to read this is
+    /// the one wiring wireframes up for the first time, and has no particular reason to have
+    /// opted into verbose logging. `#if DEBUG` keeps it out of a shipped app instead.
+    ///
+    /// Fires on local opt-in, before the remote kill switch is consulted. If the server then
+    /// turns capture off, `SettingsService.applyWireframeKillSwitch` says so in its own log line.
+    func logWireframesBetaNotice(_ config: MPSessionReplayConfig) {
+        #if DEBUG
+        guard config.wireframesOptions != nil else { return }
+        PrintLogging.shared.log(
+            .info,
+            "Wireframes enabled (beta). Before shipping to production, inspect the wireframes "
+                + "your app produces with the wireframe debug emitter and confirm that no "
+                + "sensitive information is captured."
+        )
+        #endif
+    }
+
     func updateLoggingEnabled(_ enabled: Bool) {
         if enabled {
             Logger.enableLevel(.debug)
@@ -127,6 +151,8 @@ final class MPSessionReplayManager {
         completion: @escaping (Result<MPSessionReplayInstance?, Error>) -> Void
     ) {
         updateLoggingEnabled(config.enableLogging)
+
+        logWireframesBetaNotice(config)
 
         if !config.validateServerURL() {
             PrintLogging.shared.log(

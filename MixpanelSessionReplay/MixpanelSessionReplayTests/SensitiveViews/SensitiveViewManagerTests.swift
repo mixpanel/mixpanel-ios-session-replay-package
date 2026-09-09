@@ -29,7 +29,111 @@ class SensitiveViewManagerTests: BaseTests {
     func testSensitiveViewDetection_TextField() {
         let textField = UITextField()
         let result = manager.isSensitiveView(view: textField)
-        XCTAssertEqual(result, .sensitiveTextField, "UITextField should be detected as sensitiveTextField")
+        XCTAssertEqual(result, .sensitiveTextInput, "UITextField should be detected as sensitiveTextField")
+    }
+
+    // MARK: - UITextView is a text input, editable or not
+
+    /// `UITextView` is iOS's multi-line text input, and it is classified by *type*
+    /// rather than by `isEditable` — matching Android (`EditText::class.isAssignableFrom`,
+    /// with no editability check) and Flutter (`renderObject is RenderEditable`, which
+    /// catches a read-only `SelectableText`).
+    ///
+    /// A read-only `UITextView` very often holds text the user themselves typed — a
+    /// saved note, a message body, a bio rendered back for review — so the safe default
+    /// is to treat it as an input. Being a text input, it survives both escape hatches:
+    /// `maskAllText = false` and an `mpReplaySensitive = false` ancestor.
+    func testTextView_editable_isTextInput() {
+        let textView = UITextView()
+        textView.isEditable = true
+        XCTAssertEqual(manager.isSensitiveView(view: textView), .sensitiveTextInput)
+    }
+
+    func testTextView_nonEditable_isStillTextInput() {
+        let textView = UITextView()
+        textView.isEditable = false
+        XCTAssertEqual(
+            manager.isSensitiveView(view: textView), .sensitiveTextInput,
+            "A read-only UITextView still commonly holds user-authored text")
+    }
+
+    func testTextView_isNotClassifiedAsALabel() {
+        XCTAssertFalse(
+            manager.isLabel(view: UITextView()),
+            "UITextView is an input, not a label — otherwise maskAllText would gate it")
+    }
+
+    func testTextView_maskedEvenWhenMaskAllTextIsOff() {
+        let root = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let textView = UITextView(frame: CGRect(x: 10, y: 10, width: 200, height: 60))
+        textView.isEditable = false
+        textView.text = "user typed this"
+        root.addSubview(textView)
+
+        manager.maskAllText = false
+        let frames = manager.walkHierarchy(in: root, window: window).frames
+
+        XCTAssertEqual(
+            frames[HashableRect(textView.frame)], .textInput,
+            "maskAllText = false must not expose a text input")
+    }
+
+    func testTextView_maskedInsideUnmaskedAncestor() {
+        let root = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        safeContainer.mpReplaySensitive = false
+        let textView = UITextView(frame: CGRect(x: 10, y: 10, width: 200, height: 60))
+        textView.isEditable = false
+        textView.text = "user typed this"
+        safeContainer.addSubview(textView)
+        root.addSubview(safeContainer)
+
+        let frames = manager.walkHierarchy(in: root, window: window).frames
+
+        XCTAssertEqual(
+            frames[HashableRect(textView.convert(textView.bounds, to: window))], .textInput,
+            "An unmasked ancestor must not expose a text input")
+    }
+
+    func testTextView_maskedWhenNestedDeeplyInsideUnmaskedAncestor() {
+        let root = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        safeContainer.mpReplaySensitive = false
+        let mid = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let inner = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+        let textView = UITextView(frame: CGRect(x: 10, y: 10, width: 200, height: 60))
+        textView.isEditable = false
+        inner.addSubview(textView)
+        mid.addSubview(inner)
+        safeContainer.addSubview(mid)
+        root.addSubview(safeContainer)
+
+        let frames = manager.walkHierarchy(in: root, window: window).frames
+
+        XCTAssertEqual(
+            frames[HashableRect(textView.convert(textView.bounds, to: window))], .textInput,
+            "Depth must not matter — the walk records the input wherever it sits")
+    }
+
+    func testTextView_wireframeRoleIsInputAndTextIsNeverScraped() {
+        let editable = UITextView()
+        editable.isEditable = true
+        editable.text = "typed secret"
+        let readOnly = UITextView()
+        readOnly.isEditable = false
+        readOnly.text = "saved note"
+
+        XCTAssertEqual(manager.wireframeClassifier.role(for: editable), .input)
+        XCTAssertEqual(manager.wireframeClassifier.role(for: readOnly), .input)
+        XCTAssertNil(
+            manager.wireframeClassifier.text(for: editable, role: .input),
+            "An input's text is never scraped")
+        XCTAssertNil(
+            manager.wireframeClassifier.text(for: readOnly, role: .input),
+            "An input's text is never scraped, editable or not")
     }
 
     func testSensitiveViewDetection_Label() {
@@ -125,7 +229,7 @@ class SensitiveViewManagerTests: BaseTests {
         let textField = UITextField(frame: CGRect(x: 10, y: 10, width: 50, height: 20))
         rootView.addSubview(textField)
 
-        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+        let sensitiveFrames = manager.walkHierarchy(in: rootView, window: window).frames
         XCTAssertEqual(
             sensitiveFrames[HashableRect(textField.frame)], .textInput,
             "Text field frame should be in sensitive frames as textInput")
@@ -164,11 +268,11 @@ class SensitiveViewManagerTests: BaseTests {
 
         manager.knownSensitiveViews.insert(label)
         manager.sensitiveClassViews.insert(customView)
-        manager.sensitiveTextFieldViews.insert(textField)
+        manager.sensitiveTextInputViews.insert(textField)
 
         XCTAssertTrue(manager.knownSensitiveViews.contains(label))
         XCTAssertTrue(manager.sensitiveClassViews.contains(customView))
-        XCTAssertTrue(manager.sensitiveTextFieldViews.contains(textField))
+        XCTAssertTrue(manager.sensitiveTextInputViews.contains(textField))
 
         // Clear cache
         manager.clearCache()
@@ -176,15 +280,15 @@ class SensitiveViewManagerTests: BaseTests {
         // Verify all caches are cleared
         XCTAssertFalse(manager.knownSensitiveViews.contains(label))
         XCTAssertFalse(manager.sensitiveClassViews.contains(customView))
-        XCTAssertFalse(manager.sensitiveTextFieldViews.contains(textField))
+        XCTAssertFalse(manager.sensitiveTextInputViews.contains(textField))
     }
 
     func testSensitiveViewDetection_TextField_ReturnsSensitiveTextField() {
         let textField = UITextField()
         let result = manager.isSensitiveView(view: textField)
         XCTAssertEqual(
-            result, .sensitiveTextField,
-            "UITextField should return .sensitiveTextField enum case")
+            result, .sensitiveTextInput,
+            "UITextField should return .sensitiveTextInput enum case")
     }
 
     func testSensitiveViewDetection_TextField_ConsistentOnMultipleChecks() {
@@ -193,20 +297,20 @@ class SensitiveViewManagerTests: BaseTests {
         // First check - not in cache
         let firstResult = manager.isSensitiveView(view: textField)
         XCTAssertEqual(
-            firstResult, .sensitiveTextField,
-            "UITextField should return .sensitiveTextField on first check")
+            firstResult, .sensitiveTextInput,
+            "UITextField should return .sensitiveTextInput on first check")
 
         // Second check - now in cache
         let secondResult = manager.isSensitiveView(view: textField)
         XCTAssertEqual(
-            secondResult, .sensitiveTextField,
-            "UITextField should still return .sensitiveTextField on subsequent checks (cached)")
+            secondResult, .sensitiveTextInput,
+            "UITextField should still return .sensitiveTextInput on subsequent checks (cached)")
 
         // Third check - verify consistency
         let thirdResult = manager.isSensitiveView(view: textField)
         XCTAssertEqual(
-            thirdResult, .sensitiveTextField,
-            "UITextField should consistently return .sensitiveTextField")
+            thirdResult, .sensitiveTextInput,
+            "UITextField should consistently return .sensitiveTextInput")
     }
 
     func testGetSensitiveFrames_TextFieldsSeparatelyTracked() {
@@ -222,7 +326,7 @@ class SensitiveViewManagerTests: BaseTests {
         rootView.addSubview(label)
 
         manager.maskAllText = true
-        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+        let sensitiveFrames = manager.walkHierarchy(in: rootView, window: window).frames
 
         // Both should be in sensitive frames with correct types
         XCTAssertEqual(
@@ -387,7 +491,7 @@ class SensitiveViewManagerTests: BaseTests {
         rootView.addSubview(labelOutsideSafe)
 
         manager.maskAllText = true
-        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+        let sensitiveFrames = manager.walkHierarchy(in: rootView, window: window).frames
 
         // The label inside the safe container should be filtered out
         // The return value should only contain mask entries (no unmask)
@@ -427,7 +531,7 @@ class SensitiveViewManagerTests: BaseTests {
             listenerDecisions = decisions
         }
 
-        let returnValue = manager.getSensitiveFrames(in: rootView, window: window)
+        let returnValue = manager.walkHierarchy(in: rootView, window: window).frames
 
         // Return value should NOT contain unmask
         XCTAssertNil(
@@ -469,7 +573,7 @@ class SensitiveViewManagerTests: BaseTests {
         rootView.addSubview(invisibleLabel)
 
         manager.maskAllText = true
-        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+        let sensitiveFrames = manager.walkHierarchy(in: rootView, window: window).frames
 
         XCTAssertEqual(sensitiveFrames.count, 1, "Only visible label should be in sensitive frames")
         XCTAssertEqual(
@@ -478,7 +582,16 @@ class SensitiveViewManagerTests: BaseTests {
     }
 
     @available(iOS 26.0, *)
-    func testGetSensitiveFrames_WithLayerHierarchy() {
+    /// Scoped to iOS 26+, matching what it builds. The standalone `CALayer` with a
+    /// `UIImageView` delegate is the shape SwiftUI produces from iOS 26 (see the
+    /// comment below), and the only thing that can detect it is `traverseLayer`, which
+    /// is `@available(iOS 26.0, *)`. Below 26 the walk is views-only and that layer is
+    /// unreachable by design, so the test asserted something impossible and failed --
+    /// it had simply never been run on an older runtime, because CI only ran 26.2.
+    func testGetSensitiveFrames_WithLayerHierarchy() throws {
+        guard #available(iOS 26.0, *) else {
+            throw XCTSkip("Layer-based detection is iOS 26+; the walk is views-only below it.")
+        }
         let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
         let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
 
@@ -499,7 +612,7 @@ class SensitiveViewManagerTests: BaseTests {
         containerView.layer.addSublayer(imageLayer)
 
         manager.maskAllImages = true
-        let sensitiveFrames = manager.getSensitiveFrames(in: rootView, window: window)
+        let sensitiveFrames = manager.walkHierarchy(in: rootView, window: window).frames
 
         XCTAssertTrue(
             sensitiveFrames.count >= 1,
@@ -510,7 +623,7 @@ class SensitiveViewManagerTests: BaseTests {
     }
 
     func test_decodedCharCodes_matchExpectedMangledName() {
-        let decoded = manager.swiftUIDrawingLayerCodes.decodedString() ?? nil
+        let decoded = SwiftUIRenderClasses.drawingLayerCodes.decodedString() ?? nil
         XCTAssertEqual(
             decoded,
             "_TtC7SwiftUIP33_863CCF9D49B535DAEB1C7D61BEE53B5914CGDrawingLayer",
@@ -529,7 +642,8 @@ class SensitiveViewManagerTests: BaseTests {
             "CGDrawingLayer only exists on iOS 26+"
         )
 
-        let resolvedClass: AnyClass? = ObfuscatedClassLookup.resolveClass(from: manager.swiftUIDrawingLayerCodes)
+        let resolvedClass: AnyClass? = ObfuscatedClassLookup.resolveClass(
+            from: SwiftUIRenderClasses.drawingLayerCodes)
 
         XCTAssertNotNil(
             resolvedClass,
@@ -537,4 +651,88 @@ class SensitiveViewManagerTests: BaseTests {
                 + "SwiftUI may have renamed/removed CGDrawingLayer in this iOS version — "
         )
     }
+    // MARK: - PR 49 scenario: text field inside an explicitly-safe container
+
+    /// The leak PR 49 set out to fix: a container marked `mpReplaySensitive = false`
+    /// containing a `UITextField`. Stopping traversal at the safe container never
+    /// visited the field, so the characters the user typed shipped unmasked.
+    func testPR49_textFieldInsideSafeContainer_isStillMasked() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 150, height: 150))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        // Nested one level deeper than PR 49's fixture, to prove the walk recurses.
+        let inner = UIView(frame: CGRect(x: 5, y: 5, width: 140, height: 100))
+        safeContainer.addSubview(inner)
+
+        let field = UITextField(frame: CGRect(x: 10, y: 10, width: 100, height: 30))
+        inner.addSubview(field)
+
+        let frames = manager.walkHierarchy(in: rootView, window: window).frames
+
+        XCTAssertEqual(
+            frames[HashableRect(CGRect(x: 15, y: 15, width: 100, height: 30))], .textInput,
+            "Text field inside a safe container must still be masked as text input")
+    }
+
+    /// The half of PR 49's scenario its fixture does not cover: an *explicit*
+    /// `mpReplaySensitive = true` nested inside a safe container. PR 49's
+    /// descendant scan only looks for text fields, so this stays unmasked there.
+    func testPR49_explicitMaskInsideSafeContainer_isStillMasked() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        let safeContainer = UIView(frame: CGRect(x: 0, y: 0, width: 150, height: 150))
+        safeContainer.mpReplaySensitive = false
+        rootView.addSubview(safeContainer)
+
+        let secret = UIView(frame: CGRect(x: 10, y: 10, width: 60, height: 20))
+        secret.mpReplaySensitive = true
+        safeContainer.addSubview(secret)
+
+        let frames = manager.walkHierarchy(in: rootView, window: window).frames
+
+        XCTAssertEqual(
+            frames[HashableRect(secret.frame)], .mask,
+            "An explicit mask nested inside a safe container must survive")
+    }
+
+    /// The SwiftUI shape of the same scenario, which is *structurally* different:
+    /// `.mpReplaySensitive(false)` plants an `MPReplayWrapper` as a `.background`,
+    /// so the flag sits on a childless *sibling* of the content, not an ancestor.
+    /// The text field is therefore reached by ordinary recursion (never "inside" a
+    /// safe subtree at all) and masked; the safe rect exempts only what it
+    /// geometrically contains, and `.textInput` is exempt from that sweep.
+    ///
+    /// This is what PR 49's parent-marking would replace with a structural
+    /// relationship — worth a golden either way, since the two models protect the
+    /// field for entirely different reasons.
+    func testPR49_swiftUIShape_siblingUnmaskWrapper_textFieldStillMasked() {
+        let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+
+        // SwiftUI container holding [background wrapper, content] at equal bounds.
+        let container = UIView(frame: CGRect(x: 0, y: 0, width: 150, height: 150))
+        rootView.addSubview(container)
+
+        let wrapper = MPReplayWrapper(frame: container.bounds)
+        wrapper.mpReplaySensitive = false
+        container.addSubview(wrapper)
+
+        let content = UIView(frame: container.bounds)
+        container.addSubview(content)
+
+        let field = UITextField(frame: CGRect(x: 10, y: 10, width: 100, height: 30))
+        content.addSubview(field)
+
+        let frames = manager.walkHierarchy(in: rootView, window: window).frames
+
+        XCTAssertEqual(
+            frames[HashableRect(field.frame)], .textInput,
+            "Text field under a sibling unmask wrapper must still be masked")
+    }
+
 }

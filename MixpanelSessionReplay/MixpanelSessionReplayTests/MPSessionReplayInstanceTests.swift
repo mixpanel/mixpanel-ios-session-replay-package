@@ -122,6 +122,48 @@ class MPSessionReplayInstanceTests: BaseTests {
         )
     }
 
+    /// A new recording session must clear wireframe dedup state.
+    ///
+    /// The emitter is built once per SDK lifetime and survives a stop/start cycle, so
+    /// without an explicit reset the new replay's first frame is compared against the
+    /// previous replay's last one. Backgrounding and foregrounding onto an unchanged
+    /// screen then dedups the opening `mp_wireframe` away, leaving a screenshot with
+    /// nothing to describe it — the one frame an AI summary most needs.
+    ///
+    /// Asserted at the `startRecording` call site on purpose: a test that calls
+    /// `resetDedup()` directly still passes if the call site is deleted.
+    func testStartRecording_ResetsWireframeDedupState() throws {
+        let emitter = WireframeEmitter(options: MPWireframesOptions())
+        ScreenRecorder.shared.wireframeEmitter = emitter
+        defer { ScreenRecorder.shared.wireframeEmitter = nil }
+
+        // Prime dedup state the way a previous session's last frame would.
+        emitter.emit(
+            elements: [
+                WireframeElement.from(
+                    role: .text, text: "unchanged",
+                    rect: CGRect(x: 0, y: 0, width: 10, height: 10),
+                    decision: .none)
+            ],
+            viewport: (100, 100), maskBounds: [])
+
+        // Wait on the condition, not on a guessed interval. The emitter hands the payload
+        // to its own queue, and a fixed 0.2s delay is a bet on how quickly a machine gets
+        // round to it — one this lost intermittently on CI, failing the precondition below
+        // rather than the behaviour under test. Polling the real state is faster in the
+        // common case and does not have to be re-tuned for slower hardware.
+        let primed = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in emitter.lastPayloadHash != nil },
+            object: nil)
+        wait(for: [primed], timeout: 10.0)
+
+        instance.startRecording()
+
+        XCTAssertNil(
+            emitter.lastPayloadHash,
+            "startRecording must reset dedup so the new session's first frame publishes")
+    }
+
     func testStopRecording() {
         var observer: NSObjectProtocol?
         let expectation = expectation(description: "Unregister notification received")

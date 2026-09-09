@@ -45,4 +45,10 @@ class EventPublisher {
             self?.subscribers.forEach { $0.receivedScreenshotEvent(event) }
         }
     }
+
+    func publishCustomEvent(_ event: SessionEvent) {
+        queue.async { [weak self] in
+            self?.subscribers.forEach { $0.receivedCustomEvent(event) }
+        }
+    }
 }

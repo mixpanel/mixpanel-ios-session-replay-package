@@ -1,0 +1,19 @@
+{
+  "viewport": [
+    402,
+    874
+  ],
+  "elements": [
+    {
+      "role": "input",
+      "text": "Order status",
+      "bounds": [
+        20,
+        20,
+        260,
+        57
+      ],
+      "maskDecision": "DECLARED"
+    }
+  ]
+}

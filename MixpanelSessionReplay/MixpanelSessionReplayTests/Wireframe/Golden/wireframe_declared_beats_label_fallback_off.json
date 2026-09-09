@@ -1,0 +1,19 @@
+{
+  "viewport": [
+    500,
+    800
+  ],
+  "elements": [
+    {
+      "role": "button",
+      "text": "Open settings",
+      "bounds": [
+        30,
+        100,
+        48,
+        48
+      ],
+      "maskDecision": "DECLARED"
+    }
+  ]
+}

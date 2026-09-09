@@ -102,51 +102,38 @@ class SensitiveViewManager {
     var maskAllWebViews: Bool = true
     var maskAllMapViews: Bool = true
 
+    /// When true, `walkHierarchy(in:window:)` returns a populated
+    /// wireframe element list. When false, wireframe collection is a no-op
+    /// (the existing masking pass runs unchanged).
+    var wireframeCollectionEnabled: Bool = false
+
     var sensitiveClasses: [AnyClass] = []
 
     private(set) var knownSensitiveViews: WeakViewsMap!
-    var sensitiveTextFieldViews: WeakViewsMap!
+    var sensitiveTextInputViews: WeakViewsMap!
     var sensitiveClassViews: WeakViewsMap!
 
-    // MARK: Liquid glass UI unaffected SwiftUI Classes
-    private let swiftUITextFieldClass: AnyClass? = NSClassFromString("SwiftUI.TextEditorTextView")
-    private let swiftUIImageLayer: AnyClass? = NSClassFromString("SwiftUI.ImageLayer")
+    /// The private SwiftUI/UIKit render classes the type predicates below match
+    /// against, shared with ``wireframeClassifier`` so masking and description cannot
+    /// disagree about what a given class is.
+    let renderClasses = SwiftUIRenderClasses()
 
-    // MARK: - Legacy SwiftUI Classes (iOS 18 and earlier)
-    private let swiftUiTextClass: AnyClass? = NSClassFromString("SwiftUI.CGDrawingView")
-
-    // MARK: - iOS 26+ Layer Classes
-
-    /// iOS 26: SwiftUI Text is rendered directly to CGDrawingLayer (CALayer subclass)
-    /// Byte codes for SwiftUI's private mangled `_TtC7SwiftUIP33_863CCF9D49B535DAEB1C7D61BEE53B5914CGDrawingLayer` class name.
-    /// Stored as individual UInt8s (not a contiguous string literal) so the
-    /// symbol never appears as plain text in the binary's string table.
-    let swiftUIDrawingLayerCodes: [UInt8] = [
-        95, 84, 116, 67, 55, 83, 119, 105, 102, 116, 85, 73, 80, 51, 51, 95,
-        56, 54, 51, 67, 67, 70, 57, 68, 52, 57, 66, 53, 51, 53, 68, 65, 69,
-        66, 49, 67, 55, 68, 54, 49, 66, 69, 69, 53, 51, 66, 53, 57, 49, 52,
-        67, 71, 68, 114, 97, 119, 105, 110, 103, 76, 97, 121, 101, 114,
-    ]
-
-    let swiftUIiOS26TextLayerClass: AnyClass?
-
-    private let buttonLabelClass: AnyClass? = NSClassFromString("UIButtonLabel")
+    /// Decides a view's wireframe role and text. Separate from masking on purpose —
+    /// see ``WireframeClassifier``.
+    var wireframeClassifier: WireframeClassifier
 
     enum SensitiveViewState {
-        case sensitiveTextField
+        case sensitiveTextInput
         case sensitive
         case safe
         case unknown
     }
 
     private init() {
-        // NOTE: iOS 26 introduces layer-based rendering for SwiftUI
-        // Text views no longer create UIViews (CGDrawingView), instead they render to CGDrawingLayer
-
         knownSensitiveViews = WeakViewsMap.weakToWeakObjects()
         sensitiveClassViews = WeakViewsMap.weakToWeakObjects()
-        sensitiveTextFieldViews = WeakViewsMap.weakToWeakObjects()
-        swiftUIiOS26TextLayerClass = ObfuscatedClassLookup.resolveClass(from: swiftUIDrawingLayerCodes)
+        sensitiveTextInputViews = WeakViewsMap.weakToWeakObjects()
+        wireframeClassifier = WireframeClassifier(renderClasses: renderClasses)
     }
 
     static func reset() {
@@ -156,7 +143,7 @@ class SensitiveViewManager {
     func clearCache() {
         knownSensitiveViews.removeAllObjects()
         sensitiveClassViews.removeAllObjects()
-        sensitiveTextFieldViews.removeAllObjects()
+        sensitiveTextInputViews.removeAllObjects()
     }
 
     func isSensitiveView(view: UIView) -> SensitiveViewState {
@@ -164,19 +151,19 @@ class SensitiveViewManager {
             return .sensitive
         }
 
-        // Check text field cache first to maintain .sensitiveTextField return type
-        if sensitiveTextFieldViews.contains(view) {
-            return .sensitiveTextField
+        // Check the text-input cache first so the .sensitiveTextInput state survives
+        if sensitiveTextInputViews.contains(view) {
+            return .sensitiveTextInput
         }
 
         if knownSensitiveViews.contains(view) || sensitiveClassViews.contains(view) {
             return .sensitive
         }
 
-        // Text fields are always sensitive, so check before !isSensitive
-        if isTextField(view: view) {
-            sensitiveTextFieldViews.insert(view)
-            return .sensitiveTextField
+        // Text inputs are always sensitive, so check before the safe/auto branches
+        if isTextInput(view: view) {
+            sensitiveTextInputViews.insert(view)
+            return .sensitiveTextInput
         }
 
         // If mpReplaySensitive is false, view is manually marked as safe
@@ -212,14 +199,39 @@ class SensitiveViewManager {
         return .unknown
     }
 
+    /// *Why* `view` is masked, once ``isSensitiveView(view:)`` has already said that it
+    /// is. Reporting only: the painter fills every rect without reading its decision, so
+    /// the pixels are identical either way. What this changes is the wireframe element's
+    /// `maskDecision` and the debug overlay's fill colour.
+    ///
+    /// A class registered via `addSensitiveClass` counts as *manually marked* and reports
+    /// `.mask` (wire `EXPLICIT`) rather than `.auto`: per the ERD's Layer 1 table it is a
+    /// developer opt-in, alongside `mpReplaySensitive(true)`. Only the
+    /// `maskAllText`/`maskAllImages`/`maskAllWebViews`/`maskAllMapViews` type matches are
+    /// `AUTO`. Matches Android's `isViewClassCustomerSensitive` branch.
+    ///
+    /// Asked of the *view* rather than of which cache it landed in, and that is the whole
+    /// reason this is a method rather than an extra payload on ``SensitiveViewState``:
+    /// ``isSensitiveView(view:)`` tests auto-detection before `sensitiveClasses`, so a
+    /// `UILabel` that is also a registered class caches as auto-detected and never reaches
+    /// the class branch. Reading the reason off the cache would report it `AUTO` and
+    /// contradict the ERD; reordering the checks to fix that would move a class scan onto
+    /// the masking path, which runs with wireframes off too, to serve a wireframe-only
+    /// field.
+    func reportedMaskDecision(for view: UIView) -> MaskDecision {
+        if view.mpReplaySensitive == true { return .mask }
+        if sensitiveClasses.contains(where: { view.isKind(of: $0) }) { return .mask }
+        return .auto
+    }
+
     // Legacy text/label detection
     func isLabel(view: UIView) -> Bool {
-        if view.isKind(of: UILabel.self) || view.isKind(of: UITextView.self) {
+        if view.isKind(of: UILabel.self) {
             return true
         }
 
         // Legacy: SwiftUI CGDrawingView (iOS 18 and earlier)
-        if let swiftUiTextClass, type(of: view) == swiftUiTextClass {
+        if let drawingView = renderClasses.drawingView, type(of: view) == drawingView {
             return true
         }
 
@@ -233,20 +245,46 @@ class SensitiveViewManager {
         }
 
         // Check for SwiftUI image layer
-        if let swiftUIImageLayer, type(of: view.layer) == swiftUIImageLayer {
+        if let imageLayer = renderClasses.imageLayer, type(of: view.layer) == imageLayer {
+            return true
+        }
+
+        // SF Symbols: rendered as a shape layer, not an image layer.
+        if let colorShapeLayer = renderClasses.colorShapeLayer, type(of: view.layer) == colorShapeLayer {
             return true
         }
 
         return false
     }
 
-    func isTextField(view: UIView) -> Bool {
-        if view.isKind(of: UITextField.self) {
+    /// Whether `view` is a text input, and therefore always masked.
+    ///
+    /// Classified by *type*, never by `isEditable`. `UITextView` is iOS's multi-line
+    /// text input, and a read-only one very often holds text the user themselves typed
+    /// — a saved note, a message body, a bio rendered back for review. Reading its
+    /// `isEditable` flag would make masking depend on a presentation detail the
+    /// developer can flip at runtime, so the safe default is to treat every
+    /// `UITextView` as an input.
+    ///
+    /// This matches the other platforms, which also key on type alone: Android tests
+    /// `EditText::class.java.isAssignableFrom(view)` with no editability check (a
+    /// disabled or `TYPE_NULL` field is still `TEXT_ENTRY`), and Flutter tests
+    /// `renderObject is RenderEditable`, which catches a read-only `SelectableText`.
+    ///
+    /// Being a text input rather than auto-masked text, the result survives both
+    /// escape hatches — `maskAllText = false` and an `mpReplaySensitive = false`
+    /// ancestor — because neither was meant to expose what a user typed. Android
+    /// enforces the same thing by seeding `EditText` into its sensitive classes
+    /// permanently.
+    func isTextInput(view: UIView) -> Bool {
+        if view.isKind(of: UITextField.self) || view.isKind(of: UITextView.self) {
             return true
         }
 
-        // Check for SwiftUI text editor text view
-        if let swiftUITextFieldClass, view.isKind(of: swiftUITextFieldClass) {
+        // SwiftUI `TextEditor` renders into a private text view.
+        if let textEditorTextView = renderClasses.textEditorTextView,
+            view.isKind(of: textEditorTextView)
+        {
             return true
         }
 
@@ -267,12 +305,12 @@ class SensitiveViewManager {
     /// In iOS 26, SwiftUI Text views render directly to CGDrawingLayer instead of creating UIViews
     func isTextLayer(_ layer: CALayer) -> Bool {
         // Check for iOS 26 CGDrawingLayer by class
-        if let swiftUIiOS26TextLayerClass, layer.isKind(of: swiftUIiOS26TextLayerClass) {
+        if let drawingLayer = renderClasses.drawingLayer, layer.isKind(of: drawingLayer) {
             return true
         }
 
         // Check for SwiftUI UILabelLayer delegate
-        if let buttonLabelClass, layer.delegate?.isKind(of: buttonLabelClass) == true {
+        if let buttonLabel = renderClasses.buttonLabel, layer.delegate?.isKind(of: buttonLabel) == true {
             return true
         }
 
@@ -283,7 +321,13 @@ class SensitiveViewManager {
     func isImageLayer(_ layer: CALayer) -> Bool {
         // 1. MOST SPECIFIC: Known SwiftUI class (exact match)
         //    Fast pointer comparison, catches specific iOS <26 SwiftUI case
-        if let swiftUIImageLayer, type(of: layer) == swiftUIImageLayer {
+        if let imageLayer = renderClasses.imageLayer, type(of: layer) == imageLayer {
+            return true
+        }
+
+        // SF Symbols: rendered as a shape layer, not an image layer. See
+        // ``SwiftUIRenderClasses/colorShapeLayer``.
+        if let colorShapeLayer = renderClasses.colorShapeLayer, type(of: layer) == colorShapeLayer {
             return true
         }
 
@@ -315,184 +359,7 @@ class SensitiveViewManager {
         }
     }
 
-    /// Returns visible sensitive regions within a view hierarchy that should be masked during session replay.
-    ///
-    /// Performs a unified traversal of both UIView and CALayer hierarchies to detect:
-    /// - Text views and labels (UILabel, UITextView, iOS 26+ SwiftUI Text)
-    /// - Images (UIImageView, iOS 26+ SwiftUI Image)
-    /// - Input fields (UITextField, text editors)
-    /// - Web views and map views
-    /// - Custom sensitive classes
-    ///
-    /// Respects views explicitly marked as safe via `mpReplaySensitive = false`.
-    ///
-    /// - Parameters:
-    ///   - rootView: The root view to traverse
-    ///   - window: The window providing coordinate space for frame conversion
-    /// - Returns: Set of rectangles in window coordinates representing sensitive content to mask
-    func getSensitiveFrames(in rootView: UIView, window: UIView) -> [HashableRect: MaskDecision] {
-        var maskDecisions = [HashableRect: MaskDecision]()
-        var safeFrames = Set<HashableRect>()
-
-        // Single unified traversal
-        traverseViewAndLayers(
-            rootView,
-            window: window,
-            maskDecisions: &maskDecisions,
-            safeFrames: &safeFrames)
-
-        // Remove regions contained within safe frames, except text inputs which always stay
-        if !safeFrames.isEmpty {
-            maskDecisions = maskDecisions.filter { (rect, decision) in
-                decision == .textInput || !safeFrames.contains { $0.contains(rect) }
-            }
-        }
-
-        // Only add unmask entries and notify when a debug listener is active
-        if let listener = maskRegionsListener {
-            // Build a separate dictionary for the listener that includes unmask entries
-            // so the debug overlay can visualize safe regions without polluting the
-            // production return value
-            var debugDecisions = maskDecisions
-            for safeFrame in safeFrames {
-                addOrUpdate(&debugDecisions, rect: safeFrame, decision: .unmask)
-            }
-            listener(debugDecisions, window as? UIWindow)
-        }
-
-        return maskDecisions
-    }
-
-    /// Adds or updates a mask decision, keeping the higher priority decision.
-    private func addOrUpdate(
-        _ decisions: inout [HashableRect: MaskDecision], rect: HashableRect, decision: MaskDecision
-    ) {
-        if let existing = decisions[rect] {
-            if decision > existing {
-                decisions[rect] = decision
-            }
-        } else {
-            decisions[rect] = decision
-        }
-    }
-
-    /// Unified traversal that handles both UIView hierarchy and CALayer hierarchy in a single pass
-    ///
-    /// This method efficiently combines:
-    /// - UIView hierarchy traversal (for UIKit and iOS <26 SwiftUI)
-    /// - CALayer hierarchy traversal (for iOS 26+ SwiftUI rendered directly to layers)
-    ///
-    /// By traversing both simultaneously, we avoid redundant work and maintain correct precedence:
-    /// 1. Check if view itself is sensitive/safe (UIView level)
-    /// 2. If not handled at view level, check the view's layer subtree for iOS 26+ SwiftUI content
-    /// 3. Recurse into subviews
-    ///
-    private func traverseViewAndLayers(
-        _ view: UIView,
-        window: UIView,
-        maskDecisions: inout [HashableRect: MaskDecision],
-        safeFrames: inout Set<HashableRect>
-    ) {
-        // Skip invisible views
-        guard view.isVisible() else { return }
-
-        // MARK: - Check UIView level first (UIKit + legacy SwiftUI)
-        switch isSensitiveView(view: view) {
-            case .safe:
-                // View is explicitly marked as safe - capture frame and stop traversal
-                if let hashableRect = hashableFrame(for: view.layer, in: window) {
-                    safeFrames.insert(hashableRect)
-                }
-                return  // Don't process subviews or sublayers
-
-            case .sensitiveTextField:
-                // Text fields are always sensitive and cannot be overridden by safe parents
-                if let hashableRect = hashableFrame(for: view.layer, in: window) {
-                    addOrUpdate(&maskDecisions, rect: hashableRect, decision: .textInput)
-                }
-                return  // Don't process subviews or sublayers
-
-            case .sensitive:
-                // Determine if this is an auto-detected or manually marked sensitive view
-                if let hashableRect = hashableFrame(for: view.layer, in: window) {
-                    let decision: MaskDecision = (view.mpReplaySensitive == true) ? .mask : .auto
-                    addOrUpdate(&maskDecisions, rect: hashableRect, decision: decision)
-                }
-                return  // Don't process subviews or sublayers
-
-            case .unknown:
-                // View itself is not sensitive/safe, continue checking
-                break
-        }
-
-        // MARK: - Check Layer subtree for iOS 26+ SwiftUI content
-        // Only traverse layers if we're on iOS 26+ and the view itself wasn't sensitive
-        if #available(iOS 26.0, *) {
-            // Check direct sublayers (not the view's own layer, which we already handled)
-            // This catches SwiftUI Text/Image rendered directly to layers
-            if let sublayers = view.layer.sublayers {
-                for sublayer in sublayers {
-                    traverseLayer(
-                        sublayer,
-                        window: window,
-                        maskDecisions: &maskDecisions,
-                        safeFrames: &safeFrames)
-                }
-            }
-        }
-
-        // MARK: - Recurse into subviews
-        for subview in view.subviews {
-            traverseViewAndLayers(
-                subview,
-                window: window,
-                maskDecisions: &maskDecisions,
-                safeFrames: &safeFrames)
-        }
-    }
-
-    /// Traverses a layer hierarchy for iOS 26+ SwiftUI content rendered directly to layers
-    ///
-    /// This handles the case where SwiftUI Text/Image is rendered to CGDrawingLayer/ImageLayer
-    /// without creating a corresponding UIView in the hierarchy.
-    @available(iOS 26.0, *)
-    private func traverseLayer(
-        _ layer: CALayer,
-        window: UIView,
-        maskDecisions: inout [HashableRect: MaskDecision],
-        safeFrames: inout Set<HashableRect>
-    ) {
-
-        // Skip this layer if it's not visible
-        guard layer.isVisible() else {
-            return
-        }
-
-        var isSensitive = false
-
-        // Check if this is a text-rendering layer (iOS 26 SwiftUI Text)
-        if maskAllText, isTextLayer(layer) {
-            isSensitive = true
-        } else if maskAllImages, isImageLayer(layer) {  // Check if this is an image-rendering layer (iOS 26 SwiftUI Image)
-            isSensitive = true
-        }
-
-        if isSensitive {
-            if let frame = hashableFrame(for: layer, in: window) {
-                addOrUpdate(&maskDecisions, rect: frame, decision: .auto)
-            }
-            return
-        }
-
-        // Recurse into sublayers
-        for sublayer in layer.sublayers ?? [] {
-            traverseLayer(
-                sublayer,
-                window: window,
-                maskDecisions: &maskDecisions,
-                safeFrames: &safeFrames)
-        }
-    }
+    // MARK: - Frame conversion
 
     func getFrame(for layer: CALayer, in window: UIView) -> CGRect? {
         // Use presentation layer for accurate frame during animations
@@ -522,18 +389,5 @@ class SensitiveViewManager {
         } else {
             return nil
         }
-    }
-}
-
-extension Array where Element == UInt8 {
-    func decodedString() -> String? {
-        String(bytes: self, encoding: .utf8)
-    }
-}
-
-enum ObfuscatedClassLookup {
-    static func resolveClass(from codes: [UInt8]) -> AnyClass? {
-        guard let name = codes.decodedString() else { return nil }
-        return NSClassFromString(name)
     }
 }

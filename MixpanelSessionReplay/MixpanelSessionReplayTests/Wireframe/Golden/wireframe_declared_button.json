@@ -1,0 +1,19 @@
+{
+  "viewport": [
+    500,
+    800
+  ],
+  "elements": [
+    {
+      "role": "button",
+      "text": "checkout action",
+      "bounds": [
+        30,
+        100,
+        140,
+        44
+      ],
+      "maskDecision": "DECLARED"
+    }
+  ]
+}

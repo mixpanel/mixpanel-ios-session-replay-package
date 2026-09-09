@@ -1,0 +1,19 @@
+{
+  "viewport": [
+    402,
+    874
+  ],
+  "elements": [
+    {
+      "role": "input",
+      "text": null,
+      "bounds": [
+        20,
+        82,
+        260,
+        22
+      ],
+      "maskDecision": "TEXT_ENTRY"
+    }
+  ]
+}
