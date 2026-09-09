@@ -1,3 +1,15 @@
+## [1.6.0](https://github.com/mixpanel/mixpanel-ios-session-replay-package/tree/1.6.0) (2026-09-09)
+
+### Features
+
+- wireframes (beta) (#50) ([#50](https://github.com/mixpanel/mixpanel-ios-session-replay-package/pull/50))
+
+### Fixes
+
+- prevent event processing during exponential backoff (#43) ([#43](https://github.com/mixpanel/mixpanel-ios-session-replay-package/pull/43))
+
+[Full Changelog](https://github.com/mixpanel/mixpanel-ios-session-replay-package/compare/1.5.2...1.6.0)
+
 ## [1.5.2](https://github.com/mixpanel/mixpanel-ios-session-replay-package/tree/1.5.2) (2026-07-13)
 
 ### Fixes
