@@ -1,0 +1,19 @@
+{
+  "viewport": [
+    500,
+    800
+  ],
+  "elements": [
+    {
+      "role": "text",
+      "text": "Welcome back",
+      "bounds": [
+        5,
+        6,
+        120,
+        40
+      ],
+      "maskDecision": "DECLARED"
+    }
+  ]
+}

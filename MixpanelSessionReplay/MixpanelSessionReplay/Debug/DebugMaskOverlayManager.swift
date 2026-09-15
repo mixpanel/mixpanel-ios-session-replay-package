@@ -278,6 +278,6 @@ class DebugMaskOverlayManager {
 
         // Compute mask decisions — the maskRegionsListener callback will
         // deliver the results (including unmask entries) to updateMaskRegions
-        _ = SensitiveViewManager.shared.getSensitiveFrames(in: view, window: currentWindow)
+        _ = SensitiveViewManager.shared.walkHierarchy(in: view, window: currentWindow)
     }
 }

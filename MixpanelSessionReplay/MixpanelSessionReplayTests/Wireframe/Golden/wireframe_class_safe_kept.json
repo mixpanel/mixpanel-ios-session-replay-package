@@ -1,0 +1,19 @@
+{
+  "viewport": [
+    500,
+    800
+  ],
+  "elements": [
+    {
+      "role": "text",
+      "text": "Card ending 1111",
+      "bounds": [
+        16,
+        24,
+        240,
+        64
+      ],
+      "maskDecision": "NONE"
+    }
+  ]
+}

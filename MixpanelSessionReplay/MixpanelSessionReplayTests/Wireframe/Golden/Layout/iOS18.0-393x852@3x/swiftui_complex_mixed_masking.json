@@ -1,0 +1,85 @@
+{
+  "viewport": [
+    393,
+    852
+  ],
+  "elements": [
+    {
+      "role": "text",
+      "text": null,
+      "bounds": [
+        20,
+        79,
+        248,
+        34
+      ],
+      "maskDecision": "AUTO"
+    },
+    {
+      "role": "image",
+      "text": null,
+      "bounds": [
+        20,
+        125,
+        100,
+        100
+      ],
+      "maskDecision": "NONE"
+    },
+    {
+      "role": "text",
+      "text": null,
+      "bounds": [
+        20,
+        237,
+        150,
+        20
+      ],
+      "maskDecision": "AUTO"
+    },
+    {
+      "role": "image",
+      "text": null,
+      "bounds": [
+        20,
+        269,
+        100,
+        100
+      ],
+      "maskDecision": "NONE"
+    },
+    {
+      "role": "text",
+      "text": null,
+      "bounds": [
+        20,
+        382,
+        71,
+        20
+      ],
+      "maskDecision": "AUTO"
+    },
+    {
+      "role": "text",
+      "text": null,
+      "bounds": [
+        103,
+        382,
+        52,
+        20
+      ],
+      "maskDecision": "AUTO"
+    },
+    {
+      "role": "input",
+      "text": null,
+      "bounds": [
+        166,
+        381,
+        120,
+        22
+      ],
+      "maskDecision": "TEXT_ENTRY"
+    }
+  ]
+}

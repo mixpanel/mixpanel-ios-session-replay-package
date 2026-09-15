@@ -293,14 +293,14 @@ class DebugMaskOverlayManagerTests: BaseTests {
             expectation.fulfill()
         }
 
-        // Trigger the listener by calling getSensitiveFrames
+        // Trigger the listener by walking the hierarchy
         let rootView = UIView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
         let sensitiveView = UILabel(frame: CGRect(x: 0, y: 0, width: 50, height: 50))
         sensitiveView.mpReplaySensitive = true
         rootView.addSubview(sensitiveView)
 
         SensitiveViewManager.shared.maskAllText = true
-        _ = SensitiveViewManager.shared.getSensitiveFrames(in: rootView, window: window)
+        _ = SensitiveViewManager.shared.walkHierarchy(in: rootView, window: window)
 
         wait(for: [expectation], timeout: 1.0)
 

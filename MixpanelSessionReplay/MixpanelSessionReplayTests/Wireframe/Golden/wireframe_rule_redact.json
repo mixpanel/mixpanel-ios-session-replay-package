@@ -1,0 +1,19 @@
+{
+  "viewport": [
+    500,
+    800
+  ],
+  "elements": [
+    {
+      "role": "text",
+      "text": "contact [EMAIL] now",
+      "bounds": [
+        10,
+        10,
+        320,
+        30
+      ],
+      "maskDecision": "RULE_REDACT"
+    }
+  ]
+}

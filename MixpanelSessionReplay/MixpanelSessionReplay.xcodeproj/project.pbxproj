@@ -23,6 +23,7 @@
 		1659D04B2F7A64B0009208CE /* DebugOverlayColorsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1659D0432F7A64B0009208CE /* DebugOverlayColorsTests.swift */; };
 		167A788F2D70AF6800298D2C /* MPSessionReplayInstanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167A788E2D70AF6800298D2C /* MPSessionReplayInstanceTests.swift */; };
 		167A78922D7620A100298D2C /* TouchEventTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167A78912D7620A100298D2C /* TouchEventTrackerTests.swift */; };
+		AB0000000000000000000602 /* EventHandlerTouchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000601 /* EventHandlerTouchTests.swift */; };
 		167A78942D76231700298D2C /* MockClasses.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167A78932D76231300298D2C /* MockClasses.swift */; };
 		167A78962D7626F000298D2C /* BaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167A78952D7626E100298D2C /* BaseTests.swift */; };
 		167A78992D762B0800298D2C /* MPSessionReplayConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167A78982D762B0600298D2C /* MPSessionReplayConfigTests.swift */; };
@@ -77,7 +78,28 @@
 		86E80E3F2C1BA6F100515FD6 /* DeviceInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E80E3E2C1BA6F100515FD6 /* DeviceInfo.swift */; };
 		86E80E452C1BC51000515FD6 /* PrintLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E80E442C1BC51000515FD6 /* PrintLogging.swift */; };
 		86E80E482C20EBCE00515FD6 /* View+SensitiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E80E472C20EBCE00515FD6 /* View+SensitiveView.swift */; };
+		AB0000000000000000000401 /* View+MPReplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000400 /* View+MPReplay.swift */; };
 		86E80E502C25008200515FD6 /* SensitiveViewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E80E4F2C25008200515FD6 /* SensitiveViewManager.swift */; };
+		AB00000000000000000000F2 /* MPWireframesOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F1 /* MPWireframesOptions.swift */; };
+		AB00000000000000000000F4 /* MPWireframeDebug.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F3 /* MPWireframeDebug.swift */; };
+		AB00000000000000000000F6 /* WireframeElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F5 /* WireframeElement.swift */; };
+		AB00000000000000000000F8 /* WireframePayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F7 /* WireframePayload.swift */; };
+		AB00000000000000000000FA /* WireframeEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000000000000000000F9 /* WireframeEmitter.swift */; };
+		AB0000000000000000000701 /* ReactNativeWireframeSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000700 /* ReactNativeWireframeSupport.swift */; };
+		AB0000000000000000000805 /* WireframeClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000804 /* WireframeClassifier.swift */; };
+		AB0000000000000000000803 /* SensitiveViewManager+HierarchyWalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000802 /* SensitiveViewManager+HierarchyWalk.swift */; };
+		AB0000000000000000000903 /* HierarchyWalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000902 /* HierarchyWalk.swift */; };
+		AB0000000000000000000801 /* SwiftUIRenderClasses.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000800 /* SwiftUIRenderClasses.swift */; };
+		AB0000000000000000000711 /* ReactNativeWireframeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000710 /* ReactNativeWireframeTests.swift */; };
+		AB0000000000000000000721 /* MPWireframesOptionsCodableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000720 /* MPWireframesOptionsCodableTests.swift */; };
+		AB0000000000000000000101 /* WireframeEmitterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000100 /* WireframeEmitterTests.swift */; };
+		AB0000000000000000000103 /* SensitiveViewManagerWireframeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000102 /* SensitiveViewManagerWireframeTests.swift */; };
+		AB0000000000000000000501 /* WireframeGoldenTestUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000500 /* WireframeGoldenTestUtils.swift */; };
+		AB0000000000000000000503 /* WireframeGoldenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000502 /* WireframeGoldenTests.swift */; };
+		AB0000000000000000000511 /* WireframeLayoutGoldenTestUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000510 /* WireframeLayoutGoldenTestUtils.swift */; };
+		AB0000000000000000000513 /* WireframeLayoutGoldenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000512 /* WireframeLayoutGoldenTests.swift */; };
+		AB0000000000000000000515 /* SwiftUIWireframeLayoutGoldenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000514 /* SwiftUIWireframeLayoutGoldenTests.swift */; };
+		AB0000000000000000000301 /* SwiftUIExtractionLabTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000300 /* SwiftUIExtractionLabTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -106,6 +128,7 @@
 		1659D0442F7A64B0009208CE /* MaskDecisionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskDecisionTests.swift; sourceTree = "<group>"; };
 		167A788E2D70AF6800298D2C /* MPSessionReplayInstanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPSessionReplayInstanceTests.swift; sourceTree = "<group>"; };
 		167A78912D7620A100298D2C /* TouchEventTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchEventTrackerTests.swift; sourceTree = "<group>"; };
+		AB0000000000000000000601 /* EventHandlerTouchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventHandlerTouchTests.swift; sourceTree = "<group>"; };
 		167A78932D76231300298D2C /* MockClasses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockClasses.swift; sourceTree = "<group>"; };
 		167A78952D7626E100298D2C /* BaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseTests.swift; sourceTree = "<group>"; };
 		167A78982D762B0600298D2C /* MPSessionReplayConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPSessionReplayConfigTests.swift; sourceTree = "<group>"; };
@@ -163,7 +186,28 @@
 		86E80E3E2C1BA6F100515FD6 /* DeviceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfo.swift; sourceTree = "<group>"; };
 		86E80E442C1BC51000515FD6 /* PrintLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintLogging.swift; sourceTree = "<group>"; };
 		86E80E472C20EBCE00515FD6 /* View+SensitiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+SensitiveView.swift"; sourceTree = "<group>"; };
+		AB0000000000000000000400 /* View+MPReplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+MPReplay.swift"; sourceTree = "<group>"; };
 		86E80E4F2C25008200515FD6 /* SensitiveViewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveViewManager.swift; sourceTree = "<group>"; };
+		AB00000000000000000000F1 /* MPWireframesOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPWireframesOptions.swift; sourceTree = "<group>"; };
+		AB00000000000000000000F3 /* MPWireframeDebug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPWireframeDebug.swift; sourceTree = "<group>"; };
+		AB00000000000000000000F5 /* WireframeElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeElement.swift; sourceTree = "<group>"; };
+		AB00000000000000000000F7 /* WireframePayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframePayload.swift; sourceTree = "<group>"; };
+		AB00000000000000000000F9 /* WireframeEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeEmitter.swift; sourceTree = "<group>"; };
+		AB0000000000000000000700 /* ReactNativeWireframeSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactNativeWireframeSupport.swift; sourceTree = "<group>"; };
+		AB0000000000000000000804 /* WireframeClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeClassifier.swift; sourceTree = "<group>"; };
+		AB0000000000000000000802 /* SensitiveViewManager+HierarchyWalk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SensitiveViewManager+HierarchyWalk.swift"; sourceTree = "<group>"; };
+		AB0000000000000000000902 /* HierarchyWalk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HierarchyWalk.swift; sourceTree = "<group>"; };
+		AB0000000000000000000800 /* SwiftUIRenderClasses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIRenderClasses.swift; sourceTree = "<group>"; };
+		AB0000000000000000000710 /* ReactNativeWireframeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactNativeWireframeTests.swift; sourceTree = "<group>"; };
+		AB0000000000000000000720 /* MPWireframesOptionsCodableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPWireframesOptionsCodableTests.swift; sourceTree = "<group>"; };
+		AB0000000000000000000100 /* WireframeEmitterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeEmitterTests.swift; sourceTree = "<group>"; };
+		AB0000000000000000000102 /* SensitiveViewManagerWireframeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveViewManagerWireframeTests.swift; sourceTree = "<group>"; };
+		AB0000000000000000000500 /* WireframeGoldenTestUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeGoldenTestUtils.swift; sourceTree = "<group>"; };
+		AB0000000000000000000502 /* WireframeGoldenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeGoldenTests.swift; sourceTree = "<group>"; };
+		AB0000000000000000000510 /* WireframeLayoutGoldenTestUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeLayoutGoldenTestUtils.swift; sourceTree = "<group>"; };
+		AB0000000000000000000512 /* WireframeLayoutGoldenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireframeLayoutGoldenTests.swift; sourceTree = "<group>"; };
+		AB0000000000000000000514 /* SwiftUIWireframeLayoutGoldenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIWireframeLayoutGoldenTests.swift; sourceTree = "<group>"; };
+		AB0000000000000000000300 /* SwiftUIExtractionLabTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIExtractionLabTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -250,6 +294,7 @@
 			children = (
 				167A78A12D7773B500298D2C /* ScreenRecorderTests.swift */,
 				167A78912D7620A100298D2C /* TouchEventTrackerTests.swift */,
+				AB0000000000000000000601 /* EventHandlerTouchTests.swift */,
 			);
 			path = Tracking;
 			sourceTree = "<group>";
@@ -310,9 +355,23 @@
 				8650D2E52C13BC39008903B1 /* MPSessionReplayModels.swift */,
 				861224F62C17CF7200ACF6BF /* ReplayJSONTemplate.swift */,
 				17BB0FF52C408FC4005FBFB0 /* MPSessionReplayConfig.swift */,
+				AB00000000000000000000F1 /* MPWireframesOptions.swift */,
 				864DFFF02C3EE3CA003B258E /* RawEvent.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		AB00000000000000000000FD /* Wireframe */ = {
+			isa = PBXGroup;
+			children = (
+				AB00000000000000000000F3 /* MPWireframeDebug.swift */,
+				AB00000000000000000000F5 /* WireframeElement.swift */,
+				AB00000000000000000000F7 /* WireframePayload.swift */,
+				AB00000000000000000000F9 /* WireframeEmitter.swift */,
+				AB0000000000000000000700 /* ReactNativeWireframeSupport.swift */,
+				AB0000000000000000000804 /* WireframeClassifier.swift */,
+			);
+			path = Wireframe;
 			sourceTree = "<group>";
 		};
 		861224F52C17C87300ACF6BF /* Utils */ = {
@@ -337,6 +396,7 @@
 			isa = PBXGroup;
 			children = (
 				86E80E472C20EBCE00515FD6 /* View+SensitiveView.swift */,
+				AB0000000000000000000400 /* View+MPReplay.swift */,
 				8628FB4F2C34B8E70023984E /* UIApplication+firstKeyWindow.swift */,
 				8628FB512C3686D40023984E /* Data+Compression.swift */,
 			);
@@ -353,6 +413,7 @@
 				167A788A2D6F729F00298D2C /* Utils */,
 				167A78892D6F728000298D2C /* Services */,
 				167A78882D6F726F00298D2C /* Network */,
+				AB0000000000000000000104 /* Wireframe */,
 				167A788E2D70AF6800298D2C /* MPSessionReplayInstanceTests.swift */,
 				16178FBD2F64841700E022F2 /* MPSessionReplayAutoMaskedViewsTests.swift */,
 				164C4AAC2F33144100230843 /* MPSessionReplayTests.swift */,
@@ -360,6 +421,23 @@
 				167A78952D7626E100298D2C /* BaseTests.swift */,
 			);
 			path = MixpanelSessionReplayTests;
+			sourceTree = "<group>";
+		};
+		AB0000000000000000000104 /* Wireframe */ = {
+			isa = PBXGroup;
+			children = (
+				AB0000000000000000000100 /* WireframeEmitterTests.swift */,
+				AB0000000000000000000102 /* SensitiveViewManagerWireframeTests.swift */,
+				AB0000000000000000000300 /* SwiftUIExtractionLabTests.swift */,
+				AB0000000000000000000500 /* WireframeGoldenTestUtils.swift */,
+				AB0000000000000000000502 /* WireframeGoldenTests.swift */,
+				AB0000000000000000000510 /* WireframeLayoutGoldenTestUtils.swift */,
+				AB0000000000000000000512 /* WireframeLayoutGoldenTests.swift */,
+				AB0000000000000000000514 /* SwiftUIWireframeLayoutGoldenTests.swift */,
+				AB0000000000000000000710 /* ReactNativeWireframeTests.swift */,
+				AB0000000000000000000720 /* MPWireframesOptionsCodableTests.swift */,
+			);
+			path = Wireframe;
 			sourceTree = "<group>";
 		};
 		8650D2B62C13B041008903B1 = {
@@ -395,6 +473,7 @@
 				86E80E4E2C24EFDA00515FD6 /* SensitiveViews */,
 				8674BEDA2C34728F007EDB1F /* Tracking */,
 				861224F12C17C7AB00ACF6BF /* Models */,
+				AB00000000000000000000FD /* Wireframe */,
 				861224EF2C17C76500ACF6BF /* Logging */,
 				861224EA2C17A2C300ACF6BF /* MPSessionReplayInstance.swift */,
 				16C9EFC22D4AAD840005ED7E /* MPSessionReplay.swift */,
@@ -429,6 +508,9 @@
 			isa = PBXGroup;
 			children = (
 				86E80E4F2C25008200515FD6 /* SensitiveViewManager.swift */,
+				AB0000000000000000000802 /* SensitiveViewManager+HierarchyWalk.swift */,
+				AB0000000000000000000902 /* HierarchyWalk.swift */,
+				AB0000000000000000000800 /* SwiftUIRenderClasses.swift */,
 			);
 			path = SensitiveViews;
 			sourceTree = "<group>";
@@ -588,8 +670,19 @@
 				8650D2F32C13BCB4008903B1 /* Constants.swift in Sources */,
 				17F94D442E2C7641007E7579 /* SettingsResponse.swift in Sources */,
 				86E80E482C20EBCE00515FD6 /* View+SensitiveView.swift in Sources */,
+				AB0000000000000000000401 /* View+MPReplay.swift in Sources */,
 				8628FB562C38B56B0023984E /* NetworkMonitor.swift in Sources */,
 				16991D0A2DDE580100E43ED4 /* ThreadUtils.swift in Sources */,
+				AB00000000000000000000F2 /* MPWireframesOptions.swift in Sources */,
+				AB00000000000000000000F4 /* MPWireframeDebug.swift in Sources */,
+				AB00000000000000000000F6 /* WireframeElement.swift in Sources */,
+				AB00000000000000000000F8 /* WireframePayload.swift in Sources */,
+				AB00000000000000000000FA /* WireframeEmitter.swift in Sources */,
+				AB0000000000000000000701 /* ReactNativeWireframeSupport.swift in Sources */,
+				AB0000000000000000000805 /* WireframeClassifier.swift in Sources */,
+				AB0000000000000000000803 /* SensitiveViewManager+HierarchyWalk.swift in Sources */,
+				AB0000000000000000000903 /* HierarchyWalk.swift in Sources */,
+				AB0000000000000000000801 /* SwiftUIRenderClasses.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -612,6 +705,7 @@
 				864DFFE92C3B5815003B258E /* FlushRequestTests.swift in Sources */,
 				1707D96A2DEE424F00D330D6 /* SwizzlerTests.swift in Sources */,
 				167A78922D7620A100298D2C /* TouchEventTrackerTests.swift in Sources */,
+				AB0000000000000000000602 /* EventHandlerTouchTests.swift in Sources */,
 				167A789B2D762C8D00298D2C /* ViewUtilsTests.swift in Sources */,
 				17ABC2252E2D8CCE005041C1 /* SettingsServiceTests.swift in Sources */,
 				167A789E2D776A5C00298D2C /* SensitiveViewManagerTests.swift in Sources */,
@@ -622,6 +716,16 @@
 				864DFFFE2C41F2BF003B258E /* EventServiceTests.swift in Sources */,
 				167A78A02D776C1100298D2C /* HashableRectTests.swift in Sources */,
 				16178FBE2F64841700E022F2 /* MPSessionReplayAutoMaskedViewsTests.swift in Sources */,
+				AB0000000000000000000101 /* WireframeEmitterTests.swift in Sources */,
+				AB0000000000000000000103 /* SensitiveViewManagerWireframeTests.swift in Sources */,
+				AB0000000000000000000501 /* WireframeGoldenTestUtils.swift in Sources */,
+				AB0000000000000000000503 /* WireframeGoldenTests.swift in Sources */,
+				AB0000000000000000000711 /* ReactNativeWireframeTests.swift in Sources */,
+				AB0000000000000000000721 /* MPWireframesOptionsCodableTests.swift in Sources */,
+				AB0000000000000000000511 /* WireframeLayoutGoldenTestUtils.swift in Sources */,
+				AB0000000000000000000513 /* WireframeLayoutGoldenTests.swift in Sources */,
+				AB0000000000000000000515 /* SwiftUIWireframeLayoutGoldenTests.swift in Sources */,
+				AB0000000000000000000301 /* SwiftUIExtractionLabTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

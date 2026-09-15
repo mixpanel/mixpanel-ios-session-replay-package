@@ -13,18 +13,16 @@ class EventServiceTests: XCTestCase {
 
     var touchEvent: SessionEvent {
         let currentTimestamp = TimestampUtils.timestamp()
-        let rawEvent = RawTouchEvent(
-            start: CGPoint(x: 0, y: 0), end: CGPoint(x: 1.0, y: 1.0), isSwipe: false,
-            timestamp: currentTimestamp)
+        let point = CGPoint(x: 0, y: 0)
         return SessionEvent(
             type: EventType.incrementalSnapshot,
             data: .detailedData(
                 EventDataDetail(
-                    source: IncrementalSource.touchInteraction,
-                    type: TouchInteraction.start,
+                    source: IncrementalSource.mouseInteraction,
+                    type: MouseInteraction.touchStart,
                     id: PayloadObjectID.mainSnapshot,
-                    x: Int(rawEvent.start.x),
-                    y: Int(rawEvent.start.y)
+                    x: Int(point.x),
+                    y: Int(point.y)
                 )
             ),
             timestamp: currentTimestamp

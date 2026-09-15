@@ -59,6 +59,18 @@ open class MPSessionReplayInstance: MPSessionReplaying {
             }
         }
 
+        // Wire up wireframes if opted in. `wireframesOptions` is the single
+        // switch that turns capture on; `debugOptions.wireframeEmitter` only
+        // observes it, so passing it without wireframes options is a no-op.
+        if let wireframesOptions = config.wireframesOptions {
+            ScreenRecorder.shared.wireframeEmitter = WireframeEmitter(
+                options: wireframesOptions,
+                debugEmitter: config.debugOptions?.wireframeEmitter)
+            SensitiveViewManager.shared.wireframeClassifier.useAccessibilityLabelFallback =
+                wireframesOptions.useAccessibilityLabelFallback
+            SensitiveViewManager.shared.wireframeCollectionEnabled = true
+        }
+
         // This will not trigger the didSet of autoMaskedViews, so we need to call the update method here to make sure the masking is updated according to the config during initialization.
         self.autoMaskedViews = config.autoMaskedViews
         updateSensitiveViewMasking(config.autoMaskedViews)
@@ -145,6 +157,13 @@ open class MPSessionReplayInstance: MPSessionReplaying {
 
         // Clean up mask regions listener (safe to set to nil even if not set)
         SensitiveViewManager.shared.maskRegionsListener = nil
+
+        // Tear down wireframe capture (safe to run when never enabled). Only the emitter
+        // needs clearing by hand: `ScreenRecorder` is a separate singleton that survives
+        // this teardown, while every `SensitiveViewManager` flag — `wireframeCollectionEnabled`
+        // included — goes with `SensitiveViewManager.reset()` a few lines later in
+        // `deinitializeInstance`, the sole caller of this method.
+        ScreenRecorder.shared.wireframeEmitter = nil
     }
 
     @objc func appDidEnterBackground() {
@@ -220,6 +239,14 @@ open class MPSessionReplayInstance: MPSessionReplaying {
                 SessionManager.shared.generateNewSession()
                 // generate a new session will make old session events obsolete, so clean it up.
                 eventService.clearEvents()
+                // Wireframe dedup is per *session*, not per SDK lifetime. The emitter
+                // outlives a stop/start cycle, so without this the new replay's first
+                // frame is compared against the previous replay's last one — and a
+                // background/foreground onto an unchanged screen dedups it away,
+                // shipping an opening screenshot with no `mp_wireframe` to describe it.
+                // This is the one session boundary: `generateNewSession()` has no other
+                // caller. Android and Flutter reset at the same point.
+                ScreenRecorder.shared.wireframeEmitter?.resetDedup()
                 performSwizzling()
                 record()
                 isRecording = true
@@ -300,25 +327,39 @@ open class MPSessionReplayInstance: MPSessionReplaying {
         return components?.url?.absoluteString
     }
 
+    /// - Parameter triggerTimestamp: When the thing that asked for this capture happened —
+    ///   a touch's own `UITouch.timestamp`, or `nil` for "now". Used **only** to rate-limit
+    ///   against `ReplaySettings.recordInterval`; it is deliberately not what the resulting
+    ///   events are stamped with. The frame carries the instant its pixels came off the
+    ///   renderer (`RenderedFrame.capturedAtMs`), which is strictly later than the trigger
+    ///   by the render duration. Those are two different quantities: the gate asks "has
+    ///   enough time passed since we last captured", the event asserts "this is what the
+    ///   screen looked like at T". Conflating them back-dated every touch-triggered frame
+    ///   to its touch, tying the two events and leaving the service's touch-gated sampler
+    ///   to break the tie by sort stability. Android and Flutter stamp at the pixels too.
     func record(_ triggerTimestamp: Int64? = nil) {
         if shouldRecordSession && isScreenDirty() {
-            let timestamp = triggerTimestamp ?? TimestampUtils.timestamp()
-            let elapsedTime = timestamp - MPSessionReplayInstance.lastRecordTimestamp
+            let triggeredAtMs = triggerTimestamp ?? TimestampUtils.timestamp()
+            let elapsedTime = triggeredAtMs - MPSessionReplayInstance.lastRecordTimestamp
 
             if elapsedTime < ReplaySettings.recordInterval {
                 return
             }
-            MPSessionReplayInstance.lastRecordTimestamp = timestamp
+            MPSessionReplayInstance.lastRecordTimestamp = triggeredAtMs
 
             MPSessionReplayInstance.recordWorkItem?.cancel()
             MPSessionReplayInstance.recordWorkItem = DispatchWorkItem { [weak self] in
                 let startTime = TimestampUtils.timestamp()
+                // The screenshot and its `mp_wireframe` are stamped from one instant read at
+                // the render, so the pair describes one moment and both report when that
+                // moment was on screen.
                 if let screenshot = ScreenRecorder.shared.captureScreenshot() {
                     let endTime = TimestampUtils.timestamp()
                     Logger.debug(message: "Time taken to take screenshot - \(endTime - startTime)")
                     // Additional recording check to skip processing screenshot that accidentally got captured due to async processing
                     if self?.isRecording == true {
-                        self?.processScreenshot(screenshot, timestamp: timestamp)
+                        self?.processScreenshot(
+                            screenshot.data, timestamp: screenshot.capturedAtMs)
                     }
                 }
             }
@@ -333,11 +374,15 @@ open class MPSessionReplayInstance: MPSessionReplaying {
         }
     }
 
+    /// - Parameter timestamp: The frame's `RenderedFrame.capturedAtMs`, not the time this
+    ///   runs. Publishing hops to a background queue and the encoder sits behind the event
+    ///   serial queue, so a publish-time stamp would date the screen to whenever the
+    ///   pipeline drained — while touches are accurate at the source. Same reasoning as
+    ///   Android's `RawScreenshotEvent.timestamp`.
     func processScreenshot(_ screenshot: Data, timestamp: Int64) {
         _screenIsDirty = false
         // Move event publishing to a background thread
         DispatchQueue.global(qos: .utility).async {
-            // Use notificationTimestamp to associate the screenshot with the click
             EventPublisher.shared.publishSessionEvent(
                 // TODO: Refactor or cleanup incremental snapshot support, only send full snapshots for now (isInitial: true)
                 RawScreenshotEvent(data: screenshot, isInitial: true, timestamp: timestamp)
@@ -421,6 +466,16 @@ open class MPSessionReplayInstance: MPSessionReplaying {
         flushService.flushEvents(forAll: true, completionHandler: completionHandler)
     }
 
+    /// Masks every view that is an instance of `aClass`.
+    ///
+    /// **Registrations do not survive re-initialization.** `MPSessionReplay.initialize`
+    /// deinitializes any previous instance first, and `deinitializeInstance` replaces
+    /// `SensitiveViewManager` outright — so registered classes are gone and the incoming config
+    /// decides what is masked. Register again after re-initializing.
+    ///
+    /// This has always been the behaviour here; it was undocumented, and Android used to differ
+    /// by keeping registrations. Android now matches (2026-08-26) — a new initialization is a new
+    /// initialization on both.
     public func addSensitiveClass(_ aClass: AnyClass) {
         SensitiveViewManager.shared.addSensitiveClass(aClass)
     }

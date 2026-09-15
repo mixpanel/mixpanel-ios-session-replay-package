@@ -201,4 +201,131 @@ class ScreenRecorderTests: XCTestCase {
         let result = recorder.captureScreenshot()
         XCTAssertNil(result, "Should return nil if no window is available")
     }
+
+    // MARK: - Wireframe / screenshot timestamp agreement
+
+    /// The render path must hand the wireframe emitter the same capture instant it reports
+    /// to its caller, so the `mp_wireframe` event and the screenshot event describing one
+    /// frame agree. Two regressions live here: the emitter used to read the clock itself
+    /// after rendering finished (drifting from the screenshot by the render duration), and
+    /// the instant used to come *in* from `record()` as the trigger time — on a
+    /// touch-triggered capture, the touch's own timestamp, which tied the frame to the
+    /// touch that produced it. Android reads it right after `createBitmapFromView` and
+    /// Flutter reads `captureTimestamp` at the render for the same reason.
+    func testRenderViewHierarchyAsImage_stampsWireframeWithTheCaptureInstant() throws {
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        let label = UILabel(frame: CGRect(x: 10, y: 10, width: 100, height: 20))
+        label.text = "Welcome"
+        window.addSubview(label)
+        window.isHidden = false
+
+        EventPublisher.shared.resetSubscribers()
+        // The publisher calls back on the emitter's queue, so this array is mutated off the
+        // test thread and read on it. Guarded, and awaited through an expectation rather
+        // than a polled deadline: the 2s of RunLoop pumping it replaces was a bet on how
+        // soon the machine got round to the emit, and it lost intermittently on CI.
+        let publishedLock = NSLock()
+        var published: [SessionEvent] = []
+        let receivedWireframe = expectation(description: "mp_wireframe published")
+        receivedWireframe.assertForOverFulfill = false
+        let subscriber = CapturingCustomEventSubscriber {
+            publishedLock.lock()
+            published.append($0)
+            publishedLock.unlock()
+            receivedWireframe.fulfill()
+        }
+        EventPublisher.shared.subscribe(subscriber)
+
+        SensitiveViewManager.reset()
+        SensitiveViewManager.shared.wireframeCollectionEnabled = true
+        recorder.wireframeEmitter = WireframeEmitter(options: MPWireframesOptions())
+        defer {
+            recorder.wireframeEmitter = nil
+            SensitiveViewManager.reset()
+            EventPublisher.shared.resetSubscribers()
+        }
+
+        let before = TimestampUtils.timestamp()
+        let frame = try XCTUnwrap(recorder.renderViewHierarchyAsImage(window: window))
+        let after = TimestampUtils.timestamp()
+
+        wait(for: [receivedWireframe], timeout: 10.0)
+
+        publishedLock.lock()
+        let firstPublished = published.first
+        publishedLock.unlock()
+
+        let event = try XCTUnwrap(firstPublished, "expected an mp_wireframe event")
+        XCTAssertEqual(
+            event.timestamp, frame.capturedAtMs,
+            "wireframe must carry the same capture instant the frame reports")
+        // Read at the render, so it falls inside the window this call occupied — it is
+        // neither a trigger time from before the call nor a clock read after publishing.
+        XCTAssertGreaterThanOrEqual(frame.capturedAtMs, before)
+        XCTAssertLessThanOrEqual(frame.capturedAtMs, after)
+    }
+
+    // MARK: - Empty wireframes
+
+    /// A frame that yields no elements still ships an `mp_wireframe` event with an empty
+    /// `elements` array. "Described, nothing readable" is a different fact from "never
+    /// described" — suppressing the event would leave the summarizer unable to tell a
+    /// blank screen from a frame we failed to walk. Android emits it too; iOS used to
+    /// gate the emit on `!wireframes.isEmpty`.
+    func testRenderViewHierarchyAsImage_emitsWireframeForAFrameWithNoElements() throws {
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        // No labels, no controls — nothing the walker can turn into an element.
+        window.addSubview(UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 200)))
+        window.isHidden = false
+
+        EventPublisher.shared.resetSubscribers()
+        // The publisher calls back on the emitter's queue, so this array is mutated off the
+        // test thread and read on it. Guarded, and awaited through an expectation rather
+        // than a polled deadline: the 2s of RunLoop pumping it replaces was a bet on how
+        // soon the machine got round to the emit, and it lost intermittently on CI.
+        let publishedLock = NSLock()
+        var published: [SessionEvent] = []
+        let receivedWireframe = expectation(description: "mp_wireframe published")
+        receivedWireframe.assertForOverFulfill = false
+        let subscriber = CapturingCustomEventSubscriber {
+            publishedLock.lock()
+            published.append($0)
+            publishedLock.unlock()
+            receivedWireframe.fulfill()
+        }
+        EventPublisher.shared.subscribe(subscriber)
+
+        SensitiveViewManager.reset()
+        SensitiveViewManager.shared.wireframeCollectionEnabled = true
+        recorder.wireframeEmitter = WireframeEmitter(options: MPWireframesOptions())
+        defer {
+            recorder.wireframeEmitter = nil
+            SensitiveViewManager.reset()
+            EventPublisher.shared.resetSubscribers()
+        }
+
+        XCTAssertNotNil(recorder.renderViewHierarchyAsImage(window: window))
+
+        wait(for: [receivedWireframe], timeout: 10.0)
+
+        publishedLock.lock()
+        let firstPublished = published.first
+        publishedLock.unlock()
+
+        let event = try XCTUnwrap(firstPublished, "an empty frame must still emit mp_wireframe")
+        guard case .customData(let custom) = event.data else {
+            return XCTFail("expected customData")
+        }
+        XCTAssertEqual(custom.tag, WireframeEmitter.tag)
+        XCTAssertTrue(custom.payload.elements.isEmpty, "expected a zero-element payload")
+        XCTAssertEqual(custom.payload.viewport, [200, 200], "viewport still describes the frame")
+    }
+}
+
+private final class CapturingCustomEventSubscriber: EventListener {
+    let onCustom: (SessionEvent) -> Void
+    init(onCustom: @escaping (SessionEvent) -> Void) { self.onCustom = onCustom }
+    func receivedTouchEvent(_ rawEvent: RawTouchEvent) {}
+    func receivedScreenshotEvent(_ rawEvent: RawScreenshotEvent) {}
+    func receivedCustomEvent(_ event: SessionEvent) { onCustom(event) }
 }

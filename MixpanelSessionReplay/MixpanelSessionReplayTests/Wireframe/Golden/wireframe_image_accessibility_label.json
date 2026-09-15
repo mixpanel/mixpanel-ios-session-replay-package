@@ -1,0 +1,19 @@
+{
+  "viewport": [
+    500,
+    800
+  ],
+  "elements": [
+    {
+      "role": "image",
+      "text": "avatar",
+      "bounds": [
+        16,
+        16,
+        64,
+        64
+      ],
+      "maskDecision": "NONE"
+    }
+  ]
+}

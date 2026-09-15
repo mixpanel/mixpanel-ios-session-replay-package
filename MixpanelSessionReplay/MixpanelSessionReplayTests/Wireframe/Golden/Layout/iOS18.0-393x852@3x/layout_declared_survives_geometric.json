@@ -1,0 +1,19 @@
+{
+  "viewport": [
+    393,
+    852
+  ],
+  "elements": [
+    {
+      "role": "text",
+      "text": "Declared label",
+      "bounds": [
+        40,
+        60,
+        64,
+        20
+      ],
+      "maskDecision": "DECLARED"
+    }
+  ]
+}
