@@ -21,18 +21,24 @@ class SettingsService {
     private let mpLib: String
     private let userDefaults: UserDefaults
     private let settingsEndPoint: String
+    private let bundleId: String?
+    private let buildNumber: String?
     static let settingsTimeoutMS = 5.0
 
     init(
         network: Network = Network(), version: String,
         mpLib: String,
         userDefaults: UserDefaults = UserDefaults(suiteName: ReplaySettings.userDefaultsName) ?? UserDefaults.standard,
-        serverURL: String = DataResidency.us
+        serverURL: String = DataResidency.us,
+        bundleId: String? = DeviceInfo.bundleId,
+        buildNumber: String? = DeviceInfo.buildNumber
     ) {
         self.network = network
         self.version = version
         self.userDefaults = userDefaults
         self.mpLib = mpLib
+        self.bundleId = bundleId
+        self.buildNumber = buildNumber
         settingsEndPoint = MPSessionReplayAPI.settingsEndpoint(for: serverURL)
     }
 
@@ -96,6 +102,13 @@ class SettingsService {
             URLQueryItem(name: "$os", value: "iOS"),
         ]
 
+        // Include app bundle ID and build number so that server-side SDK blocking per app ID and app build version can be done if needed.
+        if let bundleId = bundleId {
+            queryItems.append(URLQueryItem(name: "bundle_id", value: bundleId))
+        }
+        if let buildNumber = buildNumber {
+            queryItems.append(URLQueryItem(name: "build_number", value: buildNumber))
+        }
         // Only ask for the wireframe kill switch when this app opted in to wireframes.
         if wireframesRequested {
             queryItems.append(URLQueryItem(name: "wireframe", value: "1"))

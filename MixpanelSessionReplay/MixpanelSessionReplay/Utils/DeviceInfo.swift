@@ -49,4 +49,12 @@ struct DeviceInfo {
         }
         return false
     }
+
+    static var bundleId: String? {
+        return Bundle.main.bundleIdentifier
+    }
+
+    static var buildNumber: String? {
+        return Bundle.main.infoDictionary?["CFBundleVersion"] as? String
+    }
 }
