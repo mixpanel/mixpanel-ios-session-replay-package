@@ -31,8 +31,6 @@
 		167A789E2D776A5C00298D2C /* SensitiveViewManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167A789D2D776A5C00298D2C /* SensitiveViewManagerTests.swift */; };
 		167A78A02D776C1100298D2C /* HashableRectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167A789F2D776C0D00298D2C /* HashableRectTests.swift */; };
 		167A78A22D7773C000298D2C /* ScreenRecorderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167A78A12D7773B500298D2C /* ScreenRecorderTests.swift */; };
-		16851AD62EF5C7AF004E574B /* SessionReplayCompatibilityCheckerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16851AD52EF5C7AE004E574B /* SessionReplayCompatibilityCheckerTests.swift */; };
-		169611DA2EF547EB00923CFE /* SessionReplayCompatibilityChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169611D92EF547EA00923CFE /* SessionReplayCompatibilityChecker.swift */; };
 		16991D0A2DDE580100E43ED4 /* ThreadUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16991D092DDE57FC00E43ED4 /* ThreadUtils.swift */; };
 		16C9EFC32D4AAD840005ED7E /* MPSessionReplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C9EFC22D4AAD840005ED7E /* MPSessionReplay.swift */; };
 		16D9D0D72FD7D4FD005A6762 /* MPSessionReplayAPITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D9D0D62FD7D4FD005A6762 /* MPSessionReplayAPITests.swift */; };
@@ -136,8 +134,6 @@
 		167A789D2D776A5C00298D2C /* SensitiveViewManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveViewManagerTests.swift; sourceTree = "<group>"; };
 		167A789F2D776C0D00298D2C /* HashableRectTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HashableRectTests.swift; sourceTree = "<group>"; };
 		167A78A12D7773B500298D2C /* ScreenRecorderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenRecorderTests.swift; sourceTree = "<group>"; };
-		16851AD52EF5C7AE004E574B /* SessionReplayCompatibilityCheckerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayCompatibilityCheckerTests.swift; sourceTree = "<group>"; };
-		169611D92EF547EA00923CFE /* SessionReplayCompatibilityChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayCompatibilityChecker.swift; sourceTree = "<group>"; };
 		16991D092DDE57FC00E43ED4 /* ThreadUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadUtils.swift; sourceTree = "<group>"; };
 		16C9EFC22D4AAD840005ED7E /* MPSessionReplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPSessionReplay.swift; sourceTree = "<group>"; };
 		16D9D0D62FD7D4FD005A6762 /* MPSessionReplayAPITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPSessionReplayAPITests.swift; sourceTree = "<group>"; };
@@ -282,7 +278,6 @@
 			isa = PBXGroup;
 			children = (
 				16D9D0D62FD7D4FD005A6762 /* MPSessionReplayAPITests.swift */,
-				16851AD52EF5C7AE004E574B /* SessionReplayCompatibilityCheckerTests.swift */,
 				167A789A2D762C8C00298D2C /* ViewUtilsTests.swift */,
 				1707D9692DEE424F00D330D6 /* SwizzlerTests.swift */,
 			);
@@ -378,7 +373,6 @@
 			isa = PBXGroup;
 			children = (
 				1602FC682F8576E200CAD8E1 /* RecordingEventTriggerEvaluator.swift */,
-				169611D92EF547EA00923CFE /* SessionReplayCompatibilityChecker.swift */,
 				16991D092DDE57FC00E43ED4 /* ThreadUtils.swift */,
 				17E5AD592D66946400D1068A /* JSONHandler.swift */,
 				8650D2F12C13BCB4008903B1 /* Constants.swift */,
@@ -666,7 +660,6 @@
 				86E80E452C1BC51000515FD6 /* PrintLogging.swift in Sources */,
 				8650D2F72C13BD1C008903B1 /* Logger.swift in Sources */,
 				17A710CC2CD2AEF7002287CA /* ViewUtils.swift in Sources */,
-				169611DA2EF547EB00923CFE /* SessionReplayCompatibilityChecker.swift in Sources */,
 				8650D2F32C13BCB4008903B1 /* Constants.swift in Sources */,
 				17F94D442E2C7641007E7579 /* SettingsResponse.swift in Sources */,
 				86E80E482C20EBCE00515FD6 /* View+SensitiveView.swift in Sources */,
@@ -694,7 +687,6 @@
 				164C4AAD2F33144100230843 /* MPSessionReplayTests.swift in Sources */,
 				864D00022C450954003B258E /* FlushServiceTests.swift in Sources */,
 				16D9D0D72FD7D4FD005A6762 /* MPSessionReplayAPITests.swift in Sources */,
-				16851AD62EF5C7AF004E574B /* SessionReplayCompatibilityCheckerTests.swift in Sources */,
 				1659D0472F7A64B0009208CE /* MaskDecisionTests.swift in Sources */,
 				1659D0482F7A64B0009208CE /* DebugOptionsTests.swift in Sources */,
 				1659D0492F7A64B0009208CE /* DebugMaskOverlayManagerTests.swift in Sources */,

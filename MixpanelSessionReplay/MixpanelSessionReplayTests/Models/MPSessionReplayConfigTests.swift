@@ -63,6 +63,36 @@ class MPSessionReplayConfigTests: XCTestCase {
                 "remoteSettingsMode": "disabled",
                 "enableLogging": true,
                 "flushInterval": 10.0,
+                "serverURL": "https://api.mixpanel.com"
+            }
+            """
+        let jsonData = jsonString.data(using: .utf8)!
+        let decodedConfig = try MPSessionReplayConfig.from(json: jsonData)
+
+        XCTAssertFalse(decodedConfig.wifiOnly)
+        XCTAssertFalse(decodedConfig.autoStartRecording)
+        XCTAssertEqual(decodedConfig.recordingSessionsPercent, 50.0)
+        XCTAssertEqual(decodedConfig.autoMaskedViews, [.text, .map])
+        XCTAssertTrue(decodedConfig.enableLogging)
+        XCTAssertEqual(decodedConfig.flushInterval, 10.0)
+        XCTAssertEqual(decodedConfig.serverURL, "https://api.mixpanel.com")
+        XCTAssertNil(decodedConfig.debugOptions)
+    }
+
+    /// Regression test: `enableSessionReplayOniOS26AndLater` was removed from `MPSessionReplayConfig`
+    /// in 2.0.0, but the React Native bridge (`mixpanel-react-native-session-replay`) still sends it
+    /// in its JSON payload. `JSONDecoder` ignores unknown keys, so decoding must still succeed and
+    /// every other field must still round-trip correctly.
+    func testDecodingFromJSONIgnoresRemovedLegacyKey() throws {
+        let jsonString = """
+            {
+                "wifiOnly": false,
+                "recordingSessionsPercent": 50.0,
+                "autoMaskedViews": ["text", "map"],
+                "autoStartRecording": false,
+                "remoteSettingsMode": "disabled",
+                "enableLogging": true,
+                "flushInterval": 10.0,
                 "enableSessionReplayOniOS26AndLater": true,
                 "serverURL": "https://api.mixpanel.com"
             }
@@ -76,7 +106,6 @@ class MPSessionReplayConfigTests: XCTestCase {
         XCTAssertEqual(decodedConfig.autoMaskedViews, [.text, .map])
         XCTAssertTrue(decodedConfig.enableLogging)
         XCTAssertEqual(decodedConfig.flushInterval, 10.0)
-        XCTAssertEqual(decodedConfig.enableSessionReplayOniOS26AndLater, true)
         XCTAssertEqual(decodedConfig.serverURL, "https://api.mixpanel.com")
         XCTAssertNil(decodedConfig.debugOptions)
     }
@@ -176,7 +205,6 @@ class MPSessionReplayConfigTests: XCTestCase {
                 "remoteSettingsMode": "disabled",
                 "enableLogging": false,
                 "flushInterval": 10.0,
-                "enableSessionReplayOniOS26AndLater": false,
                 "serverURL": "https://api-eu.mixpanel.com"
             }
             """
@@ -326,8 +354,7 @@ class MPSessionReplayConfigTests: XCTestCase {
                 "remoteSettingsMode": "disabled",
                 "serverURL": "https://api.mixpanel.com",
                 "enableLogging": false,
-                "flushInterval": 10.0,
-                "enableSessionReplayOniOS26AndLater": false
+                "flushInterval": 10.0
             }
             """
         let jsonDataDisabled = jsonStringDisabled.data(using: .utf8)!
@@ -343,8 +370,7 @@ class MPSessionReplayConfigTests: XCTestCase {
                 "remoteSettingsMode": "strict",
                 "serverURL": "https://api.mixpanel.com",
                 "enableLogging": false,
-                "flushInterval": 10.0,
-                "enableSessionReplayOniOS26AndLater": false
+                "flushInterval": 10.0
             }
             """
         let jsonDataStrict = jsonStringStrict.data(using: .utf8)!
@@ -360,8 +386,7 @@ class MPSessionReplayConfigTests: XCTestCase {
                 "remoteSettingsMode": "fallback",
                 "serverURL": "https://api.mixpanel.com",
                 "enableLogging": false,
-                "flushInterval": 10.0,
-                "enableSessionReplayOniOS26AndLater": false
+                "flushInterval": 10.0
             }
             """
         let jsonDataFallback = jsonStringFallback.data(using: .utf8)!
