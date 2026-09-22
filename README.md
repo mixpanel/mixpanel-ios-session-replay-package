@@ -92,6 +92,11 @@ This section is for **app developers integrating the SDK** into their iOS applic
 ## Requirements
 
 - Active Mixpanel account
+- iOS 15.0+, Xcode 27+
+
+> **Note:** Starting with 2.0.0, Session Replay is enabled on iOS 26+ without any opt-in
+> flag. Automasking on SwiftUI's Liquid Glass rendering should still be verified in test
+> builds; mark any sensitive views with `mpReplaySensitive(true)` before shipping.
 
 ---
 
@@ -108,7 +113,7 @@ Open **podfile** and add Mixpanel Session Replay library to your dependencies:
 
 ```
 target 'MyApp' do
-     pod 'MixpanelSessionReplay', :git => 'https://github.com/mixpanel/mixpanel-ios-session-replay-package.git', :tag => '1.0.0'
+     pod 'MixpanelSessionReplay'
 end
 ```
 

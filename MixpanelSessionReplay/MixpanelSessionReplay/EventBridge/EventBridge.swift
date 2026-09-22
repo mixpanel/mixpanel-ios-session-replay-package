@@ -40,15 +40,9 @@ internal struct EventBridge {
     ///
     /// - Parameter handler: The handler that will process each MixpanelEvent instance
     ///
-    /// - Note: Requires iOS 13.0+. Safe to call multiple times. Handler is retained until
+    /// - Note: Safe to call multiple times. Handler is retained until
     ///         `stopConsuming()` is called.
     internal static func startConsuming(handler: EventBridgeHandler) {
-        // Check runtime availability
-        guard #available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *) else {
-            Logger.warn(message: "AsyncStream requires iOS 13+. Event triggers unavailable.")
-            return
-        }
-
         // Clean up any existing consumption
         stopConsuming()
 

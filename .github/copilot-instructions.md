@@ -5,15 +5,15 @@
 This is the **Mixpanel Session Replay iOS SDK**, a Swift library that enables session replay recording for iOS applications. It captures screenshots and touch events to help developers understand user interactions. The SDK is distributed via Swift Package Manager (SPM) and works alongside the main Mixpanel iOS SDK.
 
 - **Language**: Swift (iOS SDK)
-- **Minimum Deployment Targets**: iOS 13.0, tvOS 13.0, macOS 10.15, watchOS 6.0
-- **Swift Tools Version**: 5.3
+- **Minimum Deployment Target**: iOS 15.0 (iOS only; no tvOS/macOS/watchOS targets)
+- **Swift Tools Version**: 5.6
 - **License**: Apache 2.0
 
 ## Build and Test Instructions
 
 ### Prerequisites
 
-- **macOS** with **Xcode 16.4** installed (required for full build/test)
+- **macOS** with **Xcode 27** installed (required for full build/test)
 - Xcode command-line tools (`xcode-select --install`)
 - iOS Simulator (e.g., "iPhone 17 Pro")
 
