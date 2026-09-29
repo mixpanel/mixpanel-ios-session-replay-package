@@ -33,6 +33,10 @@ class ScreenRecorder {
     /// the current wireframe elements alongside each screenshot capture.
     var wireframeEmitter: WireframeEmitter?
 
+    /// How each frame is rendered; mirrored from `MPSessionReplayConfig.captureMethod`
+    /// by the instance that owns the recording.
+    var captureMethod: MPCaptureMethod = .viewHierarchy
+
     var mainScreenRendererFormat: UIGraphicsImageRendererFormat
     var presentedScreenRendererFormat: UIGraphicsImageRendererFormat
 
@@ -197,7 +201,7 @@ class ScreenRecorder {
             sensitiveFrames = frames
             wireframes = elements
 
-            view.drawHierarchy(in: viewBounds, afterScreenUpdates: false)
+            draw(view, at: viewBounds, in: context.cgContext)
 
             // Apply masking to sensitive frames with LIGHT GRAY
             context.cgContext.setFillColor(UIColor.lightGray.cgColor)
@@ -225,6 +229,190 @@ class ScreenRecorder {
         }
 
         return RenderedFrame(image: image, capturedAtMs: capturedAtMs)
+    }
+
+    /// Draws `view` into `cgContext` at `viewBounds` — its frame in window coordinates —
+    /// with the configured capture method.
+    func draw(_ view: UIView, at viewBounds: CGRect, in cgContext: CGContext) {
+        switch captureMethod {
+            case .viewHierarchy:
+                view.drawHierarchy(in: viewBounds, afterScreenUpdates: false)
+            case .layerTree:
+                // The presentation tree is drawn rather than the model tree: it holds the
+                // values of any animation in flight, as the screen shows them, and it is
+                // the tree the masks are measured on (`SensitiveViewManager.getFrame`), so
+                // a view mid-animation and its mask land in the same place.
+                let tree = view.layer.presentation() ?? view.layer
+                // Snapshotted pickers' presentation copies are hidden for the render, so the
+                // frame shows what is behind them instead of what `render(in:)` makes of
+                // them. Shadows are left out too: `render(in:)` blurs each one on the CPU,
+                // and SwiftUI's `.shadow` on a stack puts one on every element in it — nine
+                // on one card, which took a render from 16 ms to 63 ms on an iPhone 14 —
+                // while a frame without a soft shadow reads the same. Only copies are
+                // touched: the model tree, and so the screen, never changes.
+                let snapshots = pickerSnapshots(in: view, tree: tree, at: viewBounds)
+                var hidden: [CALayer] = []
+                var shadowed: [(layer: CALayer, opacity: Float)] = []
+                if tree !== view.layer {
+                    for snapshot in snapshots {
+                        snapshot.copy.isHidden = true
+                        hidden.append(snapshot.copy)
+                    }
+                    shadowed = shadowedLayers(in: tree).map { ($0, $0.shadowOpacity) }
+                    for copy in shadowed {
+                        copy.layer.shadowOpacity = 0
+                    }
+                }
+                // `render(in:)` draws at the layer's own origin, so the context is moved
+                // to where the view sits in the window first — the same placement
+                // `drawHierarchy(in:)` gives the snapshot.
+                cgContext.saveGState()
+                cgContext.translateBy(x: viewBounds.origin.x, y: viewBounds.origin.y)
+                tree.render(in: cgContext)
+                cgContext.restoreGState()
+                for copy in hidden {
+                    copy.isHidden = false
+                }
+                for copy in shadowed {
+                    copy.layer.shadowOpacity = copy.opacity
+                }
+                for snapshot in snapshots {
+                    drawSnapshot(of: snapshot.view, at: snapshot.rect, in: cgContext)
+                }
+        }
+    }
+
+    /// Views whose content `CALayer.render(in:)` cannot draw — a picker's wheel is built
+    /// from 3D transforms, which it flattens — so `.layerTree` draws them with
+    /// `drawHierarchy(in:afterScreenUpdates:)` over the rest of the frame. Snapshotting only
+    /// those views keeps the capture cheap: about 10 ms for a wheel date picker on an
+    /// iPhone 14, against about 65 ms for the whole window.
+    static let snapshottedViewTypes: [UIView.Type] = [UIPickerView.self]
+
+    /// The pickers to snapshot under `view`, with each one's presentation copy in `tree` and
+    /// the rect to draw it in, in window coordinates.
+    ///
+    /// The rect comes from the presentation copy, where the picker is on screen at this
+    /// instant — the same place its mask is measured — so a picker caught mid-animation is
+    /// drawn under its mask. A picker that something drawn after it paints over (a popover,
+    /// a toast) is left to `render(in:)`: a snapshot is drawn over the whole frame and would
+    /// cover it. Without a presentation tree there is nothing to place a snapshot by, and
+    /// no picker is snapshotted.
+    func pickerSnapshots(in view: UIView, tree: CALayer, at viewBounds: CGRect)
+        -> [(view: UIView, copy: CALayer, rect: CGRect)]
+    {
+        guard tree !== view.layer else { return [] }
+        return snapshottedViews(in: view).compactMap { picker in
+            let modelRect = picker.layer.convert(picker.layer.bounds, to: view.layer)
+            guard !isPainted(over: modelRect, after: picker.layer, in: view.layer),
+                let copy = presentationCopy(of: picker.layer, in: tree, under: view.layer)
+            else { return nil }
+            let rect = copy.convert(copy.bounds, to: tree).offsetBy(dx: viewBounds.minX, dy: viewBounds.minY)
+            return (picker, copy, rect)
+        }
+    }
+
+    /// Whether a layer drawn after `layer` in `root`'s tree — a later sibling of it or of one
+    /// of its ancestors, or anything inside one — draws something over `rect`, in `root`'s
+    /// coordinates.
+    func isPainted(over rect: CGRect, after layer: CALayer, in root: CALayer) -> Bool {
+        var current = layer
+        while current !== root, let parent = current.superlayer {
+            let siblings = parent.sublayers ?? []
+            if let index = siblings.firstIndex(where: { $0 === current }) {
+                for later in siblings[(index + 1)...] where paints(later, over: rect, in: root) {
+                    return true
+                }
+            }
+            current = parent
+        }
+        return false
+    }
+
+    /// Whether `layer`, or anything inside it, draws something over `rect`. Transparent
+    /// containers — a SwiftUI host spanning the screen — don't count; only what draws.
+    private func paints(_ layer: CALayer, over rect: CGRect, in root: CALayer) -> Bool {
+        guard !layer.isHidden, layer.opacity > 0.01 else { return false }
+        let frame = layer.convert(layer.bounds, to: root)
+        if frame.intersects(rect), drawsSomething(layer) {
+            return true
+        }
+        if layer.masksToBounds, !frame.intersects(rect) {
+            return false
+        }
+        return (layer.sublayers ?? []).contains { paints($0, over: rect, in: root) }
+    }
+
+    private func drawsSomething(_ layer: CALayer) -> Bool {
+        if layer.contents != nil || layer.borderWidth > 0 {
+            return true
+        }
+        if let color = layer.backgroundColor, color.alpha > 0.01 {
+            return true
+        }
+        if let shape = layer as? CAShapeLayer {
+            return shape.fillColor != nil || shape.strokeColor != nil
+        }
+        return layer is CATextLayer
+    }
+
+    /// Draws `view`'s own snapshot over the frame in `rect`. The snapshot is taken into a
+    /// transparent image first and composited from there: `drawHierarchy` straight into the
+    /// frame's opaque context would write the view's clear areas as black instead of
+    /// leaving the page behind it.
+    func drawSnapshot(of view: UIView, at rect: CGRect, in cgContext: CGContext) {
+        let format = UIGraphicsImageRendererFormat()
+        format.opaque = false
+        format.scale = cgContext.userSpaceToDeviceSpaceTransform.a
+        let snapshot = UIGraphicsImageRenderer(bounds: view.bounds, format: format).image { _ in
+            view.drawHierarchy(in: view.bounds, afterScreenUpdates: false)
+        }
+        guard let image = snapshot.cgImage else { return }
+        cgContext.saveGState()
+        // `CGContext.draw` places an image bottom-up; the frame's context is top-down.
+        cgContext.translateBy(x: rect.minX, y: rect.maxY)
+        cgContext.scaleBy(x: 1, y: -1)
+        cgContext.draw(image, in: CGRect(origin: .zero, size: rect.size))
+        cgContext.restoreGState()
+    }
+
+    /// The visible views under `root` of a ``snapshottedViewTypes`` type, outermost only.
+    func snapshottedViews(in root: UIView) -> [UIView] {
+        guard !root.isHidden, root.alpha > 0.01 else { return [] }
+        if Self.snapshottedViewTypes.contains(where: { root.isKind(of: $0) }) {
+            return [root]
+        }
+        return root.subviews.flatMap { snapshottedViews(in: $0) }
+    }
+
+    /// The layers under `root`, itself included, that cast a shadow.
+    func shadowedLayers(in root: CALayer) -> [CALayer] {
+        var layers: [CALayer] = root.shadowOpacity > 0 ? [root] : []
+        for sublayer in root.sublayers ?? [] {
+            layers += shadowedLayers(in: sublayer)
+        }
+        return layers
+    }
+
+    /// The copy of `layer` in the presentation tree `tree`, the copy of `root`: found by
+    /// following `layer`'s path of sublayer indexes down from `root`, which a presentation
+    /// copy shares with its model.
+    func presentationCopy(of layer: CALayer, in tree: CALayer, under root: CALayer) -> CALayer? {
+        var path: [Int] = []
+        var current = layer
+        while current !== root {
+            guard let parent = current.superlayer,
+                let index = parent.sublayers?.firstIndex(where: { $0 === current })
+            else { return nil }
+            path.append(index)
+            current = parent
+        }
+        var copy = tree
+        for index in path.reversed() {
+            guard let sublayers = copy.sublayers, index < sublayers.count else { return nil }
+            copy = sublayers[index]
+        }
+        return copy.model() === layer ? copy : nil
     }
 
     /// Renders and compresses the current window, carrying the frame's capture instant

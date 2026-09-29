@@ -328,4 +328,17 @@ class MPSessionReplayInstanceTests: BaseTests {
 
         testInstance.stopRecording()
     }
+
+    func testCaptureMethod_IsAppliedOnInitAndResetOnTeardown() {
+        let config = MPSessionReplayConfig(
+            wifiOnly: false, autoStartRecording: false, captureMethod: .layerTree)
+        let testInstance = MPSessionReplayInstance(
+            token: "test-token", distinctId: "test-distinct-id", config: config)
+
+        XCTAssertEqual(ScreenRecorder.shared.captureMethod, .layerTree)
+
+        testInstance.removeObservers()
+
+        XCTAssertEqual(ScreenRecorder.shared.captureMethod, .viewHierarchy)
+    }
 }

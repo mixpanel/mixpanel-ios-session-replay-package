@@ -60,6 +60,22 @@ public enum RemoteSettingsMode: String, Codable {
     case fallback
 }
 
+/// How the SDK renders each frame it captures.
+public enum MPCaptureMethod: String, Codable {
+    /// `UIView.drawHierarchy(in:afterScreenUpdates:)`: a snapshot of the window as the
+    /// render server composites it, including video layers and system visual effects.
+    case viewHierarchy
+
+    /// `CALayer.render(in:)`: draws the window's layer tree — its presentation tree, so an
+    /// animation in flight is drawn where the screen shows it. Several times cheaper on the
+    /// main thread — about 20 ms per frame on an iPhone 14 running iOS 27, against about
+    /// 65 ms for `viewHierarchy`. Pickers, whose wheels `render(in:)` cannot draw, are
+    /// snapshotted on their own and drawn over the frame; shadows, which it blurs on the
+    /// CPU, are left out. Content the app does not draw itself renders empty:
+    /// `AVPlayerLayer` video and system visual effects.
+    case layerTree
+}
+
 public struct MPSessionReplayConfig: Codable {
 
     /// Determines whether replay events will only be flushed to the server when the device has a WiFi connection.
@@ -190,6 +206,19 @@ public struct MPSessionReplayConfig: Codable {
         }
     }
 
+    /// How each frame is rendered. See ``MPCaptureMethod`` for the trade-off.
+    ///
+    /// - Default: `.viewHierarchy`
+    public var captureMethod: MPCaptureMethod {
+        get { storedCaptureMethod ?? .viewHierarchy }
+        set { storedCaptureMethod = newValue }
+    }
+
+    // Stored as an optional, nil meaning the default, so the synthesized decoder accepts a
+    // config JSON written before the key existed — a cross-platform bridge's, say —
+    // instead of failing on the missing key.
+    private var storedCaptureMethod: MPCaptureMethod?
+
     /// Enables wireframe capture: a per-frame structured list of visible UI
     /// elements (role, text, bounds) shipped as an rrweb Custom event alongside
     /// the screenshot stream.
@@ -250,6 +279,7 @@ public struct MPSessionReplayConfig: Codable {
     ///   - debugOptions: Debug feature configuration. When not nil, enables debug features (debug builds only).
     ///   - serverURL: The data residency base URL. Use `DataResidency.us` (default), `DataResidency.eu`, `DataResidency.in`, or a custom URL.
     ///   - wireframesOptions: Wireframe capture configuration. When not nil, enables wireframe emission.
+    ///   - captureMethod: How each frame is rendered. See ``MPCaptureMethod``.
     public init(
         wifiOnly: Bool = true,
         autoMaskedViews: Set<MPAutoMaskedViews> = [.image, .text, .web, .map],
@@ -261,7 +291,8 @@ public struct MPSessionReplayConfig: Codable {
         enableSessionReplayOniOS26AndLater: Bool = false,
         debugOptions: DebugOptions? = nil,
         serverURL: String = DataResidency.us,
-        wireframesOptions: MPWireframesOptions? = nil
+        wireframesOptions: MPWireframesOptions? = nil,
+        captureMethod: MPCaptureMethod = .viewHierarchy
     ) {
         self.wifiOnly = wifiOnly
         self.autoMaskedViews = autoMaskedViews
@@ -274,6 +305,7 @@ public struct MPSessionReplayConfig: Codable {
         self.debugOptions = debugOptions
         self.serverURL = getTrimmedServerURL(urlString: serverURL)
         self.wireframesOptions = wireframesOptions
+        self.captureMethod = captureMethod
     }
 
     enum CodingKeys: String, CodingKey {
@@ -288,6 +320,7 @@ public struct MPSessionReplayConfig: Codable {
         case debugOptions
         case serverURL
         case wireframesOptions
+        case storedCaptureMethod = "captureMethod"
     }
 
     /// Validates the serverURL and logs errors if invalid

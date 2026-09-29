@@ -368,4 +368,53 @@ class MPSessionReplayConfigTests: XCTestCase {
         let decodedConfigFallback = try MPSessionReplayConfig.from(json: jsonDataFallback)
         XCTAssertEqual(decodedConfigFallback.remoteSettingsMode, .fallback)
     }
+
+    // MARK: - Capture Method
+
+    func testCaptureMethodDefault() {
+        let config = MPSessionReplayConfig()
+
+        XCTAssertEqual(config.captureMethod, .viewHierarchy, "Default captureMethod should be viewHierarchy")
+    }
+
+    func testCaptureMethodCustomInitialization() {
+        let config = MPSessionReplayConfig(captureMethod: .layerTree)
+
+        XCTAssertEqual(config.captureMethod, .layerTree)
+    }
+
+    func testCaptureMethodEncodingAndDecoding() throws {
+        let originalConfig = MPSessionReplayConfig(captureMethod: .layerTree)
+
+        let jsonData = try originalConfig.toJSON()
+        let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: jsonData) as? [String: Any])
+        XCTAssertEqual(json["captureMethod"] as? String, "layerTree")
+
+        let decodedConfig = try MPSessionReplayConfig.from(json: jsonData)
+        XCTAssertEqual(decodedConfig.captureMethod, .layerTree)
+    }
+
+    func testDecodingWithoutCaptureMethodUsesTheDefault() throws {
+        // A config JSON written before this option existed must keep decoding.
+        let jsonString = """
+            {
+                "wifiOnly": true,
+                "recordingSessionsPercent": 100.0,
+                "autoMaskedViews": ["image", "text"],
+                "autoStartRecording": true,
+                "remoteSettingsMode": "disabled",
+                "enableLogging": false,
+                "flushInterval": 10.0,
+                "enableSessionReplayOniOS26AndLater": false,
+                "serverURL": "https://api.mixpanel.com"
+            }
+            """
+        let jsonData = jsonString.data(using: .utf8)!
+        let decodedConfig = try MPSessionReplayConfig.from(json: jsonData)
+
+        XCTAssertEqual(decodedConfig.captureMethod, .viewHierarchy)
+        // The keys that were there are still honored.
+        XCTAssertTrue(decodedConfig.wifiOnly)
+        XCTAssertEqual(decodedConfig.autoMaskedViews, [.image, .text])
+    }
 }
