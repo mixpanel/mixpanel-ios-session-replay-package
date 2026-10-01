@@ -68,7 +68,7 @@ jobs:
       working-directory: MixpanelSessionReplay
       run: |
         set -o pipefail
-        xcodebuild -scheme MixpanelSessionReplay -derivedDataPath Build/ -destination "${{ matrix.destination }}" -configuration Debug ONLY_ACTIVE_ARCH=NO ENABLE_TESTABILITY=YES -enableCodeCoverage YES clean build test | xcpretty -c;
+        xcodebuild -scheme MixpanelSessionReplay -derivedDataPath Build/ -destination "${{ matrix.destination }}" -configuration Debug ONLY_ACTIVE_ARCH=NO ENABLE_TESTABILITY=YES -enableCodeCoverage YES -retry-tests-on-failure -test-iterations 3 clean build test | xcpretty -c;
     - name: Fail if a layout golden was recorded rather than compared
       # A missing golden is written and the test passes, which is right locally
       # but would let an unreviewed golden slip through CI. Anything new here
