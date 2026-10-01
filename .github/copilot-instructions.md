@@ -5,15 +5,15 @@
 This is the **Mixpanel Session Replay iOS SDK**, a Swift library that enables session replay recording for iOS applications. It captures screenshots and touch events to help developers understand user interactions. The SDK is distributed via Swift Package Manager (SPM) and works alongside the main Mixpanel iOS SDK.
 
 - **Language**: Swift (iOS SDK)
-- **Minimum Deployment Targets**: iOS 13.0, tvOS 13.0, macOS 10.15, watchOS 6.0
-- **Swift Tools Version**: 5.3
+- **Minimum Deployment Target**: iOS 15.0 (iOS only; no tvOS/macOS/watchOS targets)
+- **Swift Tools Version**: 5.6
 - **License**: Apache 2.0
 
 ## Build and Test Instructions
 
 ### Prerequisites
 
-- **macOS** with **Xcode 16.4** installed (required for full build/test)
+- **macOS** with **Xcode 27** installed (required for full build/test)
 - Xcode command-line tools (`xcode-select --install`)
 - iOS Simulator (e.g., "iPhone 17 Pro")
 
@@ -62,7 +62,7 @@ This creates `MixpanelSessionReplay.xcframework.zip` in the repository root.
 ├── .github/
 │   ├── CODEOWNERS              # Code review ownership
 │   └── workflows/
-│       ├── iOS.yml             # CI workflow (builds/tests on push/PR)
+│       ├── ci.yml              # CI workflow (builds/tests on push/PR)
 │       └── release.yml         # Release workflow (creates XCFramework on tag push)
 ├── MixpanelSessionReplay/      # Main project directory
 │   ├── MixpanelSessionReplay/  # Source code
@@ -102,10 +102,10 @@ This creates `MixpanelSessionReplay.xcframework.zip` in the repository root.
 
 ## CI/CD Workflows
 
-### iOS CI (`iOS.yml`)
+### CI (`ci.yml`)
 - **Triggers**: Push to `main`, PRs to `main` or `development`
-- **Environment**: macOS-latest, Xcode 16.4
-- **Actions**: Builds and runs all tests on iPhone 17 Pro Simulator
+- **Environment**: `macos-26` with the latest Xcode 26.x (iOS 26.2 and 18.0 simulators), and the `xcode-27` runner with Xcode 27.0 (iOS 27.0 simulator)
+- **Actions**: Builds and runs all tests on each leg, then runs `pod lib lint` on Xcode 27.0
 
 ### Release (`release.yml`)
 - **Triggers**: Push of tags matching `v*`

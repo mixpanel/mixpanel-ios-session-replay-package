@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "MixpanelSessionReplay",
     platforms: [
-        .iOS(.v13)
+        .iOS(.v15)
     ],
     products: [
         .library(name: "MixpanelSessionReplay", targets: ["MixpanelSessionReplay"])
@@ -13,7 +13,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/mixpanel/mixpanel-swift-common.git",
-            from: "1.0.1"
+            from: "2.0.0"
         )
     ],
     targets: [
