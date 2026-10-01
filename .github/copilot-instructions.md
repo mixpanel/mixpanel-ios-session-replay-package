@@ -62,7 +62,7 @@ This creates `MixpanelSessionReplay.xcframework.zip` in the repository root.
 ├── .github/
 │   ├── CODEOWNERS              # Code review ownership
 │   └── workflows/
-│       ├── iOS.yml             # CI workflow (builds/tests on push/PR)
+│       ├── ci.yml              # CI workflow (builds/tests on push/PR)
 │       └── release.yml         # Release workflow (creates XCFramework on tag push)
 ├── MixpanelSessionReplay/      # Main project directory
 │   ├── MixpanelSessionReplay/  # Source code
@@ -102,10 +102,10 @@ This creates `MixpanelSessionReplay.xcframework.zip` in the repository root.
 
 ## CI/CD Workflows
 
-### iOS CI (`iOS.yml`)
+### CI (`ci.yml`)
 - **Triggers**: Push to `main`, PRs to `main` or `development`
-- **Environment**: macOS-latest, Xcode 16.4
-- **Actions**: Builds and runs all tests on iPhone 17 Pro Simulator
+- **Environment**: `macos-26` with the latest Xcode 26.x (iOS 26.2 and 18.0 simulators), and the `xcode-27` runner with Xcode 27.0 (iOS 27.0 simulator)
+- **Actions**: Builds and runs all tests on each leg, then runs `pod lib lint` on Xcode 27.0
 
 ### Release (`release.yml`)
 - **Triggers**: Push of tags matching `v*`

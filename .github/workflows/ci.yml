@@ -1,4 +1,4 @@
-name: iOS CI
+name: CI
 on:
   push:
     branches: [ main ]
@@ -33,10 +33,12 @@ jobs:
         # still builds, and the Xcode 27 leg proves the iOS 15 floor satisfies
         # Xcode 27's deployment-target range. Xcode 27 runs on the `xcode-27` runner.
         include:
-          - { xcode: '26.2', runner: macos-26,  destination: 'name=iPhone 17,OS=26.2' }
-          - { xcode: '26.2', runner: macos-26,  destination: 'name=iPhone 16,OS=18.0' }
-          - { xcode: '27.0', runner: xcode-27,  destination: 'name=iPhone 17,OS=27.0' }
-    name: Test (Xcode ${{ matrix.xcode }}, ${{ matrix.destination }})
+          # Latest Xcode 26.x
+          - { platform: iOS, os: '26.2', xcode: '26',   runner: macos-26, destination: 'name=iPhone 17,OS=26.2' }
+          - { platform: iOS, os: '18.0', xcode: '26',   runner: macos-26, destination: 'name=iPhone 16,OS=18.0' }
+          # Xcode 27
+          - { platform: iOS, os: '27.0', xcode: '27.0', runner: xcode-27, destination: 'name=iPhone 17,OS=27.0' }
+    name: ${{ matrix.platform }} ${{ matrix.os }} (Xcode ${{ matrix.xcode }})
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
     - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90  # v1
