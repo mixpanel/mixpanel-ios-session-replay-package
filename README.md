@@ -92,11 +92,25 @@ This section is for **app developers integrating the SDK** into their iOS applic
 ## Requirements
 
 - Active Mixpanel account
-- iOS 15.0+, Xcode 27+
+- iOS 15.0+
+- Xcode 26 or 27
 
 > **Note:** Starting with 2.0.0, Session Replay is enabled on iOS 26+ without any opt-in
 > flag. Automasking on SwiftUI's Liquid Glass rendering should still be verified in test
 > builds; mark any sensitive views with `mpReplaySensitive(true)` before shipping.
+
+### Supported OS and Xcode policy
+
+We add support for each new Xcode's minimum deployment target promptly after that Xcode
+ships. We drop an older floor only when Apple's toolchain or App Store rules require it,
+not before.
+
+Xcode 27 cannot build any target below iOS 15, and Apple requires the iOS 27 SDK for App
+Store submissions from April 2027. Version 2.0.0 therefore raises the minimum to iOS 15,
+and is tested with Xcode 26 and Xcode 27.
+
+**Need iOS 13 or 14?** Stay on version 1.x. The 1.x line receives no further releases,
+including security and crash fixes. Upgrading to 2.x is the supported path.
 
 ---
 
