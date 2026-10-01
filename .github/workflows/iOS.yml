@@ -6,7 +6,7 @@ on:
     branches: [ main, development ]
 jobs:
   build:
-    runs-on: macos-26
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
     strategy:
@@ -28,15 +28,20 @@ jobs:
         # is derived from OS version + logical screen size + scale. Adding a
         # destination means recording its directory (run the suite once; a missing
         # golden is written and passes); removing one means deleting its directory.
-        destination:
-          - 'name=iPhone 17,OS=26.2'
-          - 'name=iPhone 16,OS=18.0'
-    name: Test (${{ matrix.destination }})
+        #
+        # Xcode is a matrix axis too: the Xcode 26 legs prove the older toolchain
+        # still builds, and the Xcode 27 leg proves the iOS 15 floor satisfies
+        # Xcode 27's deployment-target range. Xcode 27 runs on the `xcode-27` runner.
+        include:
+          - { xcode: '26.2', runner: macos-26,  destination: 'name=iPhone 17,OS=26.2' }
+          - { xcode: '26.2', runner: macos-26,  destination: 'name=iPhone 16,OS=18.0' }
+          - { xcode: '27.0', runner: xcode-27,  destination: 'name=iPhone 17,OS=27.0' }
+    name: Test (Xcode ${{ matrix.xcode }}, ${{ matrix.destination }})
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
     - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90  # v1
       with:
-        xcode-version: '26.2'
+        xcode-version: ${{ matrix.xcode }}
     - name: Ensure the simulator runtime is present
       # The pinned Xcode ships only its own iOS runtime, so the older leg needs one
       # the image may not carry. Try to fetch it, and if it still is not there, say
@@ -73,3 +78,18 @@ jobs:
           echo "Record them locally and commit them."
           exit 1
         fi
+
+  pod-lint:
+    name: pod lib lint (Xcode 27.0)
+    runs-on: xcode-27
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+    - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90  # v1
+      with:
+        xcode-version: '27.0'
+    - name: pod lib lint (Xcode 27)
+      # Xcode builds and SPM never reject a stale deployment target, only a
+      # CocoaPods pod target does, so this is the check that guards the iOS 15 floor.
+      run: pod lib lint MixpanelSessionReplay.podspec --allow-warnings
