@@ -37,11 +37,6 @@ import XCTest
 
 @testable import MixpanelSessionReplay
 
-/// `@available` because SwiftUI's `accessibilityLabel(_:)` is iOS 14+. The package
-/// floor is iOS 13, but every destination we test against is far above that, so the
-/// annotation costs no coverage — it just keeps the suite off a runtime it could not
-/// compile for.
-@available(iOS 14.0, *)
 final class SwiftUIWireframeLayoutGoldenTests: XCTestCase {
 
     private var manager: SensitiveViewManager!

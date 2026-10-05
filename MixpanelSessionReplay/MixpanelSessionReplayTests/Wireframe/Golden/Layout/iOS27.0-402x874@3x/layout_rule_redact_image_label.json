@@ -1,0 +1,19 @@
+{
+  "viewport": [
+    402,
+    874
+  ],
+  "elements": [
+    {
+      "role": "image",
+      "text": "avatar of [EMAIL]",
+      "bounds": [
+        20,
+        20,
+        80,
+        80
+      ],
+      "maskDecision": "RULE_REDACT"
+    }
+  ]
+}
