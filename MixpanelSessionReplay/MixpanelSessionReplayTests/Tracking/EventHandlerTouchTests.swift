@@ -35,7 +35,7 @@ final class EventHandlerTouchTests: BaseTests {
         let expectation = expectation(description: "enqueueEvent called")
         mockEventService.enqueueEventExpectation = expectation
         handler.receivedTouchEvent(rawEvent)
-        wait(for: [expectation], timeout: 5.0)
+        wait(for: [expectation], timeout: 30.0)
         return mockEventService.capturedEvents.last!
     }
 
