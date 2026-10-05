@@ -101,16 +101,7 @@ This section is for **app developers integrating the SDK** into their iOS applic
 
 ### Supported OS and Xcode policy
 
-We add support for each new Xcode's minimum deployment target promptly after that Xcode
-ships. We drop an older floor only when Apple's toolchain or App Store rules require it,
-not before.
-
-Xcode 27 cannot build any target below iOS 15, and Apple requires the iOS 27 SDK for App
-Store submissions from April 2027. Version 2.0.0 therefore raises the minimum to iOS 15,
-and is tested with Xcode 26 and Xcode 27.
-
-**Need iOS 13 or 14?** Stay on version 1.x. The 1.x line receives no further releases,
-including security and crash fixes. Upgrading to 2.x is the supported path.
+As of SDK version 2.0.0, the minimum supported version is iOS 15, matching the minimum deployment target of Xcode 27. Need an older OS? Stay on the 1.x releases (`maintenance/1.x`) with Xcode 26. We add support for each new Xcode's floor promptly after its release and drop the old floor only when Apple's App Store SDK deadline requires it. 1.x receives security and critical fixes until April 2027.
 
 ---
 
