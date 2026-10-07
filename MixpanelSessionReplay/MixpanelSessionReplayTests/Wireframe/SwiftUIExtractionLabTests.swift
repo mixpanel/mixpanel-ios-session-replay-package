@@ -15,6 +15,7 @@ import XCTest
 
 @testable import MixpanelSessionReplay
 
+@available(iOS 14.0, *)
 final class SwiftUIExtractionLabTests: XCTestCase {
 
     /// Strings that ProbeContent renders and that the SDK is *supposed* to
@@ -94,6 +95,7 @@ final class SwiftUIExtractionLabTests: XCTestCase {
 
 // MARK: - Probe subject
 
+@available(iOS 14.0, *)
 private struct ProbeContent: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {

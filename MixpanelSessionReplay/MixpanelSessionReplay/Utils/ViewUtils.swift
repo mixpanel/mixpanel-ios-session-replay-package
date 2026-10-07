@@ -67,8 +67,10 @@ struct ViewUtils {
         if let windowScene = UIApplication.shared.connectedScenes.first(where: {
             $0.activationState == .foregroundActive
         }) as? UIWindowScene {
-            if let keyWindow = windowScene.keyWindow {
-                return keyWindow
+            if #available(iOS 15.0, *) {
+                if let keyWindow = windowScene.keyWindow {
+                    return keyWindow
+                }
             }
             for window in windowScene.windows where window.isKeyWindow {
                 return window
@@ -96,10 +98,16 @@ struct ViewUtils {
     static func getAllWindows() -> [UIWindow] {
         var windows: [UIWindow] = []
 
-        for scene in UIApplication.shared.connectedScenes {
-            if let windowScene = scene as? UIWindowScene {
-                windows.append(contentsOf: windowScene.windows)
+        if #available(iOS 15.0, *) {
+            // Use modern API for iOS 15+
+            for scene in UIApplication.shared.connectedScenes {
+                if let windowScene = scene as? UIWindowScene {
+                    windows.append(contentsOf: windowScene.windows)
+                }
             }
+        } else {
+            // Fallback for older iOS versions
+            windows = UIApplication.shared.windows
         }
 
         // Filter to only app-owned key windows
@@ -116,12 +124,14 @@ struct ViewUtils {
             return false
         }
 
-        // Ensure window belongs to an app-owned UIWindowScene
-        // System scenes (like keyboard) are not activation scenes
-        guard let windowScene = window.windowScene,
-            windowScene.activationState != .unattached
-        else {
-            return false
+        if #available(iOS 15.0, *) {
+            // Ensure window belongs to an app-owned UIWindowScene
+            // System scenes (like keyboard) are not activation scenes
+            guard let windowScene = window.windowScene,
+                windowScene.activationState != .unattached
+            else {
+                return false
+            }
         }
 
         return true

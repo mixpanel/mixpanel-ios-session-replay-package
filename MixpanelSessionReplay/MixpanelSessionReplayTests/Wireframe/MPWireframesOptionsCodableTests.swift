@@ -232,6 +232,7 @@ final class MPWireframesOptionsCodableTests: XCTestCase {
               "enableLogging": false,
               "remoteSettingsMode": "disabled",
               "debugOptions": null,
+              "enableSessionReplayOniOS26AndLater": true,
               "serverURL": "https://api.mixpanel.com",
               "wireframesOptions": {
                 "sensitiveRules": [{ "type": "strip", "text": "password" }],
@@ -264,6 +265,7 @@ final class MPWireframesOptionsCodableTests: XCTestCase {
               "enableLogging": false,
               "remoteSettingsMode": "disabled",
               "debugOptions": null,
+              "enableSessionReplayOniOS26AndLater": true,
               "serverURL": "https://api.mixpanel.com"
             }
             """

@@ -15,9 +15,9 @@ public enum MPSessionReplayError: Error {
 open class MPSessionReplay {
     /// Initializes the Mixpanel Session Replay system with the provided configuration.
     ///
-    /// This method verifies remote configuration to determine if session recording is enabled
-    /// before creating a new `MPSessionReplayInstance`. If a previous instance exists, it will be
-    /// deinitialized first.
+    /// This method first checks device compatibility, then verifies remote configuration to determine
+    /// if session recording is enabled before creating a new `MPSessionReplayInstance`. If a previous
+    /// instance exists, it will be deinitialized first.
     ///
     /// - Parameters:
     ///   - token: The Mixpanel project token used to identify the project.
@@ -27,16 +27,30 @@ open class MPSessionReplay {
     ///                 Returns a `Result` where:
     ///                 - `.success(instance)`: Indicates initialization was successful and recording is enabled from remote settings.
     ///                 - `.failure(error)`: Indicates initialization failed due to one of the following:
+    ///                   - Device incompatibility (e.g., iOS 26+ without `enableSessionReplayOniOS26AndLater` set to `true`)
     ///                   - Recording disabled via remote settings
     ///                   - Other setup errors
     ///
+    /// - Note: On iOS 26 and later, Session Replay is disabled by default due to SwiftUI architectural changes.
+    ///         Set `config.enableSessionReplayOniOS26AndLater = true` to explicitly enable it on these versions.
     /// - Note: The `completion` handler is always invoked on the main thread to ensure thread-safety when interacting with UI-related code.
     open class func initialize(
         token: String, distinctId: String, config: MPSessionReplayConfig = MPSessionReplayConfig(),
         completion: @escaping (Result<MPSessionReplayInstance?, Error>) -> Void = { _ in }
     ) {
-        MPSessionReplayManager.sharedInstance.initialize(
-            token: token, distinctId: distinctId, config: config, completion: completion)
+        let isCompatible = SessionReplayCompatibilityChecker.isCompatible()
+        if isCompatible == .compatible || config.enableSessionReplayOniOS26AndLater {
+            if isCompatible != .compatible {
+                debugPrint(
+                    "[Mixpanel Session Replay - MPSessionReplay.swift - func \(#function)] (warning) - Session Replay is being force enabled on an iOS 26+ device. Ensure you have tested thoroughly as iOS 26 Liquid Glass UI changes may impact sensitive content masking."
+                )
+            }
+
+            MPSessionReplayManager.sharedInstance.initialize(
+                token: token, distinctId: distinctId, config: config, completion: completion)
+        } else {
+            completion(.failure(MPSessionReplayError.custom(message: isCompatible.description)))
+        }
     }
 
     open class func getInstance() -> MPSessionReplayInstance? {

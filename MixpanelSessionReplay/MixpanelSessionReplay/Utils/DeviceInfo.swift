@@ -44,7 +44,10 @@ struct DeviceInfo {
     }
 
     static var isiOSAppOnMac: Bool {
-        return ProcessInfo.processInfo.isiOSAppOnMac
+        if #available(iOS 14.0, macOS 11.0, *) {
+            return ProcessInfo.processInfo.isiOSAppOnMac
+        }
+        return false
     }
 
     static var bundleId: String? {

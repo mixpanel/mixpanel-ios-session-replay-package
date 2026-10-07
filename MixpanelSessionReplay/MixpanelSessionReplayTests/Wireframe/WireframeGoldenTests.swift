@@ -585,6 +585,8 @@ private struct GoldenLoginForm: View {
         // simulator's top inset (e.g. 59pt on iPhone 16) to every element, which
         // would device-model-pin the golden. Ignoring it keeps the declared bounds
         // portable across simulators — matching the UIKit goldens' independence.
+        // (`.edgesIgnoringSafeArea` rather than `.ignoresSafeArea()`: the SDK's
+        // deployment target is iOS 13, and the latter is iOS 14+.)
         .edgesIgnoringSafeArea(.all)
     }
 }
