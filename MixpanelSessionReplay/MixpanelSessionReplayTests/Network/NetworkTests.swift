@@ -90,7 +90,7 @@ class NetworkTests: XCTestCase {
             expectation.fulfill()
         }
 
-        waitForExpectations(timeout: 15, handler: nil)
+        waitForExpectations(timeout: 2, handler: nil)
     }
 
     func testPerformAPIRequestInvalidResponse() {
