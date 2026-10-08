@@ -1,3 +1,20 @@
+## [2.0.0](https://github.com/mixpanel/mixpanel-ios-session-replay-package/tree/2.0.0) (2026-10-08)
+
+### Breaking changes([#58](https://github.com/mixpanel/mixpanel-ios-session-replay-package/pull/58))
+
+- Minimum iOS is now 15, matching Xcode 27.
+- Removed `enableSessionReplayOniOS26AndLater` from `MPSessionReplayConfig`. Session Replay now runs on iOS 26+ by default, so just delete the flag from your config.
+- Requires MixpanelSwiftCommon 2.0.
+
+### Heads up
+Check automasking on Liquid Glass in a test build, and mark sensitive views with `mpReplaySensitive(true)`.
+
+### Older iOS or Xcode
+Stay on 1.x with Xcode 26. It gets security and critical fixes until April 2027.
+
+
+[Full Changelog](https://github.com/mixpanel/mixpanel-ios-session-replay-package/compare/1.6.1...2.0.0)
+
 ## [1.6.1](https://github.com/mixpanel/mixpanel-ios-session-replay-package/tree/1.6.1) (2026-10-08)
 
 ### Fixes
