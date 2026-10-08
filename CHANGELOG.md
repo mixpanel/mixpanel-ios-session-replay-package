@@ -1,3 +1,11 @@
+## [2.0.0](https://github.com/mixpanel/mixpanel-ios-session-replay-package/tree/2.0.0) (2026-10-08)
+
+### Features
+
+- bump minimum iOS to 15 for Xcode 27 and remove the iOS 26 opt-in flag (#54) (#58) ([#54](https://github.com/mixpanel/mixpanel-ios-session-replay-package/pull/54))
+
+[Full Changelog](https://github.com/mixpanel/mixpanel-ios-session-replay-package/compare/1.6.1...2.0.0)
+
 ## [1.6.1](https://github.com/mixpanel/mixpanel-ios-session-replay-package/tree/1.6.1) (2026-10-08)
 
 ### Fixes
