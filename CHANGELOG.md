@@ -1,3 +1,11 @@
+## [1.6.1](https://github.com/mixpanel/mixpanel-ios-session-replay-package/tree/1.6.1) (2026-10-08)
+
+### Fixes
+
+- Send app bundle_id and build_number as settings API query params (#51) ([#51](https://github.com/mixpanel/mixpanel-ios-session-replay-package/pull/51))
+
+[Full Changelog](https://github.com/mixpanel/mixpanel-ios-session-replay-package/compare/1.6.0...1.6.1)
+
 ## [1.6.0](https://github.com/mixpanel/mixpanel-ios-session-replay-package/tree/1.6.0) (2026-09-09)
 
 ### Features
