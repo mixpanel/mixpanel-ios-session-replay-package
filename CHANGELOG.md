@@ -2,19 +2,15 @@
 
 ### Breaking changes([#58](https://github.com/mixpanel/mixpanel-ios-session-replay-package/pull/58))
 
-- **Minimum iOS is now 15.0** (was 13.0). Xcode 27 rejects any target with a deployment target below iOS 15, which breaks CocoaPods consumers. The new floor applies to Swift Package Manager and CocoaPods alike.
-- **Removed `enableSessionReplayOniOS26AndLater` from `MPSessionReplayConfig`.** Session Replay now runs on iOS 26 and later by default, so no opt-in is needed. If your config sets this flag, delete it, or the build will fail.
-- **Requires MixpanelSwiftCommon 2.0.** Use `~> 2.0` in CocoaPods or `from: "2.0.0"` in SPM.
+- Minimum iOS is now 15, matching Xcode 27.
+- Removed `enableSessionReplayOniOS26AndLater` from `MPSessionReplayConfig`. Session Replay now runs on iOS 26+ by default, so just delete the flag from your config.
+- Requires MixpanelSwiftCommon 2.0.
 
-### Things to know
+### Heads up
+Check automasking on Liquid Glass in a test build, and mark sensitive views with `mpReplaySensitive(true)`.
 
-- Verify automasking on SwiftUI's Liquid Glass rendering in a test build before shipping. Mark sensitive views with `mpReplaySensitive(true)` rather than relying on automasking alone.
-- Supports Xcode 26 and 27.
-- Internal cleanup: removed the iOS 26 compatibility checker and the `#available` checks that the new iOS 15 floor makes redundant.
-
-### Staying on an older iOS or Xcode
-
-Apps that need iOS 13 or 14 should stay on 1.x with Xcode 26. The 1.x line gets security and critical fixes until April 2027.
+### Older iOS or Xcode
+Stay on 1.x with Xcode 26. It gets security and critical fixes until April 2027.
 
 
 [Full Changelog](https://github.com/mixpanel/mixpanel-ios-session-replay-package/compare/1.6.1...2.0.0)
