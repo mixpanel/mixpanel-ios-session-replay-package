@@ -20,7 +20,6 @@ struct SampleAppApp: App {
         let config = MPSessionReplayConfig(
             autoMaskedViews: [],
             enableLogging: true,
-            enableSessionReplayOniOS26AndLater: true,
             // `overlayColors: nil` keeps the mask overlay off — this test bed reads
             // the wireframe payload in the console, not the grayed rectangles.
             debugOptions: DebugOptions(

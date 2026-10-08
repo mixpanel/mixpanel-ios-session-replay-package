@@ -1,0 +1,19 @@
+{
+  "viewport": [
+    402,
+    874
+  ],
+  "elements": [
+    {
+      "role": "text",
+      "text": "Public Override",
+      "bounds": [
+        20,
+        20,
+        117,
+        20
+      ],
+      "maskDecision": "NONE"
+    }
+  ]
+}

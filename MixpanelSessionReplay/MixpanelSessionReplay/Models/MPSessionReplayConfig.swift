@@ -134,30 +134,6 @@ public struct MPSessionReplayConfig: Codable {
     /// - Default: `false`
     public var enableLogging: Bool = false
 
-    /// Forces Session Replay to be enabled on iOS 26 and later, bypassing compatibility checks.
-    ///
-    /// ## Overview
-    /// Apple's iOS 26 introduces "Liquid Glass" rendering changes that affect automasking
-    /// in Session Replay for SwiftUI apps. This is an industry-wide issue impacting all
-    /// session replay vendors. By default, Session Replay is now disabled for apps built with
-    /// Xcode 26+ and running on iOS 26+ as precautionary measure.
-    /// Do not rely solely on automasking. Instead, manually mark sensitive views using 'mpReplaySensitive(true)'
-    /// and test thoroughly to ensure masking works as expected.
-    ///
-    /// Set this flag to `true` during SDK initialization if you want to force-enable
-    /// Session Replay despite potential masking limitations.
-    ///
-    /// ## Important: Testing Required
-    /// Before turning on Session Replay for production, confirm that your masking configuration
-    /// works as expected by reviewing captured replays in test builds. You are responsible
-    /// for ensuring that no sensitive data is recorded.
-    ///
-    /// > Warning: If you detect missing or incorrect masking of sensitive content,
-    /// > do not proceed with a production rollout until the problem is fixed.
-    ///
-    /// - Default: `false`
-    public var enableSessionReplayOniOS26AndLater: Bool = false
-
     /// Debug feature configuration. When not nil, debug features are enabled.
     ///
     /// Its two members differ in where they take effect: ``DebugOptions/overlayColors``
@@ -246,7 +222,6 @@ public struct MPSessionReplayConfig: Codable {
     ///   - remoteSettingsMode: Controls how remote configuration settings are fetched.
     ///   - enableLogging: Enables debug-level logging for the SDK.
     ///   - flushInterval: Specifies the flush interval in seconds.
-    ///   - enableSessionReplayOniOS26AndLater: Forces Session Replay to be enabled on iOS 26 and later.
     ///   - debugOptions: Debug feature configuration. When not nil, enables debug features (debug builds only).
     ///   - serverURL: The data residency base URL. Use `DataResidency.us` (default), `DataResidency.eu`, `DataResidency.in`, or a custom URL.
     ///   - wireframesOptions: Wireframe capture configuration. When not nil, enables wireframe emission.
@@ -258,7 +233,6 @@ public struct MPSessionReplayConfig: Codable {
         remoteSettingsMode: RemoteSettingsMode = .disabled,
         enableLogging: Bool = false,
         flushInterval: TimeInterval = 10,
-        enableSessionReplayOniOS26AndLater: Bool = false,
         debugOptions: DebugOptions? = nil,
         serverURL: String = DataResidency.us,
         wireframesOptions: MPWireframesOptions? = nil
@@ -270,7 +244,6 @@ public struct MPSessionReplayConfig: Codable {
         self.remoteSettingsMode = remoteSettingsMode
         self.enableLogging = enableLogging
         self.flushInterval = flushInterval
-        self.enableSessionReplayOniOS26AndLater = enableSessionReplayOniOS26AndLater
         self.debugOptions = debugOptions
         self.serverURL = getTrimmedServerURL(urlString: serverURL)
         self.wireframesOptions = wireframesOptions
@@ -284,7 +257,6 @@ public struct MPSessionReplayConfig: Codable {
         case remoteSettingsMode
         case enableLogging
         case flushInterval
-        case enableSessionReplayOniOS26AndLater
         case debugOptions
         case serverURL
         case wireframesOptions

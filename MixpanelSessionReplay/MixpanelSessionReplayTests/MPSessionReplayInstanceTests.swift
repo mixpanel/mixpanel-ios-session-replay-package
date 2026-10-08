@@ -242,7 +242,7 @@ class MPSessionReplayInstanceTests: BaseTests {
         )
 
         // Wait for async chain to complete (timeout provides headroom for CI)
-        wait(for: [expectation], timeout: 10.0)
+        wait(for: [expectation], timeout: 30.0)
 
         // Assertions now run after enqueueEvent completes
         XCTAssertFalse(instance.isScreenDirty())

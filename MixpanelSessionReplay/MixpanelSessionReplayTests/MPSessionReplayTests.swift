@@ -71,8 +71,7 @@ class MPSessionReplayTests: XCTestCase {
         let config = MPSessionReplayConfig(
             autoStartRecording: false,
             recordingSessionsPercent: 100,
-            remoteSettingsMode: .strict,
-            enableSessionReplayOniOS26AndLater: true
+            remoteSettingsMode: .strict
         )
 
         let expectation = self.expectation(description: "Initialization completes")
@@ -112,8 +111,7 @@ class MPSessionReplayTests: XCTestCase {
         let config = MPSessionReplayConfig(
             autoStartRecording: false,
             recordingSessionsPercent: 100,
-            remoteSettingsMode: .strict,
-            enableSessionReplayOniOS26AndLater: true
+            remoteSettingsMode: .strict
         )
 
         let expectation = self.expectation(description: "Initialization fails")
@@ -154,8 +152,7 @@ class MPSessionReplayTests: XCTestCase {
         let config = MPSessionReplayConfig(
             autoStartRecording: false,
             recordingSessionsPercent: 100,
-            remoteSettingsMode: .strict,
-            enableSessionReplayOniOS26AndLater: true
+            remoteSettingsMode: .strict
         )
 
         let expectation = self.expectation(description: "Initialization fails")
@@ -205,8 +202,7 @@ class MPSessionReplayTests: XCTestCase {
         let config = MPSessionReplayConfig(
             autoStartRecording: false,
             recordingSessionsPercent: 100,
-            remoteSettingsMode: .strict,
-            enableSessionReplayOniOS26AndLater: true
+            remoteSettingsMode: .strict
         )
 
         let expectation = self.expectation(description: "Initialization fails due to remote enablement switch")
@@ -254,8 +250,7 @@ class MPSessionReplayTests: XCTestCase {
         let config = MPSessionReplayConfig(
             autoStartRecording: false,
             recordingSessionsPercent: 100,
-            remoteSettingsMode: .fallback,
-            enableSessionReplayOniOS26AndLater: true
+            remoteSettingsMode: .fallback
         )
 
         let expectation = self.expectation(description: "Initialization completes")
@@ -295,8 +290,7 @@ class MPSessionReplayTests: XCTestCase {
         let initialConfig = MPSessionReplayConfig(
             autoStartRecording: false,
             recordingSessionsPercent: 100,
-            remoteSettingsMode: .fallback,
-            enableSessionReplayOniOS26AndLater: true
+            remoteSettingsMode: .fallback
         )
 
         let firstExpectation = self.expectation(description: "First initialization completes")
@@ -318,8 +312,7 @@ class MPSessionReplayTests: XCTestCase {
         let config = MPSessionReplayConfig(
             autoStartRecording: false,
             recordingSessionsPercent: 100,
-            remoteSettingsMode: .fallback,
-            enableSessionReplayOniOS26AndLater: true
+            remoteSettingsMode: .fallback
         )
 
         let expectation = self.expectation(description: "Second initialization with cache")
@@ -353,8 +346,7 @@ class MPSessionReplayTests: XCTestCase {
         let config = MPSessionReplayConfig(
             autoStartRecording: false,
             recordingSessionsPercent: 100,
-            remoteSettingsMode: .fallback,
-            enableSessionReplayOniOS26AndLater: true
+            remoteSettingsMode: .fallback
         )
 
         let expectation = self.expectation(description: "Initialization with fallback to original config")
@@ -397,8 +389,7 @@ class MPSessionReplayTests: XCTestCase {
         let config = MPSessionReplayConfig(
             autoStartRecording: false,
             recordingSessionsPercent: 100,
-            remoteSettingsMode: .disabled,
-            enableSessionReplayOniOS26AndLater: true
+            remoteSettingsMode: .disabled
         )
 
         let expectation = self.expectation(description: "Initialization completes")
@@ -443,8 +434,7 @@ class MPSessionReplayTests: XCTestCase {
         let config = MPSessionReplayConfig(
             autoStartRecording: false,
             recordingSessionsPercent: 100,
-            remoteSettingsMode: .disabled,
-            enableSessionReplayOniOS26AndLater: true
+            remoteSettingsMode: .disabled
         )
 
         let expectation = self.expectation(description: "Initialization fails due to remote enablement switch")
@@ -522,8 +512,7 @@ class MPSessionReplayTests: XCTestCase {
         let config = MPSessionReplayConfig(
             autoStartRecording: false,
             recordingSessionsPercent: 100,
-            remoteSettingsMode: .fallback,
-            enableSessionReplayOniOS26AndLater: true
+            remoteSettingsMode: .fallback
         )
 
         let expectation = self.expectation(description: "Initialization with basic event triggers")
