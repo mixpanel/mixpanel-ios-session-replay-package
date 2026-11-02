@@ -6,6 +6,7 @@
 //  Copyright © 2025 Mixpanel. All rights reserved.
 //
 
+import MixpanelSwiftCommon
 import XCTest
 
 @testable import MixpanelSessionReplay
@@ -269,6 +270,63 @@ class MPSessionReplayInstanceTests: BaseTests {
         XCTAssertEqual(instance.flushService.getDistinctId(), newDistinctId)
     }
 
+    func testIdentifyWithIdentityUpdatesDistinctIdAndIdentity() {
+        let identity = MixpanelIdentity(userId: "user_123", companyId: "acme", deviceId: "device-1")
+        let finished = expectation(description: "identify completion")
+
+        instance.identify(identity: identity) {
+            finished.fulfill()
+        }
+        wait(for: [finished], timeout: 2)
+
+        XCTAssertTrue(mockFlushService.flushEventsForAllCalled)
+        XCTAssertEqual(
+            instance.flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "user_123", identity: identity))
+    }
+
+    func testIdentifyWithDeviceOnlyIdentityUsesDeviceDistinctId() {
+        let identity = MixpanelIdentity(userId: nil, deviceId: "device-1")
+        let finished = expectation(description: "identify completion")
+
+        instance.identify(identity: identity) {
+            finished.fulfill()
+        }
+        wait(for: [finished], timeout: 2)
+
+        XCTAssertEqual(instance.flushService.getDistinctId(), "$device:device-1")
+        XCTAssertEqual(instance.flushService.getIdentifiers().identity, identity)
+    }
+
+    func testIdentifyWithDistinctIdClearsIdentity() {
+        let identified = expectation(description: "identify identity completion")
+        instance.identify(identity: MixpanelIdentity(userId: "user_123", companyId: "acme")) {
+            identified.fulfill()
+        }
+        wait(for: [identified], timeout: 2)
+
+        let finished = expectation(description: "identify distinct id completion")
+        instance.identify(distinctId: "plain-distinct-id") {
+            finished.fulfill()
+        }
+        wait(for: [finished], timeout: 2)
+
+        XCTAssertEqual(
+            instance.flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "plain-distinct-id", identity: nil))
+    }
+
+    func testIdentifyWithInvalidIdentityIsIgnored() {
+        let finished = expectation(description: "identify completion")
+
+        instance.identify(identity: MixpanelIdentity(userId: "", companyId: "acme", deviceId: nil)) {
+            finished.fulfill()
+        }
+        wait(for: [finished], timeout: 2)
+
+        XCTAssertFalse(mockFlushService.flushEventsForAllCalled)
+        XCTAssertEqual(
+            instance.flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "test-distinct-id", identity: nil))
+    }
+
     // MARK: - getSessionReplayURL Tests
 
     func testGetSessionReplayUrl_ReturnsNilWhenNotRecording() {
@@ -327,5 +385,52 @@ class MPSessionReplayInstanceTests: BaseTests {
         XCTAssertFalse(encodedQuery?.contains("distinct_id=user+test") == true)
 
         testInstance.stopRecording()
+    }
+
+    private func replayURLQueryItems(identity: MixpanelIdentity) -> [URLQueryItem]? {
+        let config = MPSessionReplayConfig(wifiOnly: false, autoStartRecording: false, enableLogging: false)
+        let testInstance = MPSessionReplayInstance(
+            token: "test-token", distinctId: ReplayIdentity.distinctId(identity) ?? "", identity: identity,
+            config: config)
+        testInstance.startRecording(sessionsPercent: 100)
+        defer { testInstance.stopRecording() }
+        guard let urlString = testInstance.getSessionReplayURL() else { return nil }
+        return URLComponents(string: urlString)?.queryItems
+    }
+
+    func testGetSessionReplayUrl_AppendsUserAndCompanyForHierarchicalGroupsIdentity() {
+        let identity = MixpanelIdentity(userId: "user+1", companyId: "acme", deviceId: "device-1")
+
+        XCTAssertEqual(
+            replayURLQueryItems(identity: identity),
+            [
+                URLQueryItem(name: "replay_id", value: SessionManager.shared.replayId),
+                URLQueryItem(name: "distinct_id", value: "user+1"),
+                URLQueryItem(name: "token", value: "test-token"),
+                URLQueryItem(name: "$user_id", value: "user+1"),
+                URLQueryItem(name: "$company_id", value: "acme"),
+            ])
+    }
+
+    func testGetSessionReplayUrl_UnchangedWithoutCompany() {
+        let identity = MixpanelIdentity(userId: "user_123", companyId: "", deviceId: "device-1")
+
+        XCTAssertEqual(
+            replayURLQueryItems(identity: identity),
+            [
+                URLQueryItem(name: "replay_id", value: SessionManager.shared.replayId),
+                URLQueryItem(name: "distinct_id", value: "user_123"),
+                URLQueryItem(name: "token", value: "test-token"),
+            ])
+    }
+
+    func testGetSessionReplayUrl_UnchangedForDistinctId() {
+        startRecording()
+        let urlString = instance.getSessionReplayURL()
+
+        XCTAssertEqual(
+            urlString,
+            "https://mixpanel.com/projects/replay-redirect?replay_id=\(SessionManager.shared.replayId)"
+                + "&distinct_id=test-distinct-id&token=test-token")
     }
 }

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+public import MixpanelSwiftCommon
 import UIKit
 
 open class MPSessionReplayInstance: MPSessionReplaying {
@@ -34,7 +35,7 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     var taskId = UIBackgroundTaskIdentifier.invalid
     #endif
 
-    init(token: String, distinctId: String, config: MPSessionReplayConfig) {
+    init(token: String, distinctId: String, identity: MixpanelIdentity? = nil, config: MPSessionReplayConfig) {
         self.config = config
         self.token = token
         self.wifiOnly = config.wifiOnly
@@ -42,7 +43,8 @@ open class MPSessionReplayInstance: MPSessionReplaying {
 
         eventService = EventService()
         flushService = FlushService(
-            token: token, distinctId: distinctId, eventService: eventService, wifiOnly: config.wifiOnly,
+            token: token, distinctId: distinctId, identity: identity, eventService: eventService,
+            wifiOnly: config.wifiOnly,
             flushInterval: config.flushInterval, serverURL: config.serverURL)
 
         // Initialize debug mask overlay if enabled (DEBUG builds only)
@@ -310,17 +312,60 @@ open class MPSessionReplayInstance: MPSessionReplaying {
             })
     }
 
+    /// Attributes recordings to the given identity. Pass the identity analytics reports,
+    /// `Mixpanel.mainInstance().identity`, and call this again whenever analytics identifies, so
+    /// recordings resolve to the same user as the app's events, including on a project that uses
+    /// hierarchical groups.
+    ///
+    /// Replays then carry `$user_id`, `$company_id` and `$device_id` alongside `distinct_id`. The
+    /// distinct id is the identity's user id, or `$device:` and its device id before the user is
+    /// known.
+    ///
+    /// An identity with neither a user id nor a device id is logged and ignored.
+    /// - Parameter identity: the identity analytics reports, `Mixpanel.mainInstance().identity`.
+    /// - Parameter completion: completion handler to be called after updating the identity.
+    public func identify(identity: MixpanelIdentity, completion: @escaping () -> Void = {}) {
+        guard let distinctId = ReplayIdentity.distinctId(identity) else {
+            Logger.warn(
+                message: "Can't identify Session Replay with \(identity): it needs a user id or a device id")
+            completion()
+            return
+        }
+        guard ReplayIdentifiers(distinctId: distinctId, identity: identity) != flushService.getIdentifiers() else {
+            completion()
+            return
+        }
+        self.flushService.flushEvents(
+            forAll: true,
+            completionHandler: { [weak self] in
+                self?.flushService.updateIdentity(identity, distinctId: distinctId)
+                // Ensure the completion handler is executed on the main queue.
+                DispatchQueue.main.async {
+                    completion()
+                }
+            })
+    }
+
     /// Returns the URL to view the current session replay in the Mixpanel dashboard.
     ///
     /// - Returns: The session replay URL if recording is active, or `nil` if not recording.
     public func getSessionReplayURL() -> String? {
         guard isRecording else { return nil }
+        let identifiers = flushService.getIdentifiers()
         var components = URLComponents(string: MPSessionReplayAPI.sessionReplayRedirect)
-        components?.queryItems = [
+        var queryItems = [
             URLQueryItem(name: "replay_id", value: SessionManager.shared.replayId),
-            URLQueryItem(name: "distinct_id", value: flushService.getDistinctId()),
+            URLQueryItem(name: "distinct_id", value: identifiers.distinctId),
             URLQueryItem(name: "token", value: token),
         ]
+        // On a hierarchical groups project the redirect builds the profile's distinct id from these
+        if let userId = ReplayIdentity.nonEmpty(identifiers.identity?.userId),
+            let companyId = ReplayIdentity.nonEmpty(identifiers.identity?.companyId)
+        {
+            queryItems.append(URLQueryItem(name: "$user_id", value: userId))
+            queryItems.append(URLQueryItem(name: "$company_id", value: companyId))
+        }
+        components?.queryItems = queryItems
         if let encodedQuery = components?.percentEncodedQuery {
             components?.percentEncodedQuery = encodedQuery.replacingOccurrences(of: "+", with: "%2B")
         }

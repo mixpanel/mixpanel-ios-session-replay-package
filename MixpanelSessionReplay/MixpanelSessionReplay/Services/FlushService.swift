@@ -6,6 +6,7 @@
 //
 
 import Foundation
+internal import MixpanelSwiftCommon
 
 class FlushService {
     public var wifiOnly: Bool
@@ -20,7 +21,8 @@ class FlushService {
     private var flushInterval: TimeInterval = ReplaySettings.flushInterval
 
     init(
-        token: String, distinctId: String, eventService: EventService, wifiOnly: Bool,
+        token: String, distinctId: String, identity: MixpanelIdentity? = nil, eventService: EventService,
+        wifiOnly: Bool,
         flushRequest: FlushRequest? = nil, networkMonitor: NetworkMonitoring = NetworkMonitor.shared,
         flushInterval: TimeInterval, serverURL: String = DataResidency.us
     ) {
@@ -28,7 +30,9 @@ class FlushService {
         self.serverURL = serverURL
         self.eventService = eventService
         self.wifiOnly = wifiOnly
-        self.flushRequest = flushRequest ?? FlushRequest(token: token, distinctId: distinctId, serverURL: serverURL)
+        self.flushRequest =
+            flushRequest
+            ?? FlushRequest(token: token, distinctId: distinctId, identity: identity, serverURL: serverURL)
         self.networkMonitor = networkMonitor
         self.flushInterval = flushInterval
         flushSerialQueue = DispatchQueue(
@@ -82,6 +86,17 @@ class FlushService {
     func updateDistinctId(_ distinctId: String) {
         self.flushRequest = FlushRequest(token: token, distinctId: distinctId, serverURL: serverURL)
         Logger.info(message: "Updated distinct id successfully.")
+    }
+
+    /// The current distinct id and identity, read together from one `FlushRequest`.
+    func getIdentifiers() -> ReplayIdentifiers {
+        return flushRequest.identifiers
+    }
+
+    func updateIdentity(_ identity: MixpanelIdentity, distinctId: String) {
+        self.flushRequest = FlushRequest(
+            token: token, distinctId: distinctId, identity: identity, serverURL: serverURL)
+        Logger.info(message: "Updated identity successfully.")
     }
 
     private func flushBatch(forAll: Bool) {

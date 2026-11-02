@@ -4,6 +4,7 @@
 //
 
 import Foundation
+public import MixpanelSwiftCommon
 import UIKit
 
 public enum MPSessionReplayError: Error {
@@ -37,6 +38,34 @@ open class MPSessionReplay {
     ) {
         MPSessionReplayManager.sharedInstance.initialize(
             token: token, distinctId: distinctId, config: config, completion: completion)
+    }
+
+    /// Initializes the Mixpanel Session Replay system for an identity, so recordings resolve to the
+    /// same user as the app's events, including on a project that uses hierarchical groups.
+    ///
+    /// Pass the identity analytics reports, and call `MPSessionReplayInstance.identify(identity:completion:)`
+    /// with it again whenever analytics identifies:
+    ///
+    /// ```swift
+    /// MPSessionReplay.initialize(token: token, identity: Mixpanel.mainInstance().identity)
+    /// ```
+    ///
+    /// Replays carry `$user_id`, `$company_id` and `$device_id` alongside `distinct_id`. Otherwise this
+    /// behaves like `initialize(token:distinctId:config:completion:)`.
+    ///
+    /// - Parameters:
+    ///   - token: The Mixpanel project token used to identify the project.
+    ///   - identity: The identity analytics reports, `Mixpanel.mainInstance().identity`. It needs a user id
+    ///               or a device id; otherwise initialization fails with `MPSessionReplayError.custom`.
+    ///   - config: The configuration object used to customize session replay behavior. Defaults to `MPSessionReplayConfig()`.
+    ///   - completion: A closure called after initialization completes. Defaults to a no-op closure.
+    ///                 See `initialize(token:distinctId:config:completion:)`.
+    open class func initialize(
+        token: String, identity: MixpanelIdentity, config: MPSessionReplayConfig = MPSessionReplayConfig(),
+        completion: @escaping (Result<MPSessionReplayInstance?, Error>) -> Void = { _ in }
+    ) {
+        MPSessionReplayManager.sharedInstance.initialize(
+            token: token, identity: identity, config: config, completion: completion)
     }
 
     open class func getInstance() -> MPSessionReplayInstance? {
@@ -136,6 +165,28 @@ final class MPSessionReplayManager {
         token: String, distinctId: String, config: MPSessionReplayConfig,
         completion: @escaping (Result<MPSessionReplayInstance?, Error>) -> Void
     ) {
+        initialize(token: token, distinctId: distinctId, identity: nil, config: config, completion: completion)
+    }
+
+    /// Initializes Session Replay for an identity. An identity with neither a user id nor a device id
+    /// fails initialization, the same way an invalid server URL does.
+    func initialize(
+        token: String, identity: MixpanelIdentity, config: MPSessionReplayConfig,
+        completion: @escaping (Result<MPSessionReplayInstance?, Error>) -> Void
+    ) {
+        guard let distinctId = ReplayIdentity.distinctId(identity) else {
+            let message = "Can't initialize Session Replay with \(identity): it needs a user id or a device id"
+            PrintLogging.shared.log(.error, "SDK initialization failed: \(message)")
+            completion(.failure(MPSessionReplayError.custom(message: "SDK initialization failed: \(message)")))
+            return
+        }
+        initialize(token: token, distinctId: distinctId, identity: identity, config: config, completion: completion)
+    }
+
+    private func initialize(
+        token: String, distinctId: String, identity: MixpanelIdentity?, config: MPSessionReplayConfig,
+        completion: @escaping (Result<MPSessionReplayInstance?, Error>) -> Void
+    ) {
         updateLoggingEnabled(config.enableLogging)
 
         logWireframesBetaNotice(config)
@@ -197,7 +248,8 @@ final class MPSessionReplayManager {
 
             ThreadUtils.runOnMainThread {
                 // Use the updated config that may have been merged with remote settings
-                self.instance = MPSessionReplayInstance(token: token, distinctId: distinctId, config: updatedConfig)
+                self.instance = MPSessionReplayInstance(
+                    token: token, distinctId: distinctId, identity: identity, config: updatedConfig)
                 self.setupEventTriggers(
                     token: token, recordingEventTriggers: settings?.sdkConfig?.config?.recordingEventTriggers)
                 completion(.success(self.instance))

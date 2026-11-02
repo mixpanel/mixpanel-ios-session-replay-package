@@ -5,6 +5,7 @@
 //  Copyright © 2025 Mixpanel. All rights reserved.
 //
 
+import MixpanelSwiftCommon
 import XCTest
 
 @testable import MixpanelSessionReplay
@@ -51,6 +52,103 @@ class MPSessionReplayTests: XCTestCase {
         settingsService = nil
 
         super.tearDown()
+    }
+
+    // MARK: - Identity Tests
+
+    func testInitializeWithIdentity() {
+        mockNetwork.responseJson = """
+            {
+                "code": 200,
+                "status": "OK",
+                "recording": {"is_enabled": true}
+            }
+            """
+        let config = MPSessionReplayConfig(autoStartRecording: false, remoteSettingsMode: .disabled)
+        let identity = MixpanelIdentity(userId: "user_123", companyId: "acme", deviceId: "device-1")
+
+        let expectation = self.expectation(description: "Initialization completes")
+        var initResult: Result<MPSessionReplayInstance?, Error>?
+
+        MPSessionReplay.initialize(token: testToken, identity: identity, config: config) { result in
+            initResult = result
+            expectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 1.0, handler: nil)
+
+        switch initResult {
+            case .success(let instance):
+                XCTAssertEqual(
+                    instance?.flushService.getIdentifiers(),
+                    ReplayIdentifiers(distinctId: "user_123", identity: identity))
+            case .failure(let error):
+                XCTFail("Initialization should succeed but failed with: \(error)")
+            case .none:
+                XCTFail("Result should not be nil")
+        }
+    }
+
+    func testInitializeWithDeviceOnlyIdentity() {
+        mockNetwork.responseJson = """
+            {
+                "code": 200,
+                "status": "OK",
+                "recording": {"is_enabled": true}
+            }
+            """
+        let config = MPSessionReplayConfig(autoStartRecording: false, remoteSettingsMode: .disabled)
+        let identity = MixpanelIdentity(userId: nil, deviceId: "device-1")
+
+        let expectation = self.expectation(description: "Initialization completes")
+        var initResult: Result<MPSessionReplayInstance?, Error>?
+
+        MPSessionReplay.initialize(token: testToken, identity: identity, config: config) { result in
+            initResult = result
+            expectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 1.0, handler: nil)
+
+        switch initResult {
+            case .success(let instance):
+                XCTAssertEqual(instance?.flushService.getDistinctId(), "$device:device-1")
+                XCTAssertEqual(instance?.flushService.getIdentifiers().identity, identity)
+            case .failure(let error):
+                XCTFail("Initialization should succeed but failed with: \(error)")
+            case .none:
+                XCTFail("Result should not be nil")
+        }
+    }
+
+    func testInitializeWithInvalidIdentityFails() {
+        // No remote settings stub: an invalid identity must fail before any network request.
+        let config = MPSessionReplayConfig(autoStartRecording: false, remoteSettingsMode: .disabled)
+        let identity = MixpanelIdentity(userId: "", companyId: "acme", deviceId: nil)
+
+        let expectation = self.expectation(description: "Initialization completes")
+        var initResult: Result<MPSessionReplayInstance?, Error>?
+
+        MPSessionReplay.initialize(token: testToken, identity: identity, config: config) { result in
+            initResult = result
+            expectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 1.0, handler: nil)
+
+        switch initResult {
+            case .success:
+                XCTFail("Initialization should fail for an identity without a user id or device id")
+            case .failure(let error):
+                guard case MPSessionReplayError.custom(let message) = error else {
+                    XCTFail("Unexpected error: \(error)")
+                    return
+                }
+                XCTAssertTrue(message.contains("needs a user id or a device id"))
+                XCTAssertNil(MPSessionReplay.getInstance())
+            case .none:
+                XCTFail("Result should not be nil")
+        }
     }
 
     // MARK: - Strict Mode Tests

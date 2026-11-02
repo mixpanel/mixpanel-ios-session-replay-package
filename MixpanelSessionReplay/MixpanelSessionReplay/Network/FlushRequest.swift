@@ -4,22 +4,63 @@
 //
 
 import Foundation
+internal import MixpanelSwiftCommon
+
+/// How a `MixpanelIdentity` reaches the record endpoint. Empty values are treated as unset, so a
+/// replay never sends a key that would resolve to a different user than the app's events.
+enum ReplayIdentity {
+    /// The distinct id analytics sends on events for this identity: the user once identified,
+    /// otherwise `$device:` and the device id. Nil when the identity names neither.
+    static func distinctId(_ identity: MixpanelIdentity) -> String? {
+        if let userId = nonEmpty(identity.userId) {
+            return userId
+        }
+        if let deviceId = nonEmpty(identity.deviceId) {
+            return "$device:\(deviceId)"
+        }
+        return nil
+    }
+
+    /// The identity keys Mixpanel resolves a replay's user from, alongside `distinct_id`.
+    static func queryItems(_ identity: MixpanelIdentity?) -> [URLQueryItem] {
+        guard let identity = identity else { return [] }
+        return [
+            nonEmpty(identity.userId).map { URLQueryItem(name: "$user_id", value: $0) },
+            nonEmpty(identity.companyId).map { URLQueryItem(name: "$company_id", value: $0) },
+            nonEmpty(identity.deviceId).map { URLQueryItem(name: "$device_id", value: $0) },
+        ].compactMap { $0 }
+    }
+
+    static func nonEmpty(_ value: String?) -> String? {
+        guard let value = value, !value.isEmpty else { return nil }
+        return value
+    }
+}
+
+/// The distinct id and the identity it was derived from, kept in one value so a flush never pairs
+/// a new distinct id with the previous identity. `identity` is nil when Session Replay was
+/// initialized or identified with a plain distinct id.
+struct ReplayIdentifiers: Equatable {
+    let distinctId: String
+    let identity: MixpanelIdentity?
+}
 
 class FlushRequest {
     var networkRequestsAllowedAfterTime = 0.0
     var networkConsecutiveFailures = 0
     private let token: String
-    let distinctId: String
+    let identifiers: ReplayIdentifiers
+    var distinctId: String { identifiers.distinctId }
     private var headers: [String: String] = [:]
     private let network: Network
     private let recordApiUrl: String
 
     init(
-        token: String, distinctId: String, network: Network = Network(),
+        token: String, distinctId: String, identity: MixpanelIdentity? = nil, network: Network = Network(),
         serverURL: String = DataResidency.us
     ) {
         self.token = token
-        self.distinctId = distinctId
+        self.identifiers = ReplayIdentifiers(distinctId: distinctId, identity: identity)
         self.recordApiUrl = MPSessionReplayAPI.recordEndpoint(for: serverURL)
 
         if let data = "\(token):".data(using: .utf8) {
@@ -70,9 +111,10 @@ class FlushRequest {
     }
 
     private func buildQueryItems(payloadInfo: PayloadInfo) -> [URLQueryItem] {
+        let current = identifiers
         return [
             URLQueryItem(name: "format", value: "gzip"),
-            URLQueryItem(name: "distinct_id", value: distinctId),
+            URLQueryItem(name: "distinct_id", value: current.distinctId),
             URLQueryItem(name: "seq", value: String(payloadInfo.seq)),
             URLQueryItem(name: "batch_start_time", value: String(payloadInfo.batchStartTime)),
             URLQueryItem(name: "replay_id", value: payloadInfo.replayId),
@@ -80,7 +122,7 @@ class FlushRequest {
             URLQueryItem(name: "replay_start_time", value: String(payloadInfo.replayStartTime)),
             URLQueryItem(name: "$lib_version", value: APIConstants.currentLibVersion),
             URLQueryItem(name: "mp_lib", value: APIConstants.currentMpLib),
-        ]
+        ] + ReplayIdentity.queryItems(current.identity)
     }
 
     private func updateRetryDelay() {
