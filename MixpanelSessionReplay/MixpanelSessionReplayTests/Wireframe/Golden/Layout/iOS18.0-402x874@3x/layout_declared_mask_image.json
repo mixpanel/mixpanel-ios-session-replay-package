@@ -1,0 +1,19 @@
+{
+  "viewport": [
+    402,
+    874
+  ],
+  "elements": [
+    {
+      "role": "image",
+      "text": "profile photo",
+      "bounds": [
+        20,
+        20,
+        80,
+        80
+      ],
+      "maskDecision": "DECLARED"
+    }
+  ]
+}

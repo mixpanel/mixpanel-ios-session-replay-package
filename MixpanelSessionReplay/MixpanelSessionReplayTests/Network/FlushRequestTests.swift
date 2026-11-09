@@ -133,7 +133,7 @@ final class FlushRequestTests: XCTestCase {
     }
 
     func testQueryItems_DeviceOnlyIdentity() {
-        let identity = MixpanelIdentity(userId: nil, deviceId: "device-1")
+        let identity = MixpanelIdentity(userId: nil, companyId: nil, deviceId: "device-1")
         let request = FlushRequest(
             token: "testToken", distinctId: "$device:device-1", identity: identity, network: mockNetwork)
 
@@ -145,9 +145,9 @@ final class FlushRequestTests: XCTestCase {
     }
 
     func testReplayIdentityDistinctId() {
-        XCTAssertEqual(ReplayIdentity.distinctId(MixpanelIdentity(userId: "u", deviceId: "d")), "u")
-        XCTAssertEqual(ReplayIdentity.distinctId(MixpanelIdentity(userId: "", deviceId: "d")), "$device:d")
-        XCTAssertEqual(ReplayIdentity.distinctId(MixpanelIdentity(userId: nil, deviceId: "d")), "$device:d")
+        XCTAssertEqual(ReplayIdentity.distinctId(MixpanelIdentity(userId: "u", companyId: nil, deviceId: "d")), "u")
+        XCTAssertEqual(ReplayIdentity.distinctId(MixpanelIdentity(userId: "", companyId: nil, deviceId: "d")), "$device:d")
+        XCTAssertEqual(ReplayIdentity.distinctId(MixpanelIdentity(userId: nil, companyId: nil, deviceId: "d")), "$device:d")
         XCTAssertNil(ReplayIdentity.distinctId(MixpanelIdentity(userId: nil, companyId: "acme")))
         XCTAssertNil(ReplayIdentity.distinctId(MixpanelIdentity(userId: "", companyId: "acme", deviceId: "")))
     }

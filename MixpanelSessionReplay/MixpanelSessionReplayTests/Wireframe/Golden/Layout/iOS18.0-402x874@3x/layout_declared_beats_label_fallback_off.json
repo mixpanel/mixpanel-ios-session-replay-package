@@ -1,0 +1,30 @@
+{
+  "viewport": [
+    402,
+    874
+  ],
+  "elements": [
+    {
+      "role": "button",
+      "text": "Open settings",
+      "bounds": [
+        20,
+        20,
+        30,
+        33
+      ],
+      "maskDecision": "DECLARED"
+    },
+    {
+      "role": "image",
+      "text": null,
+      "bounds": [
+        20,
+        61,
+        40,
+        40
+      ],
+      "maskDecision": "NONE"
+    }
+  ]
+}

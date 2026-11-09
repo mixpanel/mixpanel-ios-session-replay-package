@@ -285,7 +285,7 @@ class MPSessionReplayInstanceTests: BaseTests {
     }
 
     func testIdentifyWithDeviceOnlyIdentityUsesDeviceDistinctId() {
-        let identity = MixpanelIdentity(userId: nil, deviceId: "device-1")
+        let identity = MixpanelIdentity(userId: nil, companyId: nil, deviceId: "device-1")
         let finished = expectation(description: "identify completion")
 
         instance.identify(identity: identity) {

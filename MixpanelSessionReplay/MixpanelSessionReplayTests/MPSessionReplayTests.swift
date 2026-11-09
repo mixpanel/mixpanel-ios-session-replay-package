@@ -98,7 +98,7 @@ class MPSessionReplayTests: XCTestCase {
             }
             """
         let config = MPSessionReplayConfig(autoStartRecording: false, remoteSettingsMode: .disabled)
-        let identity = MixpanelIdentity(userId: nil, deviceId: "device-1")
+        let identity = MixpanelIdentity(userId: nil, companyId: nil, deviceId: "device-1")
 
         let expectation = self.expectation(description: "Initialization completes")
         var initResult: Result<MPSessionReplayInstance?, Error>?
