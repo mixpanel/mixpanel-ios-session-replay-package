@@ -119,28 +119,54 @@ class FlushService {
         return flushRequest.identifiers
     }
 
+    /// Whether an identity change is still waiting to run on `flushSerialQueue`. While one is, the
+    /// current identifiers are not final, so callers must not skip a change because it matches them.
+    var hasPendingIdentityChanges: Bool {
+        pendingIdentityChangesLock.lock()
+        defer { pendingIdentityChangesLock.unlock() }
+        return pendingIdentityChanges > 0
+    }
+    private var pendingIdentityChanges = 0
+    private let pendingIdentityChangesLock = NSLock()
+
     /// Replaces the distinct id and identity on `flushSerialQueue`, so it never races a flush reading
     /// `flushRequest`. Runs inline when already on the queue, such as from a flush completion handler.
-    func updateIdentity(_ identity: MixpanelIdentity, distinctId: String, completion: @escaping () -> Void = {}) {
+    ///
+    /// The comparison with the current identifiers happens on the queue when the change applies, so
+    /// changes apply in call order and the last call wins. Identifiers that already match change
+    /// nothing. Dropping the identity while keeping the distinct id needs no flush: events already
+    /// queued keep the identity they were captured with. Any other change first flushes all queued
+    /// events, unless `wifiOnly` skips uploads off Wi-Fi.
+    func changeIdentifiers(to identifiers: ReplayIdentifiers, completion: @escaping () -> Void = {}) {
+        pendingIdentityChangesLock.lock()
+        pendingIdentityChanges += 1
+        pendingIdentityChangesLock.unlock()
         performOnFlushQueue {
-            self.flushRequest = FlushRequest(
-                token: self.token, distinctId: distinctId, identity: identity, serverURL: self.serverURL)
-            Logger.info(message: "Updated identity successfully.")
+            let current = self.flushRequest.identifiers
+            if current != identifiers {
+                let dropsIdentityOnly = identifiers.identity == nil && identifiers.distinctId == current.distinctId
+                if !dropsIdentityOnly {
+                    self.flushAllBeforeIdentityChange()
+                }
+                self.flushRequest = FlushRequest(
+                    token: self.token, distinctId: identifiers.distinctId, identity: identifiers.identity,
+                    serverURL: self.serverURL)
+                Logger.info(message: "Updated identity successfully.")
+            }
+            self.pendingIdentityChangesLock.lock()
+            self.pendingIdentityChanges -= 1
+            self.pendingIdentityChangesLock.unlock()
             completion()
         }
     }
 
-    /// Drops the identity and keeps the distinct id, on `flushSerialQueue`. Events already queued keep
-    /// the identity they were captured with. Does nothing when there is no identity.
-    func clearIdentity(completion: @escaping () -> Void = {}) {
-        performOnFlushQueue {
-            if self.flushRequest.identifiers.identity != nil {
-                self.flushRequest = FlushRequest(
-                    token: self.token, distinctId: self.flushRequest.distinctId, serverURL: self.serverURL)
-                Logger.info(message: "Cleared identity successfully.")
-            }
-            completion()
+    /// Uploads all queued events under the current identifiers. Runs on `flushSerialQueue`.
+    func flushAllBeforeIdentityChange() {
+        if wifiOnly && !networkMonitor.isUsingWiFi {
+            Logger.warn(message: "Device is not using Wi-Fi, skipping flush request")
+            return
         }
+        flushBatch(forAll: true)
     }
 
     private func performOnFlushQueue(_ work: @escaping () -> Void) {

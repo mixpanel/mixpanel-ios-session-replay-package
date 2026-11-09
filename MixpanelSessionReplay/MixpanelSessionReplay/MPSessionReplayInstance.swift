@@ -298,12 +298,13 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     /// - Parameter completion: completion handler to be called after updating the distinct id.
     public func identify(distinctId: String, completion: @escaping () -> Void = {}) {
         // A plain distinct id replaces any identity, even when the distinct id is unchanged. Events
-        // already queued keep the identity they were captured with. The identity is dropped on the
-        // flush queue so it never races a flush.
-        if distinctId != "" && distinctId == flushService.getDistinctId()
-            && flushService.getIdentifiers().identity != nil
+        // already queued keep the identity they were captured with. While an identity is set or an
+        // identity change is pending, the change runs on the flush queue, which compares it with the
+        // identifiers current at that point, so it never races a flush and the last call wins.
+        if distinctId != ""
+            && (flushService.hasPendingIdentityChanges || flushService.getIdentifiers().identity != nil)
         {
-            flushService.clearIdentity {
+            flushService.changeIdentifiers(to: ReplayIdentifiers(distinctId: distinctId, identity: nil)) {
                 DispatchQueue.main.async {
                     completion()
                 }
@@ -344,26 +345,19 @@ open class MPSessionReplayInstance: MPSessionReplaying {
             completion()
             return
         }
-        guard ReplayIdentifiers(distinctId: distinctId, identity: identity) != flushService.getIdentifiers() else {
+        let identifiers = ReplayIdentifiers(distinctId: distinctId, identity: identity)
+        // Skip an unchanged identity only when no change is pending; otherwise the flush queue compares
+        // it when it applies, so the last call wins.
+        guard flushService.hasPendingIdentityChanges || identifiers != flushService.getIdentifiers() else {
             completion()
             return
         }
-        self.flushService.flushEvents(
-            forAll: true,
-            completionHandler: { [weak self] in
-                guard let self = self else {
-                    DispatchQueue.main.async {
-                        completion()
-                    }
-                    return
-                }
-                self.flushService.updateIdentity(identity, distinctId: distinctId) {
-                    // Ensure the completion handler is executed on the main queue.
-                    DispatchQueue.main.async {
-                        completion()
-                    }
-                }
-            })
+        flushService.changeIdentifiers(to: identifiers) {
+            // Ensure the completion handler is executed on the main queue.
+            DispatchQueue.main.async {
+                completion()
+            }
+        }
     }
 
     /// Returns the URL to view the current session replay in the Mixpanel dashboard.

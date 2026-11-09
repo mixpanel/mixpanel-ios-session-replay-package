@@ -373,6 +373,55 @@ class MPSessionReplayInstanceTests: BaseTests {
             ReplayIdentifiers(distinctId: "user_456", identity: otherIdentity))
     }
 
+    func testLastIdentifyWinsWhileFlushQueueIsBusy() {
+        for wifiOnlySkipsUpload in [false, true] {
+            let identityA = MixpanelIdentity(userId: "user_a", companyId: "acme", deviceId: "device-1")
+            let identityB = MixpanelIdentity(userId: "user_b", companyId: "acme", deviceId: "device-1")
+            let networkMonitor = MockNetworkMonitor()
+            networkMonitor.isUsingWiFiOverride = !wifiOnlySkipsUpload
+            let eventService = EventService()
+            eventService.eventHandler?.shutdown()
+            let flushService = FlushService(
+                token: "test-token", distinctId: "user_a", identity: identityA, eventService: eventService,
+                wifiOnly: wifiOnlySkipsUpload, flushRequest: nil, networkMonitor: networkMonitor,
+                flushInterval: ReplaySettings.flushInterval)
+            instance.eventService = eventService
+            instance.flushService = flushService
+
+            // Hold the flush queue as a running flush would
+            let flushStarted = DispatchSemaphore(value: 0)
+            let releaseFlush = DispatchSemaphore(value: 0)
+            flushService.flushSerialQueue.async {
+                flushStarted.signal()
+                releaseFlush.wait()
+            }
+            flushStarted.wait()
+
+            let identifiedB = expectation(description: "identify B completion")
+            instance.identify(identity: identityB) { identifiedB.fulfill() }
+            let identifiedA = expectation(description: "identify A completion")
+            instance.identify(identity: identityA) { identifiedA.fulfill() }
+            let plainId = expectation(description: "identify plain distinct id completion")
+            instance.identify(distinctId: "user_a") { plainId.fulfill() }
+            let identifiedAAgain = expectation(description: "identify A again completion")
+            instance.identify(identity: identityA) { identifiedAAgain.fulfill() }
+
+            releaseFlush.signal()
+            wait(for: [identifiedB, identifiedA, plainId, identifiedAAgain], timeout: 2, enforceOrder: true)
+            XCTAssertEqual(
+                flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "user_a", identity: identityA),
+                "the last identify must win (wifiOnly skipping upload: \(wifiOnlySkipsUpload))")
+
+            // An unchanged identity is a no-op that still completes
+            let unchanged = expectation(description: "identify unchanged completion")
+            instance.identify(identity: identityA) { unchanged.fulfill() }
+            wait(for: [unchanged], timeout: 2)
+            XCTAssertFalse(flushService.hasPendingIdentityChanges)
+            XCTAssertEqual(
+                flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "user_a", identity: identityA))
+        }
+    }
+
     func testConcurrentIdentifyDuringFlushesKeepsIdentifiersConsistent() {
         let companyA = MixpanelIdentity(userId: "user_123", companyId: "company-a", deviceId: "device-1")
         let companyB = MixpanelIdentity(userId: "user_123", companyId: "company-b", deviceId: "device-1")
