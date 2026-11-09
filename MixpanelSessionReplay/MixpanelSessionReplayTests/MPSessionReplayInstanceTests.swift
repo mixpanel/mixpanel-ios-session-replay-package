@@ -314,6 +314,108 @@ class MPSessionReplayInstanceTests: BaseTests {
             instance.flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "plain-distinct-id", identity: nil))
     }
 
+    func testIdentifyWithSameDistinctIdClearsIdentity() {
+        let identified = expectation(description: "identify identity completion")
+        instance.identify(identity: MixpanelIdentity(userId: "user_123", companyId: "acme", deviceId: "device-1")) {
+            identified.fulfill()
+        }
+        wait(for: [identified], timeout: 2)
+
+        let finished = expectation(description: "identify distinct id completion")
+        instance.identify(distinctId: "user_123") {
+            finished.fulfill()
+        }
+        wait(for: [finished], timeout: 2)
+
+        XCTAssertEqual(
+            instance.flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "user_123", identity: nil))
+        startRecording()
+        XCTAssertEqual(
+            instance.getSessionReplayURL(),
+            "https://mixpanel.com/projects/replay-redirect?replay_id=\(SessionManager.shared.replayId)"
+                + "&distinct_id=user_123&token=test-token")
+    }
+
+    func testQueuedEventsUploadWithIdentityTheyWereCapturedWith() {
+        let companyA = MixpanelIdentity(userId: "user_123", companyId: "company-a", deviceId: "device-1")
+        let companyB = MixpanelIdentity(userId: "user_123", companyId: "company-b", deviceId: "device-1")
+
+        // Real services, with uploads deferred until Wi-Fi is back
+        let eventService = EventService()
+        eventService.eventHandler?.shutdown()
+        let networkMonitor = MockNetworkMonitor()
+        networkMonitor.isUsingWiFiOverride = false
+        instance.eventService = eventService
+        instance.flushService = FlushService(
+            token: "test-token", distinctId: "user_123", identity: companyA, eventService: eventService,
+            wifiOnly: true, networkMonitor: networkMonitor, flushInterval: ReplaySettings.flushInterval)
+
+        let sentLock = NSLock()
+        var sent: [[URLQueryItem]] = []
+        URLProtocol.registerClass(MockURLProtocol.self)
+        MockURLProtocol.requestHandler = { request in
+            let items = request.url.flatMap { URLComponents(url: $0, resolvingAgainstBaseURL: false)?.queryItems }
+            sentLock.lock()
+            sent.append(items ?? [])
+            sentLock.unlock()
+            return (HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil), Data(), nil)
+        }
+        let replayStartTime = SessionManager.shared.replayStartTime
+        defer {
+            URLProtocol.unregisterClass(MockURLProtocol.self)
+            MockURLProtocol.requestHandler = nil
+            SessionManager.shared.replayStartTime = replayStartTime
+        }
+        SessionManager.shared.replayStartTime = Date().timeIntervalSince1970 - 10
+
+        func event() -> SessionEvent {
+            SessionEvent(type: EventType.incrementalSnapshot, data: nil, timestamp: TimestampUtils.timestamp())
+        }
+
+        eventService.enqueueEvent(event())
+        eventService.enqueueEvent(event())
+
+        let identified = expectation(description: "identify completion")
+        instance.identify(identity: companyB) {
+            identified.fulfill()
+        }
+        wait(for: [identified], timeout: 2)
+        XCTAssertEqual(eventService.eventsCount, 2, "the upload is deferred, so company A's events are still queued")
+
+        eventService.enqueueEvent(event())
+
+        networkMonitor.isUsingWiFiOverride = true
+        let flushed = expectation(description: "flush completion")
+        instance.flushService.flushEvents(forAll: true) {
+            flushed.fulfill()
+        }
+        wait(for: [flushed], timeout: 10)
+
+        sentLock.lock()
+        let batches = sent
+        sentLock.unlock()
+        func identityItems(_ items: [URLQueryItem]) -> [URLQueryItem] {
+            items.filter { ["distinct_id", "$user_id", "$company_id", "$device_id"].contains($0.name) }
+        }
+        XCTAssertEqual(
+            batches.map(identityItems),
+            [
+                [
+                    URLQueryItem(name: "distinct_id", value: "user_123"),
+                    URLQueryItem(name: "$user_id", value: "user_123"),
+                    URLQueryItem(name: "$company_id", value: "company-a"),
+                    URLQueryItem(name: "$device_id", value: "device-1"),
+                ],
+                [
+                    URLQueryItem(name: "distinct_id", value: "user_123"),
+                    URLQueryItem(name: "$user_id", value: "user_123"),
+                    URLQueryItem(name: "$company_id", value: "company-b"),
+                    URLQueryItem(name: "$device_id", value: "device-1"),
+                ],
+            ])
+        XCTAssertTrue(eventService.isEventsEmpty)
+    }
+
     func testIdentifyWithInvalidIdentityIsIgnored() {
         let finished = expectation(description: "identify completion")
 

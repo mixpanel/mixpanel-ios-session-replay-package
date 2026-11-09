@@ -297,6 +297,11 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     /// - Parameter distinctId: distinctId of the user.
     /// - Parameter completion: completion handler to be called after updating the distinct id.
     public func identify(distinctId: String, completion: @escaping () -> Void = {}) {
+        // A plain distinct id replaces any identity, even when the distinct id is unchanged. Events
+        // already queued keep the identity they were captured with.
+        if distinctId != "" && flushService.getIdentifiers().identity != nil {
+            flushService.updateDistinctId(flushService.getDistinctId())
+        }
         guard distinctId != flushService.getDistinctId() && distinctId != "" else {
             completion()
             return

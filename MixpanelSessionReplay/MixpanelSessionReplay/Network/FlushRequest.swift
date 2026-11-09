@@ -111,7 +111,7 @@ class FlushRequest {
     }
 
     private func buildQueryItems(payloadInfo: PayloadInfo) -> [URLQueryItem] {
-        let current = identifiers
+        let current = payloadInfo.identifiers ?? identifiers
         return [
             URLQueryItem(name: "format", value: "gzip"),
             URLQueryItem(name: "distinct_id", value: current.distinctId),

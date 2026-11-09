@@ -16,7 +16,9 @@ class FlushService {
     var flushTimer: Timer?
     var flushSerialQueue: DispatchQueue
     private var eventService: EventService
-    private var flushRequest: FlushRequest
+    private var flushRequest: FlushRequest {
+        didSet { stampNewEvents() }
+    }
     private let networkMonitor: NetworkMonitoring
     private var flushInterval: TimeInterval = ReplaySettings.flushInterval
 
@@ -37,6 +39,15 @@ class FlushService {
         self.flushInterval = flushInterval
         flushSerialQueue = DispatchQueue(
             label: "com.mixpanel.\(token).tracking", qos: .utility, autoreleaseFrequency: .workItem)
+        stampNewEvents()
+    }
+
+    /// Events queued while identified with a `MixpanelIdentity` keep it until they upload, even if the
+    /// identity changes before then. Events queued under a plain distinct id carry no stamp and upload
+    /// with the distinct id current at flush time.
+    private func stampNewEvents() {
+        let identifiers = flushRequest.identifiers
+        eventService.setIdentifiersForNewEvents(identifiers.identity == nil ? nil : identifiers)
     }
 
     func start() {
@@ -131,12 +142,13 @@ class FlushService {
                 seq: SessionManager.shared.seqId,
                 replayId: SessionManager.shared.replayId,
                 replayLengthMs: replayLengthMs,
-                replayStartTime: SessionManager.shared.replayStartTime)
+                replayStartTime: SessionManager.shared.replayStartTime,
+                identifiers: events[0].identifiers)
 
             let success = flushRequest.sendRequest(payloadInfo: payloadInfo)
             Logger.info(
                 message: """
-                    Distinct ID: \(getDistinctId());
+                    Distinct ID: \(payloadInfo.identifiers?.distinctId ?? getDistinctId());
                     Batch Start Time: \(payloadInfo.batchStartTime);
                     Sequence ID: \(payloadInfo.seq);
                     Replay ID: \(payloadInfo.replayId);
