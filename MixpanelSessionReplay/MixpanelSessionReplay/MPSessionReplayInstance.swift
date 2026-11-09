@@ -298,9 +298,17 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     /// - Parameter completion: completion handler to be called after updating the distinct id.
     public func identify(distinctId: String, completion: @escaping () -> Void = {}) {
         // A plain distinct id replaces any identity, even when the distinct id is unchanged. Events
-        // already queued keep the identity they were captured with.
-        if distinctId != "" && flushService.getIdentifiers().identity != nil {
-            flushService.updateDistinctId(flushService.getDistinctId())
+        // already queued keep the identity they were captured with. The identity is dropped on the
+        // flush queue so it never races a flush.
+        if distinctId != "" && distinctId == flushService.getDistinctId()
+            && flushService.getIdentifiers().identity != nil
+        {
+            flushService.clearIdentity {
+                DispatchQueue.main.async {
+                    completion()
+                }
+            }
+            return
         }
         guard distinctId != flushService.getDistinctId() && distinctId != "" else {
             completion()
@@ -343,10 +351,17 @@ open class MPSessionReplayInstance: MPSessionReplaying {
         self.flushService.flushEvents(
             forAll: true,
             completionHandler: { [weak self] in
-                self?.flushService.updateIdentity(identity, distinctId: distinctId)
-                // Ensure the completion handler is executed on the main queue.
-                DispatchQueue.main.async {
-                    completion()
+                guard let self = self else {
+                    DispatchQueue.main.async {
+                        completion()
+                    }
+                    return
+                }
+                self.flushService.updateIdentity(identity, distinctId: distinctId) {
+                    // Ensure the completion handler is executed on the main queue.
+                    DispatchQueue.main.async {
+                        completion()
+                    }
                 }
             })
     }

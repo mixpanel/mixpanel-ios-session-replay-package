@@ -16,11 +16,25 @@ class FlushService {
     var flushTimer: Timer?
     var flushSerialQueue: DispatchQueue
     private var eventService: EventService
+    /// Written only on `flushSerialQueue`; the lock lets other threads read it safely.
     private var flushRequest: FlushRequest {
-        didSet { stampNewEvents() }
+        get {
+            flushRequestLock.lock()
+            defer { flushRequestLock.unlock() }
+            return storedFlushRequest
+        }
+        set {
+            flushRequestLock.lock()
+            storedFlushRequest = newValue
+            flushRequestLock.unlock()
+            stampNewEvents()
+        }
     }
+    private var storedFlushRequest: FlushRequest
+    private let flushRequestLock = NSLock()
     private let networkMonitor: NetworkMonitoring
     private var flushInterval: TimeInterval = ReplaySettings.flushInterval
+    private let flushQueueKey = DispatchSpecificKey<Void>()
 
     init(
         token: String, distinctId: String, identity: MixpanelIdentity? = nil, eventService: EventService,
@@ -32,13 +46,14 @@ class FlushService {
         self.serverURL = serverURL
         self.eventService = eventService
         self.wifiOnly = wifiOnly
-        self.flushRequest =
+        self.storedFlushRequest =
             flushRequest
             ?? FlushRequest(token: token, distinctId: distinctId, identity: identity, serverURL: serverURL)
         self.networkMonitor = networkMonitor
         self.flushInterval = flushInterval
         flushSerialQueue = DispatchQueue(
             label: "com.mixpanel.\(token).tracking", qos: .utility, autoreleaseFrequency: .workItem)
+        flushSerialQueue.setSpecific(key: flushQueueKey, value: ())
         stampNewEvents()
     }
 
@@ -104,10 +119,36 @@ class FlushService {
         return flushRequest.identifiers
     }
 
-    func updateIdentity(_ identity: MixpanelIdentity, distinctId: String) {
-        self.flushRequest = FlushRequest(
-            token: token, distinctId: distinctId, identity: identity, serverURL: serverURL)
-        Logger.info(message: "Updated identity successfully.")
+    /// Replaces the distinct id and identity on `flushSerialQueue`, so it never races a flush reading
+    /// `flushRequest`. Runs inline when already on the queue, such as from a flush completion handler.
+    func updateIdentity(_ identity: MixpanelIdentity, distinctId: String, completion: @escaping () -> Void = {}) {
+        performOnFlushQueue {
+            self.flushRequest = FlushRequest(
+                token: self.token, distinctId: distinctId, identity: identity, serverURL: self.serverURL)
+            Logger.info(message: "Updated identity successfully.")
+            completion()
+        }
+    }
+
+    /// Drops the identity and keeps the distinct id, on `flushSerialQueue`. Events already queued keep
+    /// the identity they were captured with. Does nothing when there is no identity.
+    func clearIdentity(completion: @escaping () -> Void = {}) {
+        performOnFlushQueue {
+            if self.flushRequest.identifiers.identity != nil {
+                self.flushRequest = FlushRequest(
+                    token: self.token, distinctId: self.flushRequest.distinctId, serverURL: self.serverURL)
+                Logger.info(message: "Cleared identity successfully.")
+            }
+            completion()
+        }
+    }
+
+    private func performOnFlushQueue(_ work: @escaping () -> Void) {
+        if DispatchQueue.getSpecific(key: flushQueueKey) != nil {
+            work()
+        } else {
+            flushSerialQueue.async(execute: work)
+        }
     }
 
     private func flushBatch(forAll: Bool) {

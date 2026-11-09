@@ -336,6 +336,94 @@ class MPSessionReplayInstanceTests: BaseTests {
                 + "&distinct_id=user_123&token=test-token")
     }
 
+    func testIdentityChangesWaitForRunningFlush() {
+        let identity = MixpanelIdentity(userId: "user_123", companyId: "acme", deviceId: "device-1")
+        let identified = expectation(description: "identify identity completion")
+        instance.identify(identity: identity) {
+            identified.fulfill()
+        }
+        wait(for: [identified], timeout: 2)
+
+        // Hold the flush queue as a running flush would
+        let flushStarted = DispatchSemaphore(value: 0)
+        let releaseFlush = DispatchSemaphore(value: 0)
+        instance.flushService.flushSerialQueue.async {
+            flushStarted.signal()
+            releaseFlush.wait()
+        }
+        flushStarted.wait()
+
+        let cleared = expectation(description: "identify same distinct id completion")
+        instance.identify(distinctId: "user_123") {
+            cleared.fulfill()
+        }
+        let otherIdentity = MixpanelIdentity(userId: "user_456", companyId: "acme", deviceId: "device-1")
+        let reidentified = expectation(description: "identify other identity completion")
+        instance.identify(identity: otherIdentity) {
+            reidentified.fulfill()
+        }
+        XCTAssertEqual(
+            instance.flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "user_123", identity: identity),
+            "identity changes must not touch the flush request while a flush is running")
+
+        releaseFlush.signal()
+        wait(for: [cleared, reidentified], timeout: 2, enforceOrder: true)
+        XCTAssertEqual(
+            instance.flushService.getIdentifiers(),
+            ReplayIdentifiers(distinctId: "user_456", identity: otherIdentity))
+    }
+
+    func testConcurrentIdentifyDuringFlushesKeepsIdentifiersConsistent() {
+        let companyA = MixpanelIdentity(userId: "user_123", companyId: "company-a", deviceId: "device-1")
+        let companyB = MixpanelIdentity(userId: "user_123", companyId: "company-b", deviceId: "device-1")
+        let eventService = EventService()
+        eventService.eventHandler?.shutdown()
+        let flushService = FlushService(
+            token: "test-token", distinctId: "user_123", identity: companyA, eventService: eventService,
+            wifiOnly: false, flushRequest: nil, flushInterval: ReplaySettings.flushInterval)
+        instance.eventService = eventService
+        instance.flushService = flushService
+
+        URLProtocol.registerClass(MockURLProtocol.self)
+        MockURLProtocol.requestHandler = { request in
+            (HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil), Data(), nil)
+        }
+        let replayStartTime = SessionManager.shared.replayStartTime
+        defer {
+            URLProtocol.unregisterClass(MockURLProtocol.self)
+            MockURLProtocol.requestHandler = nil
+            SessionManager.shared.replayStartTime = replayStartTime
+        }
+        SessionManager.shared.replayStartTime = Date().timeIntervalSince1970 - 10
+
+        let iterations = 200
+        let group = DispatchGroup()
+        let instance = self.instance!
+        DispatchQueue.concurrentPerform(iterations: iterations) { index in
+            group.enter()
+            switch index % 4 {
+            case 0:
+                eventService.enqueueEvent(
+                    SessionEvent(type: EventType.incrementalSnapshot, data: nil, timestamp: TimestampUtils.timestamp()))
+                flushService.flushEvents(forAll: true) { group.leave() }
+            case 1:
+                instance.identify(identity: companyA) { group.leave() }
+            case 2:
+                instance.identify(identity: companyB) { group.leave() }
+            default:
+                instance.identify(distinctId: "user_123") { group.leave() }
+            }
+        }
+        let finished = expectation(description: "all calls complete")
+        group.notify(queue: .main) { finished.fulfill() }
+        wait(for: [finished], timeout: 30)
+
+        let cleared = expectation(description: "final identify completion")
+        instance.identify(distinctId: "user_123") { cleared.fulfill() }
+        wait(for: [cleared], timeout: 5)
+        XCTAssertEqual(flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "user_123", identity: nil))
+    }
+
     func testQueuedEventsUploadWithIdentityTheyWereCapturedWith() {
         let companyA = MixpanelIdentity(userId: "user_123", companyId: "company-a", deviceId: "device-1")
         let companyB = MixpanelIdentity(userId: "user_123", companyId: "company-b", deviceId: "device-1")
