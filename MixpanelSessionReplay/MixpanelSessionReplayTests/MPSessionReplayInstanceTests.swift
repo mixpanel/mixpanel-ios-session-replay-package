@@ -281,7 +281,7 @@ class MPSessionReplayInstanceTests: BaseTests {
 
         XCTAssertTrue(mockFlushService.flushEventsForAllCalled)
         XCTAssertEqual(
-            instance.flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "user_123", identity: identity))
+            instance.flushService.getIdentifiers(), ReplayIdentifiers(identity: identity)!)
     }
 
     func testIdentifyWithDeviceOnlyIdentityUsesDeviceDistinctId() {
@@ -311,7 +311,7 @@ class MPSessionReplayInstanceTests: BaseTests {
         wait(for: [finished], timeout: 2)
 
         XCTAssertEqual(
-            instance.flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "plain-distinct-id", identity: nil))
+            instance.flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "plain-distinct-id"))
     }
 
     func testIdentifyWithSameDistinctIdClearsIdentity() {
@@ -328,7 +328,7 @@ class MPSessionReplayInstanceTests: BaseTests {
         wait(for: [finished], timeout: 2)
 
         XCTAssertEqual(
-            instance.flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "user_123", identity: nil))
+            instance.flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "user_123"))
         startRecording()
         XCTAssertEqual(
             instance.getSessionReplayURL(),
@@ -363,14 +363,14 @@ class MPSessionReplayInstanceTests: BaseTests {
             reidentified.fulfill()
         }
         XCTAssertEqual(
-            instance.flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "user_123", identity: identity),
+            instance.flushService.getIdentifiers(), ReplayIdentifiers(identity: identity)!,
             "identity changes must not touch the flush request while a flush is running")
 
         releaseFlush.signal()
         wait(for: [cleared, reidentified], timeout: 2, enforceOrder: true)
         XCTAssertEqual(
             instance.flushService.getIdentifiers(),
-            ReplayIdentifiers(distinctId: "user_456", identity: otherIdentity))
+            ReplayIdentifiers(identity: otherIdentity)!)
     }
 
     func testLastIdentifyWinsWhileFlushQueueIsBusy() {
@@ -382,7 +382,7 @@ class MPSessionReplayInstanceTests: BaseTests {
             let eventService = EventService()
             eventService.eventHandler?.shutdown()
             let flushService = FlushService(
-                token: "test-token", distinctId: "user_a", identity: identityA, eventService: eventService,
+                token: "test-token", identifiers: ReplayIdentifiers(identity: identityA)!, eventService: eventService,
                 wifiOnly: wifiOnlySkipsUpload, flushRequest: nil, networkMonitor: networkMonitor,
                 flushInterval: ReplaySettings.flushInterval)
             instance.eventService = eventService
@@ -409,7 +409,7 @@ class MPSessionReplayInstanceTests: BaseTests {
             releaseFlush.signal()
             wait(for: [identifiedB, identifiedA, plainId, identifiedAAgain], timeout: 2, enforceOrder: true)
             XCTAssertEqual(
-                flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "user_a", identity: identityA),
+                flushService.getIdentifiers(), ReplayIdentifiers(identity: identityA)!,
                 "the last identify must win (wifiOnly skipping upload: \(wifiOnlySkipsUpload))")
 
             // An unchanged identity is a no-op that still completes
@@ -418,7 +418,7 @@ class MPSessionReplayInstanceTests: BaseTests {
             wait(for: [unchanged], timeout: 2)
             XCTAssertFalse(flushService.hasPendingIdentityChanges)
             XCTAssertEqual(
-                flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "user_a", identity: identityA))
+                flushService.getIdentifiers(), ReplayIdentifiers(identity: identityA)!)
         }
     }
 
@@ -428,7 +428,7 @@ class MPSessionReplayInstanceTests: BaseTests {
         let eventService = EventService()
         eventService.eventHandler?.shutdown()
         let flushService = FlushService(
-            token: "test-token", distinctId: "user_123", identity: companyA, eventService: eventService,
+            token: "test-token", identifiers: ReplayIdentifiers(identity: companyA)!, eventService: eventService,
             wifiOnly: false, flushRequest: nil, flushInterval: ReplaySettings.flushInterval)
         instance.eventService = eventService
         instance.flushService = flushService
@@ -470,7 +470,7 @@ class MPSessionReplayInstanceTests: BaseTests {
         let cleared = expectation(description: "final identify completion")
         instance.identify(distinctId: "user_123") { cleared.fulfill() }
         wait(for: [cleared], timeout: 5)
-        XCTAssertEqual(flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "user_123", identity: nil))
+        XCTAssertEqual(flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "user_123"))
     }
 
     func testQueuedEventsUploadWithIdentityTheyWereCapturedWith() {
@@ -484,7 +484,7 @@ class MPSessionReplayInstanceTests: BaseTests {
         networkMonitor.isUsingWiFiOverride = false
         instance.eventService = eventService
         instance.flushService = FlushService(
-            token: "test-token", distinctId: "user_123", identity: companyA, eventService: eventService,
+            token: "test-token", identifiers: ReplayIdentifiers(identity: companyA)!, eventService: eventService,
             wifiOnly: true, networkMonitor: networkMonitor, flushInterval: ReplaySettings.flushInterval)
 
         let sentLock = NSLock()
@@ -561,7 +561,7 @@ class MPSessionReplayInstanceTests: BaseTests {
 
         XCTAssertFalse(mockFlushService.flushEventsForAllCalled)
         XCTAssertEqual(
-            instance.flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "test-distinct-id", identity: nil))
+            instance.flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "test-distinct-id"))
     }
 
     // MARK: - getSessionReplayURL Tests
@@ -627,7 +627,7 @@ class MPSessionReplayInstanceTests: BaseTests {
     private func replayURLQueryItems(identity: MixpanelIdentity) -> [URLQueryItem]? {
         let config = MPSessionReplayConfig(wifiOnly: false, autoStartRecording: false, enableLogging: false)
         let testInstance = MPSessionReplayInstance(
-            token: "test-token", distinctId: ReplayIdentity.distinctId(identity) ?? "", identity: identity,
+            token: "test-token", identifiers: ReplayIdentifiers(identity: identity)!,
             config: config)
         testInstance.startRecording(sessionsPercent: 100)
         defer { testInstance.stopRecording() }

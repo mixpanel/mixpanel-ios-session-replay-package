@@ -44,12 +44,27 @@ enum ReplayIdentity {
     }
 }
 
-/// The distinct id and the identity it was derived from, kept in one value so a flush never pairs
-/// a new distinct id with the previous identity. `identity` is nil when Session Replay was
-/// initialized or identified with a plain distinct id.
+/// Who a replay is attributed to: either a distinct id passed directly, or an identity and the
+/// distinct id derived from it. Kept as one value so a flush never pairs a distinct id with a
+/// different identity.
 struct ReplayIdentifiers: Equatable {
     let distinctId: String
+    /// Nil for a distinct id passed directly.
     let identity: MixpanelIdentity?
+
+    /// A distinct id passed directly. Requests carry it and no identity keys.
+    init(distinctId: String) {
+        self.distinctId = distinctId
+        self.identity = nil
+    }
+
+    /// An identity and the distinct id analytics sends for it. Nil when the identity names neither
+    /// a user nor a device.
+    init?(identity: MixpanelIdentity) {
+        guard let distinctId = ReplayIdentity.distinctId(identity) else { return nil }
+        self.distinctId = distinctId
+        self.identity = identity
+    }
 }
 
 class FlushRequest {
@@ -62,12 +77,20 @@ class FlushRequest {
     private let network: Network
     private let recordApiUrl: String
 
+    convenience init(
+        token: String, distinctId: String, network: Network = Network(), serverURL: String = DataResidency.us
+    ) {
+        self.init(
+            token: token, identifiers: ReplayIdentifiers(distinctId: distinctId), network: network,
+            serverURL: serverURL)
+    }
+
     init(
-        token: String, distinctId: String, identity: MixpanelIdentity? = nil, network: Network = Network(),
+        token: String, identifiers: ReplayIdentifiers, network: Network = Network(),
         serverURL: String = DataResidency.us
     ) {
         self.token = token
-        self.identifiers = ReplayIdentifiers(distinctId: distinctId, identity: identity)
+        self.identifiers = identifiers
         self.recordApiUrl = MPSessionReplayAPI.recordEndpoint(for: serverURL)
 
         if let data = "\(token):".data(using: .utf8) {

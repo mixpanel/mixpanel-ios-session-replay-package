@@ -36,8 +36,20 @@ class FlushService {
     private var flushInterval: TimeInterval = ReplaySettings.flushInterval
     private let flushQueueKey = DispatchSpecificKey<Void>()
 
+    convenience init(
+        token: String, distinctId: String, eventService: EventService,
+        wifiOnly: Bool,
+        flushRequest: FlushRequest? = nil, networkMonitor: NetworkMonitoring = NetworkMonitor.shared,
+        flushInterval: TimeInterval, serverURL: String = DataResidency.us
+    ) {
+        self.init(
+            token: token, identifiers: ReplayIdentifiers(distinctId: distinctId), eventService: eventService,
+            wifiOnly: wifiOnly, flushRequest: flushRequest, networkMonitor: networkMonitor,
+            flushInterval: flushInterval, serverURL: serverURL)
+    }
+
     init(
-        token: String, distinctId: String, identity: MixpanelIdentity? = nil, eventService: EventService,
+        token: String, identifiers: ReplayIdentifiers, eventService: EventService,
         wifiOnly: Bool,
         flushRequest: FlushRequest? = nil, networkMonitor: NetworkMonitoring = NetworkMonitor.shared,
         flushInterval: TimeInterval, serverURL: String = DataResidency.us
@@ -48,7 +60,7 @@ class FlushService {
         self.wifiOnly = wifiOnly
         self.storedFlushRequest =
             flushRequest
-            ?? FlushRequest(token: token, distinctId: distinctId, identity: identity, serverURL: serverURL)
+            ?? FlushRequest(token: token, identifiers: identifiers, serverURL: serverURL)
         self.networkMonitor = networkMonitor
         self.flushInterval = flushInterval
         flushSerialQueue = DispatchQueue(
@@ -149,8 +161,7 @@ class FlushService {
                     self.flushAllBeforeIdentityChange()
                 }
                 self.flushRequest = FlushRequest(
-                    token: self.token, distinctId: identifiers.distinctId, identity: identifiers.identity,
-                    serverURL: self.serverURL)
+                    token: self.token, identifiers: identifiers, serverURL: self.serverURL)
                 Logger.info(message: "Updated identity successfully.")
             }
             self.pendingIdentityChangesLock.lock()

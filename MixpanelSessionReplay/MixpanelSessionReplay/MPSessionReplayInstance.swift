@@ -35,7 +35,11 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     var taskId = UIBackgroundTaskIdentifier.invalid
     #endif
 
-    init(token: String, distinctId: String, identity: MixpanelIdentity? = nil, config: MPSessionReplayConfig) {
+    convenience init(token: String, distinctId: String, config: MPSessionReplayConfig) {
+        self.init(token: token, identifiers: ReplayIdentifiers(distinctId: distinctId), config: config)
+    }
+
+    init(token: String, identifiers: ReplayIdentifiers, config: MPSessionReplayConfig) {
         self.config = config
         self.token = token
         self.wifiOnly = config.wifiOnly
@@ -43,7 +47,7 @@ open class MPSessionReplayInstance: MPSessionReplaying {
 
         eventService = EventService()
         flushService = FlushService(
-            token: token, distinctId: distinctId, identity: identity, eventService: eventService,
+            token: token, identifiers: identifiers, eventService: eventService,
             wifiOnly: config.wifiOnly,
             flushInterval: config.flushInterval, serverURL: config.serverURL)
 
@@ -304,7 +308,7 @@ open class MPSessionReplayInstance: MPSessionReplaying {
         if distinctId != ""
             && (flushService.hasPendingIdentityChanges || flushService.getIdentifiers().identity != nil)
         {
-            flushService.changeIdentifiers(to: ReplayIdentifiers(distinctId: distinctId, identity: nil)) {
+            flushService.changeIdentifiers(to: ReplayIdentifiers(distinctId: distinctId)) {
                 DispatchQueue.main.async {
                     completion()
                 }
@@ -340,13 +344,12 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     /// - Parameter identity: the identity analytics reports, `Mixpanel.mainInstance().identity`.
     /// - Parameter completion: completion handler to be called after updating the identity.
     public func identify(identity: MixpanelIdentity, completion: @escaping () -> Void = {}) {
-        guard let distinctId = ReplayIdentity.distinctId(identity) else {
+        guard let identifiers = ReplayIdentifiers(identity: identity) else {
             Logger.warn(
                 message: "Can't identify Session Replay with \(identity): it needs a user id or a device id")
             completion()
             return
         }
-        let identifiers = ReplayIdentifiers(distinctId: distinctId, identity: identity)
         // Skip an unchanged identity only when no change is pending; otherwise the flush queue compares
         // it when it applies, so the last call wins.
         guard flushService.hasPendingIdentityChanges || identifiers != flushService.getIdentifiers() else {

@@ -81,7 +81,7 @@ class MPSessionReplayTests: XCTestCase {
             case .success(let instance):
                 XCTAssertEqual(
                     instance?.flushService.getIdentifiers(),
-                    ReplayIdentifiers(distinctId: "user_123", identity: identity))
+                    ReplayIdentifiers(identity: identity)!)
             case .failure(let error):
                 XCTFail("Initialization should succeed but failed with: \(error)")
             case .none:

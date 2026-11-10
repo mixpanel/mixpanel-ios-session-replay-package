@@ -165,7 +165,7 @@ final class MPSessionReplayManager {
         token: String, distinctId: String, config: MPSessionReplayConfig,
         completion: @escaping (Result<MPSessionReplayInstance?, Error>) -> Void
     ) {
-        initialize(token: token, distinctId: distinctId, identity: nil, config: config, completion: completion)
+        initialize(token: token, identifiers: ReplayIdentifiers(distinctId: distinctId), config: config, completion: completion)
     }
 
     /// Initializes Session Replay for an identity. An identity with neither a user id nor a device id
@@ -174,17 +174,17 @@ final class MPSessionReplayManager {
         token: String, identity: MixpanelIdentity, config: MPSessionReplayConfig,
         completion: @escaping (Result<MPSessionReplayInstance?, Error>) -> Void
     ) {
-        guard let distinctId = ReplayIdentity.distinctId(identity) else {
+        guard let identifiers = ReplayIdentifiers(identity: identity) else {
             let message = "Can't initialize Session Replay with \(identity): it needs a user id or a device id"
             PrintLogging.shared.log(.error, "SDK initialization failed: \(message)")
             completion(.failure(MPSessionReplayError.custom(message: "SDK initialization failed: \(message)")))
             return
         }
-        initialize(token: token, distinctId: distinctId, identity: identity, config: config, completion: completion)
+        initialize(token: token, identifiers: identifiers, config: config, completion: completion)
     }
 
     private func initialize(
-        token: String, distinctId: String, identity: MixpanelIdentity?, config: MPSessionReplayConfig,
+        token: String, identifiers: ReplayIdentifiers, config: MPSessionReplayConfig,
         completion: @escaping (Result<MPSessionReplayInstance?, Error>) -> Void
     ) {
         updateLoggingEnabled(config.enableLogging)
@@ -249,7 +249,7 @@ final class MPSessionReplayManager {
             ThreadUtils.runOnMainThread {
                 // Use the updated config that may have been merged with remote settings
                 self.instance = MPSessionReplayInstance(
-                    token: token, distinctId: distinctId, identity: identity, config: updatedConfig)
+                    token: token, identifiers: identifiers, config: updatedConfig)
                 self.setupEventTriggers(
                     token: token, recordingEventTriggers: settings?.sdkConfig?.config?.recordingEventTriggers)
                 completion(.success(self.instance))

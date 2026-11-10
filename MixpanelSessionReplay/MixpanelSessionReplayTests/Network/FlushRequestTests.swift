@@ -111,7 +111,7 @@ final class FlushRequestTests: XCTestCase {
     func testQueryItems_HierarchicalGroupsIdentitySendsNoDistinctId() {
         let identity = MixpanelIdentity(userId: "user_123", companyId: "acme", deviceId: "device-1")
         let request = FlushRequest(
-            token: "testToken", distinctId: "user_123", identity: identity, network: mockNetwork)
+            token: "testToken", identifiers: ReplayIdentifiers(identity: identity)!, network: mockNetwork)
 
         XCTAssertEqual(
             sentQueryItems(request),
@@ -125,7 +125,7 @@ final class FlushRequestTests: XCTestCase {
     func testQueryItems_UserOnlyIdentity() {
         let identity = MixpanelIdentity(userId: "user_123", companyId: "", deviceId: nil)
         let request = FlushRequest(
-            token: "testToken", distinctId: "user_123", identity: identity, network: mockNetwork)
+            token: "testToken", identifiers: ReplayIdentifiers(identity: identity)!, network: mockNetwork)
 
         XCTAssertEqual(
             sentQueryItems(request),
@@ -135,7 +135,7 @@ final class FlushRequestTests: XCTestCase {
     func testQueryItems_CompanyWithoutUserSendsDistinctId() {
         let identity = MixpanelIdentity(userId: nil, companyId: "acme", deviceId: "device-1")
         let request = FlushRequest(
-            token: "testToken", distinctId: "$device:device-1", identity: identity, network: mockNetwork)
+            token: "testToken", identifiers: ReplayIdentifiers(identity: identity)!, network: mockNetwork)
 
         XCTAssertEqual(
             sentQueryItems(request),
@@ -148,7 +148,7 @@ final class FlushRequestTests: XCTestCase {
     func testQueryItems_DeviceOnlyIdentity() {
         let identity = MixpanelIdentity(userId: nil, companyId: nil, deviceId: "device-1")
         let request = FlushRequest(
-            token: "testToken", distinctId: "$device:device-1", identity: identity, network: mockNetwork)
+            token: "testToken", identifiers: ReplayIdentifiers(identity: identity)!, network: mockNetwork)
 
         XCTAssertEqual(
             sentQueryItems(request),
@@ -163,5 +163,15 @@ final class FlushRequestTests: XCTestCase {
         XCTAssertEqual(ReplayIdentity.distinctId(MixpanelIdentity(userId: nil, companyId: nil, deviceId: "d")), "$device:d")
         XCTAssertNil(ReplayIdentity.distinctId(MixpanelIdentity(userId: nil, companyId: "acme")))
         XCTAssertNil(ReplayIdentity.distinctId(MixpanelIdentity(userId: "", companyId: "acme", deviceId: "")))
+    }
+
+    func testReplayIdentifiersDeriveTheDistinctIdFromTheIdentity() {
+        let identity = MixpanelIdentity(userId: "user_123", companyId: "acme", deviceId: "device-1")
+        let identifiers = ReplayIdentifiers(identity: identity)
+
+        XCTAssertEqual(identifiers?.distinctId, "user_123")
+        XCTAssertEqual(identifiers?.identity, identity)
+        XCTAssertNil(ReplayIdentifiers(identity: MixpanelIdentity(userId: nil, companyId: "acme")))
+        XCTAssertNil(ReplayIdentifiers(distinctId: "plain").identity)
     }
 }
