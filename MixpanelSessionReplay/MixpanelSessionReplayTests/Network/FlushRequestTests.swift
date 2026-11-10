@@ -89,10 +89,10 @@ final class FlushRequestTests: XCTestCase {
         return sent
     }
 
-    private func expectedBaseQueryItems(distinctId: String) -> [URLQueryItem] {
+    private func expectedBaseQueryItems(distinctId: String?) -> [URLQueryItem] {
         return [
             URLQueryItem(name: "format", value: "gzip"),
-            URLQueryItem(name: "distinct_id", value: distinctId),
+            distinctId.map { URLQueryItem(name: "distinct_id", value: $0) },
             URLQueryItem(name: "seq", value: "2"),
             URLQueryItem(name: "batch_start_time", value: "1.0"),
             URLQueryItem(name: "replay_id", value: "replay"),
@@ -100,7 +100,7 @@ final class FlushRequestTests: XCTestCase {
             URLQueryItem(name: "replay_start_time", value: "4.0"),
             URLQueryItem(name: "$lib_version", value: APIConstants.currentLibVersion),
             URLQueryItem(name: "mp_lib", value: APIConstants.currentMpLib),
-        ]
+        ].compactMap { $0 }
     }
 
     func testQueryItems_DistinctIdOnly_Unchanged() {
@@ -108,14 +108,14 @@ final class FlushRequestTests: XCTestCase {
         XCTAssertNil(flushRequest.identifiers.identity)
     }
 
-    func testQueryItems_HierarchicalGroupsIdentity() {
+    func testQueryItems_HierarchicalGroupsIdentitySendsNoDistinctId() {
         let identity = MixpanelIdentity(userId: "user_123", companyId: "acme", deviceId: "device-1")
         let request = FlushRequest(
             token: "testToken", distinctId: "user_123", identity: identity, network: mockNetwork)
 
         XCTAssertEqual(
             sentQueryItems(request),
-            expectedBaseQueryItems(distinctId: "user_123") + [
+            expectedBaseQueryItems(distinctId: nil) + [
                 URLQueryItem(name: "$user_id", value: "user_123"),
                 URLQueryItem(name: "$company_id", value: "acme"),
                 URLQueryItem(name: "$device_id", value: "device-1"),
@@ -130,6 +130,19 @@ final class FlushRequestTests: XCTestCase {
         XCTAssertEqual(
             sentQueryItems(request),
             expectedBaseQueryItems(distinctId: "user_123") + [URLQueryItem(name: "$user_id", value: "user_123")])
+    }
+
+    func testQueryItems_CompanyWithoutUserSendsDistinctId() {
+        let identity = MixpanelIdentity(userId: nil, companyId: "acme", deviceId: "device-1")
+        let request = FlushRequest(
+            token: "testToken", distinctId: "$device:device-1", identity: identity, network: mockNetwork)
+
+        XCTAssertEqual(
+            sentQueryItems(request),
+            expectedBaseQueryItems(distinctId: "$device:device-1") + [
+                URLQueryItem(name: "$company_id", value: "acme"),
+                URLQueryItem(name: "$device_id", value: "device-1"),
+            ])
     }
 
     func testQueryItems_DeviceOnlyIdentity() {

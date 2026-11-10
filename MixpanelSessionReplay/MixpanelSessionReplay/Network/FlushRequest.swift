@@ -21,7 +21,14 @@ enum ReplayIdentity {
         return nil
     }
 
-    /// The identity keys Mixpanel resolves a replay's user from, alongside `distinct_id`.
+    /// Whether a request names its user with `distinct_id`. Not when the identity has both a user
+    /// and a company: Mixpanel builds the user from `$user_id` and `$company_id`, as it does for
+    /// events, which carry no `distinct_id` either.
+    static func sendsDistinctId(_ identity: MixpanelIdentity?) -> Bool {
+        nonEmpty(identity?.userId) == nil || nonEmpty(identity?.companyId) == nil
+    }
+
+    /// The identity keys Mixpanel resolves a replay's user from.
     static func queryItems(_ identity: MixpanelIdentity?) -> [URLQueryItem] {
         guard let identity = identity else { return [] }
         return [
@@ -114,7 +121,8 @@ class FlushRequest {
         let current = payloadInfo.identifiers ?? identifiers
         return [
             URLQueryItem(name: "format", value: "gzip"),
-            URLQueryItem(name: "distinct_id", value: current.distinctId),
+            ReplayIdentity.sendsDistinctId(current.identity)
+                ? URLQueryItem(name: "distinct_id", value: current.distinctId) : nil,
             URLQueryItem(name: "seq", value: String(payloadInfo.seq)),
             URLQueryItem(name: "batch_start_time", value: String(payloadInfo.batchStartTime)),
             URLQueryItem(name: "replay_id", value: payloadInfo.replayId),
@@ -122,7 +130,7 @@ class FlushRequest {
             URLQueryItem(name: "replay_start_time", value: String(payloadInfo.replayStartTime)),
             URLQueryItem(name: "$lib_version", value: APIConstants.currentLibVersion),
             URLQueryItem(name: "mp_lib", value: APIConstants.currentMpLib),
-        ] + ReplayIdentity.queryItems(current.identity)
+        ].compactMap { $0 } + ReplayIdentity.queryItems(current.identity)
     }
 
     private func updateRetryDelay() {

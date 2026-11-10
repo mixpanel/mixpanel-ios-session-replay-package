@@ -333,7 +333,8 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     ///
     /// Replays then carry `$user_id`, `$company_id` and `$device_id` alongside `distinct_id`. The
     /// distinct id is the identity's user id, or `$device:` and its device id before the user is
-    /// known.
+    /// known. An identity with both a user and a company sends no `distinct_id`, as its events
+    /// don't.
     ///
     /// An identity with neither a user id nor a device id is logged and ignored.
     /// - Parameter identity: the identity analytics reports, `Mixpanel.mainInstance().identity`.
@@ -369,9 +370,10 @@ open class MPSessionReplayInstance: MPSessionReplaying {
         var components = URLComponents(string: MPSessionReplayAPI.sessionReplayRedirect)
         var queryItems = [
             URLQueryItem(name: "replay_id", value: SessionManager.shared.replayId),
-            URLQueryItem(name: "distinct_id", value: identifiers.distinctId),
+            ReplayIdentity.sendsDistinctId(identifiers.identity)
+                ? URLQueryItem(name: "distinct_id", value: identifiers.distinctId) : nil,
             URLQueryItem(name: "token", value: token),
-        ]
+        ].compactMap { $0 }
         // On a hierarchical groups project the redirect builds the profile's distinct id from these
         if let userId = ReplayIdentity.nonEmpty(identifiers.identity?.userId),
             let companyId = ReplayIdentity.nonEmpty(identifiers.identity?.companyId)

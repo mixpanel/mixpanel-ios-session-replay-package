@@ -538,13 +538,11 @@ class MPSessionReplayInstanceTests: BaseTests {
             batches.map(identityItems),
             [
                 [
-                    URLQueryItem(name: "distinct_id", value: "user_123"),
                     URLQueryItem(name: "$user_id", value: "user_123"),
                     URLQueryItem(name: "$company_id", value: "company-a"),
                     URLQueryItem(name: "$device_id", value: "device-1"),
                 ],
                 [
-                    URLQueryItem(name: "distinct_id", value: "user_123"),
                     URLQueryItem(name: "$user_id", value: "user_123"),
                     URLQueryItem(name: "$company_id", value: "company-b"),
                     URLQueryItem(name: "$device_id", value: "device-1"),
@@ -637,14 +635,13 @@ class MPSessionReplayInstanceTests: BaseTests {
         return URLComponents(string: urlString)?.queryItems
     }
 
-    func testGetSessionReplayUrl_AppendsUserAndCompanyForHierarchicalGroupsIdentity() {
+    func testGetSessionReplayUrl_SendsUserAndCompanyInsteadOfDistinctIdForHierarchicalGroupsIdentity() {
         let identity = MixpanelIdentity(userId: "user+1", companyId: "acme", deviceId: "device-1")
 
         XCTAssertEqual(
             replayURLQueryItems(identity: identity),
             [
                 URLQueryItem(name: "replay_id", value: SessionManager.shared.replayId),
-                URLQueryItem(name: "distinct_id", value: "user+1"),
                 URLQueryItem(name: "token", value: "test-token"),
                 URLQueryItem(name: "$user_id", value: "user+1"),
                 URLQueryItem(name: "$company_id", value: "acme"),
