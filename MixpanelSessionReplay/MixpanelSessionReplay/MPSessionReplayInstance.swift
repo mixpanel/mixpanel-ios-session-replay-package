@@ -6,6 +6,7 @@
 //
 
 import Foundation
+public import MixpanelSwiftCommon
 import UIKit
 
 open class MPSessionReplayInstance: MPSessionReplaying {
@@ -34,7 +35,11 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     var taskId = UIBackgroundTaskIdentifier.invalid
     #endif
 
-    init(token: String, distinctId: String, config: MPSessionReplayConfig) {
+    convenience init(token: String, distinctId: String, config: MPSessionReplayConfig) {
+        self.init(token: token, identifiers: ReplayIdentifiers(distinctId: distinctId), config: config)
+    }
+
+    init(token: String, identifiers: ReplayIdentifiers, config: MPSessionReplayConfig) {
         self.config = config
         self.token = token
         self.wifiOnly = config.wifiOnly
@@ -42,7 +47,8 @@ open class MPSessionReplayInstance: MPSessionReplaying {
 
         eventService = EventService()
         flushService = FlushService(
-            token: token, distinctId: distinctId, eventService: eventService, wifiOnly: config.wifiOnly,
+            token: token, identifiers: identifiers, eventService: eventService,
+            wifiOnly: config.wifiOnly,
             flushInterval: config.flushInterval, serverURL: config.serverURL)
 
         // Initialize debug mask overlay if enabled (DEBUG builds only)
@@ -295,6 +301,20 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     /// - Parameter distinctId: distinctId of the user.
     /// - Parameter completion: completion handler to be called after updating the distinct id.
     public func identify(distinctId: String, completion: @escaping () -> Void = {}) {
+        // A plain distinct id replaces any identity, even when the distinct id is unchanged. Events
+        // already queued keep the identity they were captured with. While an identity is set or an
+        // identity change is pending, the change runs on the flush queue, which compares it with the
+        // identifiers current at that point, so it never races a flush and the last call wins.
+        if distinctId != ""
+            && (flushService.hasPendingIdentityChanges || flushService.getIdentifiers().identity != nil)
+        {
+            flushService.changeIdentifiers(to: ReplayIdentifiers(distinctId: distinctId)) {
+                DispatchQueue.main.async {
+                    completion()
+                }
+            }
+            return
+        }
         guard distinctId != flushService.getDistinctId() && distinctId != "" else {
             completion()
             return
@@ -310,17 +330,61 @@ open class MPSessionReplayInstance: MPSessionReplaying {
             })
     }
 
+    /// Attributes recordings to the given identity. Pass the identity analytics reports,
+    /// `Mixpanel.mainInstance().identity`, and call this again whenever analytics identifies, so
+    /// recordings resolve to the same user as the app's events, including on a project that uses
+    /// hierarchical groups.
+    ///
+    /// Replays then carry `$user_id`, `$company_id` and `$device_id` alongside `distinct_id`. The
+    /// distinct id is the identity's user id, or `$device:` and its device id before the user is
+    /// known. An identity with both a user and a company sends no `distinct_id`, as its events
+    /// don't.
+    ///
+    /// An identity with neither a user id nor a device id is logged and ignored.
+    /// - Parameter identity: the identity analytics reports, `Mixpanel.mainInstance().identity`.
+    /// - Parameter completion: completion handler to be called after updating the identity.
+    public func identify(identity: MixpanelIdentity, completion: @escaping () -> Void = {}) {
+        guard let identifiers = ReplayIdentifiers(identity: identity) else {
+            Logger.warn(
+                message: "Can't identify Session Replay with \(identity): it needs a user id or a device id")
+            completion()
+            return
+        }
+        // Skip an unchanged identity only when no change is pending; otherwise the flush queue compares
+        // it when it applies, so the last call wins.
+        guard flushService.hasPendingIdentityChanges || identifiers != flushService.getIdentifiers() else {
+            completion()
+            return
+        }
+        flushService.changeIdentifiers(to: identifiers) {
+            // Ensure the completion handler is executed on the main queue.
+            DispatchQueue.main.async {
+                completion()
+            }
+        }
+    }
+
     /// Returns the URL to view the current session replay in the Mixpanel dashboard.
     ///
     /// - Returns: The session replay URL if recording is active, or `nil` if not recording.
     public func getSessionReplayURL() -> String? {
         guard isRecording else { return nil }
+        let identifiers = flushService.getIdentifiers()
         var components = URLComponents(string: MPSessionReplayAPI.sessionReplayRedirect)
-        components?.queryItems = [
+        var queryItems = [
             URLQueryItem(name: "replay_id", value: SessionManager.shared.replayId),
-            URLQueryItem(name: "distinct_id", value: flushService.getDistinctId()),
+            ReplayIdentity.sendsDistinctId(identifiers.identity)
+                ? URLQueryItem(name: "distinct_id", value: identifiers.distinctId) : nil,
             URLQueryItem(name: "token", value: token),
-        ]
+        ].compactMap { $0 }
+        // On a hierarchical groups project the redirect builds the profile's distinct id from these
+        if let userId = ReplayIdentity.nonEmpty(identifiers.identity?.userId),
+            let companyId = ReplayIdentity.nonEmpty(identifiers.identity?.companyId)
+        {
+            queryItems.append(URLQueryItem(name: "$user_id", value: userId))
+            queryItems.append(URLQueryItem(name: "$company_id", value: companyId))
+        }
+        components?.queryItems = queryItems
         if let encodedQuery = components?.percentEncodedQuery {
             components?.percentEncodedQuery = encodedQuery.replacingOccurrences(of: "+", with: "%2B")
         }

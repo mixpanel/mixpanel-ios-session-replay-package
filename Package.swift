@@ -11,10 +11,10 @@ let package = Package(
         .library(name: "MixpanelSessionReplay", targets: ["MixpanelSessionReplay"])
     ],
     dependencies: [
-        .package(
-            url: "https://github.com/mixpanel/mixpanel-swift-common.git",
-            from: "2.0.0"
-        )
+        // TEMPORARY (hierarchical-groups): MixpanelIdentity is on mixpanel-swift-common's
+        // hierarchical-groups branch. Restore the released dependency once it ships:
+        // .package(url: "https://github.com/mixpanel/mixpanel-swift-common.git", from: "2.1.0")
+        .package(path: "../mixpanel-swift-common")
     ],
     targets: [
         .target(
