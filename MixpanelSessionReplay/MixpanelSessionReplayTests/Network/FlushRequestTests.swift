@@ -5,7 +5,7 @@
 //  Copyright © 2024 Mixpanel. All rights reserved.
 //
 
-import MixpanelSwiftCommon
+@_spi(MixpanelInternal) import MixpanelSwiftCommon
 import XCTest
 
 @testable import MixpanelSessionReplay
