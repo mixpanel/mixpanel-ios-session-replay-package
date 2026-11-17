@@ -12,5 +12,5 @@ Pod::Spec.new do |s|
   s.source_files          = 'MixpanelSessionReplay/MixpanelSessionReplay/**/*.{swift,h}'
   s.resource_bundles      = { 'MixpanelSessionReplay' => ['MixpanelSessionReplay/MixpanelSessionReplay/**/*.xcprivacy'] }
   s.ios.frameworks        = 'UIKit', 'Foundation', 'WebKit', 'MapKit'
-  s.dependency 'MixpanelSwiftCommon', '~> 2.0'
+  s.dependency 'MixpanelSwiftCommon', '~> 2.1'
 end
