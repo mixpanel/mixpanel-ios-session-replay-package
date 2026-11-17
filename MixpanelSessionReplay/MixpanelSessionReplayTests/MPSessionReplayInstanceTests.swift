@@ -451,16 +451,17 @@ class MPSessionReplayInstanceTests: BaseTests {
         DispatchQueue.concurrentPerform(iterations: iterations) { index in
             group.enter()
             switch index % 4 {
-            case 0:
-                eventService.enqueueEvent(
-                    SessionEvent(type: EventType.incrementalSnapshot, data: nil, timestamp: TimestampUtils.timestamp()))
-                flushService.flushEvents(forAll: true) { group.leave() }
-            case 1:
-                instance.identify(identity: companyA) { group.leave() }
-            case 2:
-                instance.identify(identity: companyB) { group.leave() }
-            default:
-                instance.identify(distinctId: "user_123") { group.leave() }
+                case 0:
+                    eventService.enqueueEvent(
+                        SessionEvent(
+                            type: EventType.incrementalSnapshot, data: nil, timestamp: TimestampUtils.timestamp()))
+                    flushService.flushEvents(forAll: true) { group.leave() }
+                case 1:
+                    instance.identify(identity: companyA) { group.leave() }
+                case 2:
+                    instance.identify(identity: companyB) { group.leave() }
+                default:
+                    instance.identify(distinctId: "user_123") { group.leave() }
             }
         }
         let finished = expectation(description: "all calls complete")
@@ -495,7 +496,9 @@ class MPSessionReplayInstanceTests: BaseTests {
             sentLock.lock()
             sent.append(items ?? [])
             sentLock.unlock()
-            return (HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil), Data(), nil)
+            return (
+                HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil), Data(), nil
+            )
         }
         let replayStartTime = SessionManager.shared.replayStartTime
         defer {

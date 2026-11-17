@@ -165,7 +165,9 @@ final class MPSessionReplayManager {
         token: String, distinctId: String, config: MPSessionReplayConfig,
         completion: @escaping (Result<MPSessionReplayInstance?, Error>) -> Void
     ) {
-        initialize(token: token, identifiers: ReplayIdentifiers(distinctId: distinctId), config: config, completion: completion)
+        initialize(
+            token: token, identifiers: ReplayIdentifiers(distinctId: distinctId), config: config, completion: completion
+        )
     }
 
     /// Initializes Session Replay for an identity. An identity with neither a user id nor a device id

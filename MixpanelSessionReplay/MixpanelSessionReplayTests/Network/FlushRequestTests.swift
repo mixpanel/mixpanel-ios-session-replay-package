@@ -159,8 +159,10 @@ final class FlushRequestTests: XCTestCase {
 
     func testReplayIdentityDistinctId() {
         XCTAssertEqual(ReplayIdentity.distinctId(MixpanelIdentity(userId: "u", companyId: nil, deviceId: "d")), "u")
-        XCTAssertEqual(ReplayIdentity.distinctId(MixpanelIdentity(userId: "", companyId: nil, deviceId: "d")), "$device:d")
-        XCTAssertEqual(ReplayIdentity.distinctId(MixpanelIdentity(userId: nil, companyId: nil, deviceId: "d")), "$device:d")
+        XCTAssertEqual(
+            ReplayIdentity.distinctId(MixpanelIdentity(userId: "", companyId: nil, deviceId: "d")), "$device:d")
+        XCTAssertEqual(
+            ReplayIdentity.distinctId(MixpanelIdentity(userId: nil, companyId: nil, deviceId: "d")), "$device:d")
         XCTAssertNil(ReplayIdentity.distinctId(MixpanelIdentity(userId: nil, companyId: "acme")))
         XCTAssertNil(ReplayIdentity.distinctId(MixpanelIdentity(userId: "", companyId: "acme", deviceId: "")))
     }
