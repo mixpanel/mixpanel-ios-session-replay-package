@@ -473,12 +473,34 @@ class MPSessionReplayInstanceTests: BaseTests {
             SessionEvent(type: EventType.incrementalSnapshot, data: nil, timestamp: TimestampUtils.timestamp())
         }
 
+        let instance = self.instance!
+
+        // Seed one completed upload per identity, in order and with Wi-Fi on, so every identity is
+        // covered whatever the concurrent phase below happens to upload.
+        networkMonitor.alwaysOnWiFi = true
+        let seedSteps: [(String, (@escaping () -> Void) -> Void)] = [
+            ("identity A", { instance.identify(identity: identityA, completion: $0) }),
+            ("identity B", { instance.identify(identity: identityB, completion: $0) }),
+            ("anonymous identity", { instance.identify(identity: anonymous, completion: $0) }),
+            ("plain distinct id", { instance.identify(distinctId: plainDistinctId, completion: $0) }),
+        ]
+        for (name, identify) in seedSteps {
+            let identified = expectation(description: "seed identify \(name)")
+            identify { identified.fulfill() }
+            wait(for: [identified], timeout: 10)
+            eventService.enqueueEvent(event())
+            let flushed = expectation(description: "seed flush \(name)")
+            flushService.flushEvents(forAll: true) { flushed.fulfill() }
+            wait(for: [flushed], timeout: 10)
+            XCTAssertTrue(eventService.isEventsEmpty, "the seed event for \(name) must upload")
+        }
+        networkMonitor.alwaysOnWiFi = false
+
         // Flushes and identity changes race; every call must complete (no crash or deadlock). Rounds
         // of concurrent calls, with events captured before each call and from its completion, so
         // events are captured under every identity, not only the first.
         let rounds = 30
         let callsPerRound = 8
-        let instance = self.instance!
         for round in 0..<rounds {
             let group = DispatchGroup()
             DispatchQueue.concurrentPerform(iterations: callsPerRound) { index in
@@ -533,7 +555,7 @@ class MPSessionReplayInstanceTests: BaseTests {
             }
         }
         XCTAssertEqual(
-            identitiesSeen, Set(expectedIdentityParams.indices), "uploads should cover every identity that was set")
+            identitiesSeen, Set(expectedIdentityParams.indices), "the seeded uploads cover every identity")
     }
 
     func testQueuedEventsUploadWithIdentityTheyWereCapturedWith() {
