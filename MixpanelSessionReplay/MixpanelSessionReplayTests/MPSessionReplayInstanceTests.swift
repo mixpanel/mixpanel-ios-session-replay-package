@@ -423,19 +423,43 @@ class MPSessionReplayInstanceTests: BaseTests {
     }
 
     func testConcurrentIdentifyDuringFlushesKeepsIdentifiersConsistent() {
-        let companyA = MixpanelIdentity(userId: "user_123", companyId: "company-a", deviceId: "device-1")
-        let companyB = MixpanelIdentity(userId: "user_123", companyId: "company-b", deviceId: "device-1")
+        // Identities that share no value, so a request mixing two of them matches neither
+        let identityA = MixpanelIdentity(userId: "user_a", companyId: "company-a", deviceId: "device-a")
+        let identityB = MixpanelIdentity(userId: "user_b", companyId: "company-b", deviceId: "device-b")
+        let anonymous = MixpanelIdentity(userId: nil, companyId: nil, deviceId: "device-c")
+        let plainDistinctId = "plain_user"
+        // The identity keys each of them sends, and nothing else
+        let expectedIdentityParams: [[String: String]] = [
+            ["$user_id": "user_a", "$company_id": "company-a", "$device_id": "device-a"],
+            ["$user_id": "user_b", "$company_id": "company-b", "$device_id": "device-b"],
+            ["distinct_id": "$device:device-c", "$device_id": "device-c"],
+            ["distinct_id": plainDistinctId],
+        ]
+        let identityKeys: Set<String> = ["distinct_id", "$user_id", "$company_id", "$device_id"]
+
+        // Wi-Fi drops on every other check, so some identity changes skip their upload and leave
+        // events captured under an earlier identity queued behind a later one.
+        let networkMonitor = AlternatingNetworkMonitor()
         let eventService = EventService()
         eventService.eventHandler?.shutdown()
         let flushService = FlushService(
-            token: "test-token", identifiers: ReplayIdentifiers(identity: companyA)!, eventService: eventService,
-            wifiOnly: false, flushRequest: nil, flushInterval: ReplaySettings.flushInterval)
+            token: "test-token", identifiers: ReplayIdentifiers(identity: identityA)!, eventService: eventService,
+            wifiOnly: true, flushRequest: nil, networkMonitor: networkMonitor,
+            flushInterval: ReplaySettings.flushInterval)
         instance.eventService = eventService
         instance.flushService = flushService
 
+        let sentLock = NSLock()
+        var sent: [[URLQueryItem]] = []
         URLProtocol.registerClass(MockURLProtocol.self)
         MockURLProtocol.requestHandler = { request in
-            (HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil), Data(), nil)
+            let items = request.url.flatMap { URLComponents(url: $0, resolvingAgainstBaseURL: false)?.queryItems }
+            sentLock.lock()
+            sent.append(items ?? [])
+            sentLock.unlock()
+            return (
+                HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil), Data(), nil
+            )
         }
         let replayStartTime = SessionManager.shared.replayStartTime
         defer {
@@ -445,33 +469,71 @@ class MPSessionReplayInstanceTests: BaseTests {
         }
         SessionManager.shared.replayStartTime = Date().timeIntervalSince1970 - 10
 
-        let iterations = 200
-        let group = DispatchGroup()
+        func event() -> SessionEvent {
+            SessionEvent(type: EventType.incrementalSnapshot, data: nil, timestamp: TimestampUtils.timestamp())
+        }
+
+        // Flushes and identity changes race; every call must complete (no crash or deadlock). Rounds
+        // of concurrent calls, with events captured before each call and from its completion, so
+        // events are captured under every identity, not only the first.
+        let rounds = 30
+        let callsPerRound = 8
         let instance = self.instance!
-        DispatchQueue.concurrentPerform(iterations: iterations) { index in
-            group.enter()
-            switch index % 4 {
-                case 0:
-                    eventService.enqueueEvent(
-                        SessionEvent(
-                            type: EventType.incrementalSnapshot, data: nil, timestamp: TimestampUtils.timestamp()))
-                    flushService.flushEvents(forAll: true) { group.leave() }
-                case 1:
-                    instance.identify(identity: companyA) { group.leave() }
-                case 2:
-                    instance.identify(identity: companyB) { group.leave() }
-                default:
-                    instance.identify(distinctId: "user_123") { group.leave() }
+        for round in 0..<rounds {
+            let group = DispatchGroup()
+            DispatchQueue.concurrentPerform(iterations: callsPerRound) { index in
+                group.enter()
+                eventService.enqueueEvent(event())
+                let done = {
+                    eventService.enqueueEvent(event())
+                    group.leave()
+                }
+                switch (round + index) % 6 {
+                    case 0, 3:
+                        flushService.flushEvents(forAll: true, completionHandler: done)
+                    case 1:
+                        instance.identify(identity: identityA, completion: done)
+                    case 2:
+                        instance.identify(identity: identityB, completion: done)
+                    case 4:
+                        instance.identify(identity: anonymous, completion: done)
+                    default:
+                        instance.identify(distinctId: plainDistinctId, completion: done)
+                }
+            }
+            let finished = expectation(description: "round \(round) calls complete")
+            group.notify(queue: .main) { finished.fulfill() }
+            wait(for: [finished], timeout: 10)
+        }
+
+        // Upload whatever is still queued, whichever identity it was captured under
+        networkMonitor.alwaysOnWiFi = true
+        let drained = expectation(description: "final flush completion")
+        flushService.flushEvents(forAll: true) { drained.fulfill() }
+        wait(for: [drained], timeout: 10)
+        XCTAssertTrue(eventService.isEventsEmpty, "every queued event must upload")
+
+        sentLock.lock()
+        let requests = sent
+        sentLock.unlock()
+        XCTAssertFalse(requests.isEmpty, "the flushes must upload")
+
+        var identitiesSeen = Set<Int>()
+        for (index, items) in requests.enumerated() {
+            let names = items.map(\.name)
+            XCTAssertEqual(names.count, Set(names).count, "request \(index) repeats a key: \(items)")
+            var identityParams: [String: String] = [:]
+            for item in items where identityKeys.contains(item.name) {
+                identityParams[item.name] = item.value
+            }
+            if let match = expectedIdentityParams.firstIndex(of: identityParams) {
+                identitiesSeen.insert(match)
+            } else {
+                XCTFail("request \(index) mixes identities or sends partial identifiers: \(identityParams)")
             }
         }
-        let finished = expectation(description: "all calls complete")
-        group.notify(queue: .main) { finished.fulfill() }
-        wait(for: [finished], timeout: 30)
-
-        let cleared = expectation(description: "final identify completion")
-        instance.identify(distinctId: "user_123") { cleared.fulfill() }
-        wait(for: [cleared], timeout: 5)
-        XCTAssertEqual(flushService.getIdentifiers(), ReplayIdentifiers(distinctId: "user_123"))
+        XCTAssertEqual(
+            identitiesSeen, Set(expectedIdentityParams.indices), "uploads should cover every identity that was set")
     }
 
     func testQueuedEventsUploadWithIdentityTheyWereCapturedWith() {
@@ -671,5 +733,32 @@ class MPSessionReplayInstanceTests: BaseTests {
             urlString,
             "https://mixpanel.com/projects/replay-redirect?replay_id=\(SessionManager.shared.replayId)"
                 + "&distinct_id=test-distinct-id&token=test-token")
+    }
+}
+
+/// Reports Wi-Fi on every other check, unless `alwaysOnWiFi` is set. Safe to read from any thread.
+private final class AlternatingNetworkMonitor: NetworkMonitoring {
+    private let lock = NSLock()
+    private var checks = 0
+    private var storedAlwaysOnWiFi = false
+
+    var alwaysOnWiFi: Bool {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return storedAlwaysOnWiFi
+        }
+        set {
+            lock.lock()
+            storedAlwaysOnWiFi = newValue
+            lock.unlock()
+        }
+    }
+
+    var isUsingWiFi: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        checks += 1
+        return storedAlwaysOnWiFi || checks % 2 == 0
     }
 }
