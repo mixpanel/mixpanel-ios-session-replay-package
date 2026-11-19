@@ -2,6 +2,8 @@ Pod::Spec.new do |s|
   s.name                  = 'MixpanelSessionReplay'
   s.version               = '2.0.0'
   s.summary               = 'Mixpanel Session Replay library for iOS (Swift)'
+  s.description           = 'Mixpanel Session Replay library for iOS (Swift). CocoaPods support is deprecated; use Swift Package Manager. See https://github.com/mixpanel/mixpanel-ios-session-replay-package#installation'
+  s.deprecated            = true
   s.homepage              = 'https://github.com/mixpanel/mixpanel-ios-session-replay-package'
   s.license               = { :type => 'Apache License, Version 2.0', :file => 'LICENSE' }
   s.author                = { 'Mixpanel, Inc' => 'support@mixpanel.com' }

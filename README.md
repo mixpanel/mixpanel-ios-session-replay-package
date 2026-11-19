@@ -106,15 +106,25 @@ As of SDK version 2.0.0, the minimum supported version is iOS 15, matching the m
 ---
 
 ## Installation
-### Using Swift Package Manager
+### Using Swift Package Manager (recommended)
 Add the Session Replay SDK using Swift Package Manager directly in Xcode:
 
 1. In Xcode, go to **File → Add Package Dependencies...**
 2. Paste the GitHub URL: `https://github.com/mixpanel/mixpanel-ios-session-replay-package`
 3. Follow the prompts to select the latest version and add the package to your project.
 
-### Using Cocoapods
-Open **podfile** and add Mixpanel Session Replay library to your dependencies: 
+### Using CocoaPods (deprecated)
+> [!WARNING]
+> CocoaPods support is deprecated. Please migrate to Swift Package Manager.
+>
+> - **December 2, 2026:** CocoaPods trunk becomes read-only. Versions already on trunk keep installing with `pod 'MixpanelSessionReplay'`, but new versions are not published there.
+> - **Until removal:** install newer versions straight from GitHub. Replace `X.Y.Z` with the release you want:
+>   ```ruby
+>   pod 'MixpanelSessionReplay', :git => 'https://github.com/mixpanel/mixpanel-ios-session-replay-package.git', :tag => 'X.Y.Z'
+>   ```
+> - **Around December 2027:** CocoaPods support is removed in the next major release.
+
+Open **podfile** and add Mixpanel Session Replay library to your dependencies:
 
 ```
 target 'MyApp' do
