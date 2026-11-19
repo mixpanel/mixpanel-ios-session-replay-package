@@ -124,18 +124,11 @@ Add the Session Replay SDK using Swift Package Manager directly in Xcode:
 >   ```
 > - **After November 2027:** CocoaPods support will be removed in a future major release.
 
-Open **podfile** and add Mixpanel Session Replay library to your dependencies:
+If your project already uses CocoaPods:
+1. Add `pod 'MixpanelSessionReplay'` to your Podfile (or the `:git` line above for versions after the trunk freeze).
+2. Run `pod install` in your Xcode project directory.
 
-```
-target 'MyApp' do
-     pod 'MixpanelSessionReplay'
-end
-```
-
-Install the Mixpanel Session Replay by running the following in the Xcode project directory:
-```
-pod install
-```
+New to CocoaPods? Use [Swift Package Manager](#using-swift-package-manager-recommended) instead.
 
 ---
 
