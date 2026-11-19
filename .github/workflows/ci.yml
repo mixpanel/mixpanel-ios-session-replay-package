@@ -94,4 +94,11 @@ jobs:
     - name: pod lib lint (Xcode 27)
       # Xcode builds and SPM never reject a stale deployment target, only a
       # CocoaPods pod target does, so this is the check that guards the iOS 15 floor.
-      run: pod lib lint MixpanelSessionReplay.podspec --allow-warnings
+      run: |
+        # Mixpanel dependencies that aren't on CocoaPods trunk are linted from their git tags.
+        ruby scripts/fetch-dependency-podspecs.rb MixpanelSessionReplay.podspec "$RUNNER_TEMP/pod-deps"
+        EXTERNAL=()
+        if compgen -G "$RUNNER_TEMP/pod-deps/*.podspec" > /dev/null; then
+          EXTERNAL=(--external-podspecs="$RUNNER_TEMP/pod-deps/*.podspec")
+        fi
+        pod lib lint MixpanelSessionReplay.podspec --allow-warnings "${EXTERNAL[@]}"
