@@ -46,14 +46,16 @@ open class MPSessionReplay {
     /// Pass the identity analytics reports, and call `MPSessionReplayInstance.identify(identity:completion:)`
     /// with it again whenever analytics identifies. Analytics' `identify(identity:completion:)` finishes
     /// in the background, so read its `identity` in the completion; read right after the call, it is
-    /// still the previous one:
+    /// still the previous one. Keep the instance initialization returns: until initialization
+    /// completes, `getInstance()` returns nil, so an identity change made then would not reach replay.
     ///
     /// ```swift
     /// let mixpanel = Mixpanel.mainInstance()
-    /// MPSessionReplay.initialize(token: token, identity: mixpanel.identity)
-    ///
-    /// mixpanel.identify(identity: MixpanelIdentity(userId: "user_123", companyId: "acme")) {
-    ///     MPSessionReplay.getInstance()?.identify(identity: mixpanel.identity)
+    /// MPSessionReplay.initialize(token: token, identity: mixpanel.identity) { result in
+    ///     guard case .success(let replay?) = result else { return }
+    ///     mixpanel.identify(identity: MixpanelIdentity(userId: "user_123", companyId: "acme")) {
+    ///         replay.identify(identity: mixpanel.identity)
+    ///     }
     /// }
     /// ```
     ///

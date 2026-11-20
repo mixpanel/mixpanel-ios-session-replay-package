@@ -336,12 +336,13 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     /// hierarchical groups.
     ///
     /// Analytics' `identify(identity:completion:)` finishes in the background, so read its `identity`
-    /// in the completion; read right after the call, it is still the previous one:
+    /// in the completion; read right after the call, it is still the previous one. Call this on the
+    /// instance `MPSessionReplay.initialize` returned (`replay` below):
     ///
     /// ```swift
     /// let mixpanel = Mixpanel.mainInstance()
     /// mixpanel.identify(identity: MixpanelIdentity(userId: "user_123", companyId: "acme")) {
-    ///     MPSessionReplay.getInstance()?.identify(identity: mixpanel.identity)
+    ///     replay.identify(identity: mixpanel.identity)
     /// }
     /// ```
     ///
