@@ -44,10 +44,17 @@ open class MPSessionReplay {
     /// same user as the app's events, including on a project that uses hierarchical groups.
     ///
     /// Pass the identity analytics reports, and call `MPSessionReplayInstance.identify(identity:completion:)`
-    /// with it again whenever analytics identifies:
+    /// with it again whenever analytics identifies. Analytics' `identify(identity:completion:)` finishes
+    /// in the background, so read its `identity` in the completion; read right after the call, it is
+    /// still the previous one:
     ///
     /// ```swift
-    /// MPSessionReplay.initialize(token: token, identity: Mixpanel.mainInstance().identity)
+    /// let mixpanel = Mixpanel.mainInstance()
+    /// MPSessionReplay.initialize(token: token, identity: mixpanel.identity)
+    ///
+    /// mixpanel.identify(identity: MixpanelIdentity(userId: "user_123", companyId: "acme")) {
+    ///     MPSessionReplay.getInstance()?.identify(identity: mixpanel.identity)
+    /// }
     /// ```
     ///
     /// Replays carry `$user_id`, `$company_id` and `$device_id` alongside `distinct_id`. Otherwise this

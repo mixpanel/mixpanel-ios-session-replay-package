@@ -335,6 +335,16 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     /// recordings resolve to the same user as the app's events, including on a project that uses
     /// hierarchical groups.
     ///
+    /// Analytics' `identify(identity:completion:)` finishes in the background, so read its `identity`
+    /// in the completion; read right after the call, it is still the previous one:
+    ///
+    /// ```swift
+    /// let mixpanel = Mixpanel.mainInstance()
+    /// mixpanel.identify(identity: MixpanelIdentity(userId: "user_123", companyId: "acme")) {
+    ///     MPSessionReplay.getInstance()?.identify(identity: mixpanel.identity)
+    /// }
+    /// ```
+    ///
     /// Replays then carry `$user_id`, `$company_id` and `$device_id` alongside `distinct_id`. The
     /// distinct id is the identity's user id, or `$device:` and its device id before the user is
     /// known. An identity with both a user and a company sends no `distinct_id`, as its events
