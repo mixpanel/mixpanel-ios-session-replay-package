@@ -11,6 +11,8 @@ class EventService {
     private(set) var events: [SessionEvent] = []
     private let readWriteLock: ReadWriteLock
     private var queueSizeLimit: Int
+    /// Stamped on each queued event; nil unless Session Replay is identified with a `MixpanelIdentity`.
+    private var identifiersForNewEvents: ReplayIdentifiers?
     var eventHandler: EventHandler?
 
     init(queueSizeLimit: Int = ReplaySettings.queueSizeLimit) {
@@ -54,10 +56,19 @@ class EventService {
         }
     }
 
+    /// Sets the identifiers stamped on events queued from now on.
+    func setIdentifiersForNewEvents(_ identifiers: ReplayIdentifiers?) {
+        readWriteLock.write {
+            identifiersForNewEvents = identifiers
+        }
+    }
+
     func enqueueEvent(_ event: SessionEvent) {
+        var event = event
         var currentEvents: [SessionEvent] = []
         readWriteLock.read {
             currentEvents = events
+            event.identifiers = identifiersForNewEvents
         }
         if currentEvents.count >= queueSizeLimit {
             evictEvents()
@@ -91,6 +102,11 @@ class EventService {
         var dequeuedEvents: [SessionEvent] = []
         if !currentEvents.isEmpty {
             dequeuedEvents = Array(currentEvents[0...min(currentEvents.count, numsOfEvents) - 1])
+            // A batch uploads with one identity, so end it where the queued identity changes
+            let identifiers = dequeuedEvents[0].identifiers
+            if let end = dequeuedEvents.firstIndex(where: { $0.identifiers != identifiers }) {
+                dequeuedEvents = Array(dequeuedEvents[..<end])
+            }
         }
         readWriteLock.write {
             events = Array(currentEvents.dropFirst(dequeuedEvents.count))
