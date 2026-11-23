@@ -365,6 +365,37 @@ class MPSessionReplayInstanceTests: BaseTests {
         XCTAssertEqual(instance.currentIdentifiers, ReplayIdentifiers(identity: otherIdentity)!)
     }
 
+    func testIdentityAfterAWaitingDistinctIdIdentifyIsKept() {
+        let identity = MixpanelIdentity(userId: "user_123", companyId: "acme", deviceId: "device-1")
+        // Real flush service, so identify(distinctId:) waits on the flush queue
+        let eventService = EventService()
+        eventService.eventHandler?.shutdown()
+        instance.eventService = eventService
+        instance.flushService = FlushService(
+            token: "test-token", distinctId: "test-distinct-id", eventService: eventService, wifiOnly: false,
+            flushInterval: ReplaySettings.flushInterval)
+
+        // Hold the flush queue as a running upload would
+        let flushStarted = DispatchSemaphore(value: 0)
+        let releaseFlush = DispatchSemaphore(value: 0)
+        instance.flushService.flushSerialQueue.async {
+            flushStarted.signal()
+            releaseFlush.wait()
+        }
+        flushStarted.wait()
+
+        let plainId = expectation(description: "identify distinct id completion")
+        instance.identify(distinctId: "$device:device-1") { plainId.fulfill() }
+        let identified = expectation(description: "identify identity completion")
+        instance.identify(identity: identity) { identified.fulfill() }
+        wait(for: [identified], timeout: 2)
+
+        releaseFlush.signal()
+        wait(for: [plainId], timeout: 2)
+        XCTAssertEqual(instance.currentIdentifiers, ReplayIdentifiers(identity: identity)!)
+        XCTAssertEqual(instance.flushService.getDistinctId(), "$device:device-1")
+    }
+
     func testLastIdentifyWinsWhileFlushQueueIsBusy() {
         let identityA = MixpanelIdentity(userId: "user_a", companyId: "acme", deviceId: "device-1")
         let identityB = MixpanelIdentity(userId: "user_b", companyId: "acme", deviceId: "device-1")

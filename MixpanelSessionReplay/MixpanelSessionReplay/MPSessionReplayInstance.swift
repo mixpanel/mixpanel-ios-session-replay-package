@@ -305,10 +305,12 @@ open class MPSessionReplayInstance: MPSessionReplaying {
             completion()
             return
         }
+        // Cleared now rather than after the flush, so an identify(identity:) made while this one waits
+        // for the flush isn't undone when it finishes
+        eventService.identifiers = nil
         self.flushService.flushEvents(
             forAll: true,
             completionHandler: { [weak self] in
-                self?.eventService.identifiers = nil
                 self?.flushService.updateDistinctId(distinctId)
                 // Ensure the completion handler is executed on the main queue.
                 DispatchQueue.main.async {
