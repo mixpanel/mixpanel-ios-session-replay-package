@@ -11,8 +11,9 @@ class EventService {
     private(set) var events: [SessionEvent] = []
     private let readWriteLock: ReadWriteLock
     private var queueSizeLimit: Int
-    /// Stamped on each queued event; nil unless Session Replay is identified with a `MixpanelIdentity`.
-    private var identifiersForNewEvents: ReplayIdentifiers?
+    /// The identity Session Replay is identified with, stamped on each event as it's queued. Nil when
+    /// identified with a plain distinct id; those events upload with the flush's distinct id.
+    private var currentIdentifiers: ReplayIdentifiers?
     var eventHandler: EventHandler?
 
     init(queueSizeLimit: Int = ReplaySettings.queueSizeLimit) {
@@ -56,10 +57,20 @@ class EventService {
         }
     }
 
-    /// Sets the identifiers stamped on events queued from now on.
-    func setIdentifiersForNewEvents(_ identifiers: ReplayIdentifiers?) {
-        readWriteLock.write {
-            identifiersForNewEvents = identifiers
+    /// The current identity, or nil when identified with a plain distinct id. Events queued from now
+    /// on are stamped with it and keep it until they upload, even if the identity changes first.
+    var identifiers: ReplayIdentifiers? {
+        get {
+            var current: ReplayIdentifiers?
+            readWriteLock.read {
+                current = currentIdentifiers
+            }
+            return current
+        }
+        set {
+            readWriteLock.write {
+                currentIdentifiers = newValue
+            }
         }
     }
 
@@ -68,7 +79,7 @@ class EventService {
         var currentEvents: [SessionEvent] = []
         readWriteLock.read {
             currentEvents = events
-            event.identifiers = identifiersForNewEvents
+            event.identifiers = currentIdentifiers
         }
         if currentEvents.count >= queueSizeLimit {
             evictEvents()

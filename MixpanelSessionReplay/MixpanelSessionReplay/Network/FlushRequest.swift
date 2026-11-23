@@ -4,23 +4,22 @@
 //
 
 import Foundation
-internal import MixpanelSwiftCommon
 
 class FlushRequest {
     var networkRequestsAllowedAfterTime = 0.0
     var networkConsecutiveFailures = 0
     private let token: String
-    let identifiers: ReplayIdentifiers
+    let distinctId: String
     private var headers: [String: String] = [:]
     private let network: Network
     private let recordApiUrl: String
 
     init(
-        token: String, identifiers: ReplayIdentifiers, network: Network = Network(),
+        token: String, distinctId: String, network: Network = Network(),
         serverURL: String = DataResidency.us
     ) {
         self.token = token
-        self.identifiers = identifiers
+        self.distinctId = distinctId
         self.recordApiUrl = MPSessionReplayAPI.recordEndpoint(for: serverURL)
 
         if let data = "\(token):".data(using: .utf8) {
@@ -71,7 +70,8 @@ class FlushRequest {
     }
 
     private func buildQueryItems(payloadInfo: PayloadInfo) -> [URLQueryItem] {
-        let current = payloadInfo.identifiers ?? identifiers
+        // A batch of events queued under an identity carries it; others use the distinct id
+        let current = payloadInfo.identifiers ?? ReplayIdentifiers(distinctId: distinctId)
         return [
             URLQueryItem(name: "format", value: "gzip"),
             current.sendsDistinctId ? URLQueryItem(name: "distinct_id", value: current.distinctId) : nil,

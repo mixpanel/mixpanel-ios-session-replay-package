@@ -42,8 +42,10 @@ open class MPSessionReplayInstance: MPSessionReplaying {
         self.loggingEnabled = config.enableLogging
 
         eventService = EventService()
+        // An identity lives in EventService; the flush keeps the distinct id, as without one
+        eventService.identifiers = identifiers.identity == nil ? nil : identifiers
         flushService = FlushService(
-            token: token, identifiers: identifiers, eventService: eventService,
+            token: token, distinctId: identifiers.distinctId, eventService: eventService,
             wifiOnly: config.wifiOnly,
             flushInterval: config.flushInterval, serverURL: config.serverURL)
 
@@ -297,27 +299,16 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     /// - Parameter distinctId: distinctId of the user.
     /// - Parameter completion: completion handler to be called after updating the distinct id.
     public func identify(distinctId: String, completion: @escaping () -> Void = {}) {
-        // A plain distinct id replaces any identity, even when the distinct id is unchanged. Events
-        // already queued keep the identity they were captured with. While an identity is set or an
-        // identity change is pending, the change runs on the flush queue, which compares it with the
-        // identifiers current at that point, so it never races a flush and the last call wins.
-        if distinctId != ""
-            && (flushService.hasPendingIdentityChanges || flushService.getIdentifiers().identity != nil)
-        {
-            flushService.changeIdentifiers(to: ReplayIdentifiers(distinctId: distinctId)) {
-                DispatchQueue.main.async {
-                    completion()
-                }
-            }
-            return
-        }
-        guard distinctId != flushService.getDistinctId() && distinctId != "" else {
+        // A plain distinct id also replaces an identity set earlier, so the last call wins
+        guard distinctId != "" && (distinctId != flushService.getDistinctId() || eventService.identifiers != nil)
+        else {
             completion()
             return
         }
         self.flushService.flushEvents(
             forAll: true,
             completionHandler: { [weak self] in
+                self?.eventService.identifiers = nil
                 self?.flushService.updateDistinctId(distinctId)
                 // Ensure the completion handler is executed on the main queue.
                 DispatchQueue.main.async {
@@ -356,18 +347,17 @@ open class MPSessionReplayInstance: MPSessionReplaying {
             completion()
             return
         }
-        // Skip an unchanged identity only when no change is pending; otherwise the flush queue compares
-        // it when it applies, so the last call wins.
-        guard flushService.hasPendingIdentityChanges || identifiers != flushService.getIdentifiers() else {
+        // Events already queued keep the identity, or distinct id, they were captured under
+        eventService.identifiers = identifiers
+        // Ensure the completion handler is executed on the main queue.
+        DispatchQueue.main.async {
             completion()
-            return
         }
-        flushService.changeIdentifiers(to: identifiers) {
-            // Ensure the completion handler is executed on the main queue.
-            DispatchQueue.main.async {
-                completion()
-            }
-        }
+    }
+
+    /// Who new recordings are attributed to: the identity if one is set, otherwise the distinct id.
+    var currentIdentifiers: ReplayIdentifiers {
+        eventService.identifiers ?? ReplayIdentifiers(distinctId: flushService.getDistinctId())
     }
 
     /// Returns the URL to view the current session replay in the Mixpanel dashboard.
@@ -375,7 +365,7 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     /// - Returns: The session replay URL if recording is active, or `nil` if not recording.
     public func getSessionReplayURL() -> String? {
         guard isRecording else { return nil }
-        let identifiers = flushService.getIdentifiers()
+        let identifiers = currentIdentifiers
         var components = URLComponents(string: MPSessionReplayAPI.sessionReplayRedirect)
         var queryItems = [
             URLQueryItem(name: "replay_id", value: SessionManager.shared.replayId),

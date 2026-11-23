@@ -80,7 +80,7 @@ class MPSessionReplayTests: XCTestCase {
         switch initResult {
             case .success(let instance):
                 XCTAssertEqual(
-                    instance?.flushService.getIdentifiers(),
+                    instance?.currentIdentifiers,
                     ReplayIdentifiers(identity: identity)!)
             case .failure(let error):
                 XCTFail("Initialization should succeed but failed with: \(error)")
@@ -112,8 +112,8 @@ class MPSessionReplayTests: XCTestCase {
 
         switch initResult {
             case .success(let instance):
-                XCTAssertEqual(instance?.flushService.getDistinctId(), "$device:device-1")
-                XCTAssertEqual(instance?.flushService.getIdentifiers().identity, identity)
+                XCTAssertEqual(instance?.currentIdentifiers.distinctId, "$device:device-1")
+                XCTAssertEqual(instance?.currentIdentifiers.identity, identity)
             case .failure(let error):
                 XCTFail("Initialization should succeed but failed with: \(error)")
             case .none:

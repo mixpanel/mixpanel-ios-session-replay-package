@@ -46,10 +46,6 @@ class MockFlushService: FlushService {
         flushEventsForAllCalled = true
         completionHandler()
     }
-
-    override func flushAllBeforeIdentityChange() {
-        flushEventsForAllCalled = true
-    }
 }
 
 class MockEventService: EventService {

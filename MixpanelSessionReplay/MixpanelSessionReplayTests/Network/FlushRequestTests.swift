@@ -20,7 +20,7 @@ final class FlushRequestTests: XCTestCase {
         super.setUp()
         mockNetwork = MockNetwork()
         flushRequest = FlushRequest(
-            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"), network: mockNetwork)
+            token: "testToken", distinctId: "testDistinctId", network: mockNetwork)
         responseData = Data()
         httpresponse = HTTPURLResponse(
             url: URL(string: "https://test.com")!, statusCode: 200, httpVersion: nil, headerFields: nil)!
@@ -75,8 +75,9 @@ final class FlushRequestTests: XCTestCase {
 
     // MARK: - Identity query items
 
-    /// Sends one batch through `request` and returns the query items it was sent with.
-    private func sentQueryItems(_ request: FlushRequest) -> [URLQueryItem] {
+    /// Sends one batch through `request`, queued under `identity` when given, and returns the query
+    /// items it was sent with.
+    private func sentQueryItems(_ request: FlushRequest, identity: MixpanelIdentity? = nil) -> [URLQueryItem] {
         var sent: [URLQueryItem] = []
         mockNetwork.sendRawRequestStub = { apiRequest in
             sent = apiRequest.queryItems ?? []
@@ -84,7 +85,7 @@ final class FlushRequestTests: XCTestCase {
         }
         let payloadInfo = PayloadInfo(
             sessionEvents: [], batchStartTime: 1, seq: 2, replayId: "replay", replayLengthMs: 3,
-            replayStartTime: 4)
+            replayStartTime: 4, identifiers: identity.flatMap { ReplayIdentifiers(identity: $0) })
         XCTAssertTrue(request.sendRequest(payloadInfo: payloadInfo))
         return sent
     }
@@ -105,16 +106,13 @@ final class FlushRequestTests: XCTestCase {
 
     func testQueryItems_DistinctIdOnly_Unchanged() {
         XCTAssertEqual(sentQueryItems(flushRequest), expectedBaseQueryItems(distinctId: "testDistinctId"))
-        XCTAssertNil(flushRequest.identifiers.identity)
     }
 
     func testQueryItems_HierarchicalGroupsIdentitySendsNoDistinctId() {
         let identity = MixpanelIdentity(userId: "user_123", companyId: "acme", deviceId: "device-1")
-        let request = FlushRequest(
-            token: "testToken", identifiers: ReplayIdentifiers(identity: identity)!, network: mockNetwork)
 
         XCTAssertEqual(
-            sentQueryItems(request),
+            sentQueryItems(flushRequest, identity: identity),
             expectedBaseQueryItems(distinctId: nil) + [
                 URLQueryItem(name: "$user_id", value: "user_123"),
                 URLQueryItem(name: "$company_id", value: "acme"),
@@ -124,21 +122,17 @@ final class FlushRequestTests: XCTestCase {
 
     func testQueryItems_UserOnlyIdentity() {
         let identity = MixpanelIdentity(userId: "user_123", companyId: "", deviceId: nil)
-        let request = FlushRequest(
-            token: "testToken", identifiers: ReplayIdentifiers(identity: identity)!, network: mockNetwork)
 
         XCTAssertEqual(
-            sentQueryItems(request),
+            sentQueryItems(flushRequest, identity: identity),
             expectedBaseQueryItems(distinctId: "user_123") + [URLQueryItem(name: "$user_id", value: "user_123")])
     }
 
     func testQueryItems_CompanyWithoutUserSendsDistinctId() {
         let identity = MixpanelIdentity(userId: nil, companyId: "acme", deviceId: "device-1")
-        let request = FlushRequest(
-            token: "testToken", identifiers: ReplayIdentifiers(identity: identity)!, network: mockNetwork)
 
         XCTAssertEqual(
-            sentQueryItems(request),
+            sentQueryItems(flushRequest, identity: identity),
             expectedBaseQueryItems(distinctId: "$device:device-1") + [
                 URLQueryItem(name: "$company_id", value: "acme"),
                 URLQueryItem(name: "$device_id", value: "device-1"),
@@ -147,11 +141,9 @@ final class FlushRequestTests: XCTestCase {
 
     func testQueryItems_DeviceOnlyIdentity() {
         let identity = MixpanelIdentity(userId: nil, companyId: nil, deviceId: "device-1")
-        let request = FlushRequest(
-            token: "testToken", identifiers: ReplayIdentifiers(identity: identity)!, network: mockNetwork)
 
         XCTAssertEqual(
-            sentQueryItems(request),
+            sentQueryItems(flushRequest, identity: identity),
             expectedBaseQueryItems(distinctId: "$device:device-1") + [
                 URLQueryItem(name: "$device_id", value: "device-1")
             ])
