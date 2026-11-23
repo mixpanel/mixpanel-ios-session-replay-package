@@ -27,7 +27,7 @@ class MPSessionReplayInstanceTests: BaseTests {
         config.autoMaskedViews = [.text, .image]
         let instance = MPSessionReplayInstance(
             token: "test-token",
-            distinctId: "test-distinct-id",
+            identifiers: ReplayIdentifiers(distinctId: "test-distinct-id"),
             config: config
         )
         instance.loggingEnabled = false
@@ -47,7 +47,8 @@ class MPSessionReplayInstanceTests: BaseTests {
     func testStartRecording_WhenRecordingDisabled() {
         let oldReplayId = SessionManager.shared.replayId
         let config = MPSessionReplayConfig(autoStartRecording: false)
-        let instance = MPSessionReplayInstance(token: "test-token", distinctId: "test-distinct-id", config: config)
+        let instance = MPSessionReplayInstance(
+            token: "test-token", identifiers: ReplayIdentifiers(distinctId: "test-distinct-id"), config: config)
 
         instance.startRecording(sessionsPercent: 0)
 
@@ -84,7 +85,7 @@ class MPSessionReplayInstanceTests: BaseTests {
         let oldReplayId = SessionManager.shared.replayId
         let config = MPSessionReplayConfig()
         let instance = MPSessionReplayInstance(
-            token: "test-token", distinctId: "test-distinct-id", config: config)
+            token: "test-token", identifiers: ReplayIdentifiers(distinctId: "test-distinct-id"), config: config)
 
         let newReplayId = SessionManager.shared.replayId
 
@@ -682,7 +683,7 @@ class MPSessionReplayInstanceTests: BaseTests {
             wifiOnly: false, autoStartRecording: false, enableLogging: false)
         let testInstance = MPSessionReplayInstance(
             token: "test-token",
-            distinctId: specialDistinctId,
+            identifiers: ReplayIdentifiers(distinctId: specialDistinctId),
             config: config
         )
 

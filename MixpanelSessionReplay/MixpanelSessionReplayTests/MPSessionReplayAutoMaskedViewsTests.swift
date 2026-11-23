@@ -31,7 +31,7 @@ class MPSessionReplayAutoMaskedViewsTests: BaseTests {
 
         let instance = MPSessionReplayInstance(
             token: "test-token",
-            distinctId: "test-distinct-id",
+            identifiers: ReplayIdentifiers(distinctId: "test-distinct-id"),
             config: config
         )
 
@@ -51,7 +51,7 @@ class MPSessionReplayAutoMaskedViewsTests: BaseTests {
 
         let instance = MPSessionReplayInstance(
             token: "test-token",
-            distinctId: "test-distinct-id",
+            identifiers: ReplayIdentifiers(distinctId: "test-distinct-id"),
             config: config
         )
 
@@ -76,7 +76,7 @@ class MPSessionReplayAutoMaskedViewsTests: BaseTests {
 
         let instance = MPSessionReplayInstance(
             token: "test-token",
-            distinctId: "test-distinct-id",
+            identifiers: ReplayIdentifiers(distinctId: "test-distinct-id"),
             config: config
         )
         XCTAssertTrue(SensitiveViewManager.shared.maskAllText)
@@ -106,7 +106,7 @@ class MPSessionReplayAutoMaskedViewsTests: BaseTests {
 
         let instance = MPSessionReplayInstance(
             token: "test-token",
-            distinctId: "test-distinct-id",
+            identifiers: ReplayIdentifiers(distinctId: "test-distinct-id"),
             config: config
         )
 
@@ -150,7 +150,7 @@ class MPSessionReplayAutoMaskedViewsTests: BaseTests {
 
         let instance = MPSessionReplayInstance(
             token: "test-token",
-            distinctId: "test-distinct-id",
+            identifiers: ReplayIdentifiers(distinctId: "test-distinct-id"),
             config: config
         )
 
@@ -170,7 +170,7 @@ class MPSessionReplayAutoMaskedViewsTests: BaseTests {
 
         let instance = MPSessionReplayInstance(
             token: "test-token",
-            distinctId: "test-distinct-id",
+            identifiers: ReplayIdentifiers(distinctId: "test-distinct-id"),
             config: config
         )
 
@@ -198,7 +198,7 @@ class MPSessionReplayAutoMaskedViewsTests: BaseTests {
 
         let instance = MPSessionReplayInstance(
             token: "test-token",
-            distinctId: "test-distinct-id",
+            identifiers: ReplayIdentifiers(distinctId: "test-distinct-id"),
             config: config
         )
 

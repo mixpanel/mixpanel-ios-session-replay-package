@@ -20,7 +20,7 @@ final class FlushRequestTests: XCTestCase {
         super.setUp()
         mockNetwork = MockNetwork()
         flushRequest = FlushRequest(
-            token: "testToken", distinctId: "testDistinctId", network: mockNetwork)
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"), network: mockNetwork)
         responseData = Data()
         httpresponse = HTTPURLResponse(
             url: URL(string: "https://test.com")!, statusCode: 200, httpVersion: nil, headerFields: nil)!
@@ -157,14 +157,18 @@ final class FlushRequestTests: XCTestCase {
             ])
     }
 
-    func testReplayIdentityDistinctId() {
-        XCTAssertEqual(ReplayIdentity.distinctId(MixpanelIdentity(userId: "u", companyId: nil, deviceId: "d")), "u")
+    func testReplayIdentifiersDistinctIdIsTheUserElseTheDevice() {
         XCTAssertEqual(
-            ReplayIdentity.distinctId(MixpanelIdentity(userId: "", companyId: nil, deviceId: "d")), "$device:d")
+            ReplayIdentifiers(identity: MixpanelIdentity(userId: "u", companyId: nil, deviceId: "d"))?.distinctId, "u")
         XCTAssertEqual(
-            ReplayIdentity.distinctId(MixpanelIdentity(userId: nil, companyId: nil, deviceId: "d")), "$device:d")
-        XCTAssertNil(ReplayIdentity.distinctId(MixpanelIdentity(userId: nil, companyId: "acme")))
-        XCTAssertNil(ReplayIdentity.distinctId(MixpanelIdentity(userId: "", companyId: "acme", deviceId: "")))
+            ReplayIdentifiers(identity: MixpanelIdentity(userId: "", companyId: nil, deviceId: "d"))?.distinctId,
+            "$device:d")
+        XCTAssertEqual(
+            ReplayIdentifiers(identity: MixpanelIdentity(userId: nil, companyId: nil, deviceId: "d"))?.distinctId,
+            "$device:d")
+        XCTAssertNil(ReplayIdentifiers(identity: MixpanelIdentity(userId: nil, companyId: "acme"))?.distinctId)
+        XCTAssertNil(
+            ReplayIdentifiers(identity: MixpanelIdentity(userId: "", companyId: "acme", deviceId: ""))?.distinctId)
     }
 
     func testReplayIdentifiersDeriveTheDistinctIdFromTheIdentity() {

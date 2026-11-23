@@ -36,18 +36,6 @@ class FlushService {
     private var flushInterval: TimeInterval = ReplaySettings.flushInterval
     private let flushQueueKey = DispatchSpecificKey<Void>()
 
-    convenience init(
-        token: String, distinctId: String, eventService: EventService,
-        wifiOnly: Bool,
-        flushRequest: FlushRequest? = nil, networkMonitor: NetworkMonitoring = NetworkMonitor.shared,
-        flushInterval: TimeInterval, serverURL: String = DataResidency.us
-    ) {
-        self.init(
-            token: token, identifiers: ReplayIdentifiers(distinctId: distinctId), eventService: eventService,
-            wifiOnly: wifiOnly, flushRequest: flushRequest, networkMonitor: networkMonitor,
-            flushInterval: flushInterval, serverURL: serverURL)
-    }
-
     init(
         token: String, identifiers: ReplayIdentifiers, eventService: EventService,
         wifiOnly: Bool,
@@ -118,11 +106,12 @@ class FlushService {
     }
 
     func getDistinctId() -> String {
-        return flushRequest.distinctId
+        return flushRequest.identifiers.distinctId
     }
 
     func updateDistinctId(_ distinctId: String) {
-        self.flushRequest = FlushRequest(token: token, distinctId: distinctId, serverURL: serverURL)
+        self.flushRequest = FlushRequest(
+            token: token, identifiers: ReplayIdentifiers(distinctId: distinctId), serverURL: serverURL)
         Logger.info(message: "Updated distinct id successfully.")
     }
 

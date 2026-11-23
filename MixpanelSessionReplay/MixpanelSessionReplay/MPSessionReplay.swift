@@ -59,13 +59,17 @@ open class MPSessionReplay {
     /// }
     /// ```
     ///
-    /// Replays carry `$user_id`, `$company_id` and `$device_id` alongside `distinct_id`. Otherwise this
-    /// behaves like `initialize(token:distinctId:config:completion:)`.
+    /// Replays carry `$user_id`, `$company_id` and `$device_id`, plus `distinct_id`: the identity's
+    /// user id, or `$device:` and its device id before the user is known. An identity with both a
+    /// user and a company sends no `distinct_id`, as its events don't. Otherwise this behaves like
+    /// `initialize(token:distinctId:config:completion:)`.
     ///
     /// - Parameters:
     ///   - token: The Mixpanel project token used to identify the project.
     ///   - identity: The identity analytics reports, `Mixpanel.mainInstance().identity`. It needs a user id
     ///               or a device id; otherwise initialization fails with `MPSessionReplayError.custom`.
+    ///               An install with older stored state can report neither before it identifies; use
+    ///               `initialize(token:distinctId:config:completion:)` with `mixpanel.distinctId` there.
     ///   - config: The configuration object used to customize session replay behavior. Defaults to `MPSessionReplayConfig()`.
     ///   - completion: A closure called after initialization completes. Defaults to a no-op closure.
     ///                 See `initialize(token:distinctId:config:completion:)`.
