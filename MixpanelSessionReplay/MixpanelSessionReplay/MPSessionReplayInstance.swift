@@ -45,7 +45,8 @@ open class MPSessionReplayInstance: MPSessionReplaying {
         // An identity lives in EventService; the flush keeps the distinct id, as without one
         eventService.identifiers = identifiers.identity == nil ? nil : identifiers
         flushService = FlushService(
-            token: token, distinctId: identifiers.distinctId, eventService: eventService,
+            token: token, identifiers: ReplayIdentifiers(distinctId: identifiers.distinctId),
+            eventService: eventService,
             wifiOnly: config.wifiOnly,
             flushInterval: config.flushInterval, serverURL: config.serverURL)
 

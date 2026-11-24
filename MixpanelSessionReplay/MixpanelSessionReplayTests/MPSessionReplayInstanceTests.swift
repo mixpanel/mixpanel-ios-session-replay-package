@@ -372,7 +372,8 @@ class MPSessionReplayInstanceTests: BaseTests {
         eventService.eventHandler?.shutdown()
         instance.eventService = eventService
         instance.flushService = FlushService(
-            token: "test-token", distinctId: "test-distinct-id", eventService: eventService, wifiOnly: false,
+            token: "test-token", identifiers: ReplayIdentifiers(distinctId: "test-distinct-id"),
+            eventService: eventService, wifiOnly: false,
             flushInterval: ReplaySettings.flushInterval)
 
         // Hold the flush queue as a running upload would
@@ -446,7 +447,7 @@ class MPSessionReplayInstanceTests: BaseTests {
         eventService.eventHandler?.shutdown()
         eventService.identifiers = ReplayIdentifiers(identity: identityA)!
         let flushService = FlushService(
-            token: "test-token", distinctId: "user_a", eventService: eventService,
+            token: "test-token", identifiers: ReplayIdentifiers(distinctId: "user_a"), eventService: eventService,
             wifiOnly: true, flushRequest: nil, networkMonitor: networkMonitor,
             flushInterval: ReplaySettings.flushInterval)
         instance.eventService = eventService
@@ -573,7 +574,7 @@ class MPSessionReplayInstanceTests: BaseTests {
         instance.eventService = eventService
         eventService.identifiers = ReplayIdentifiers(identity: companyA)!
         instance.flushService = FlushService(
-            token: "test-token", distinctId: "user_123", eventService: eventService,
+            token: "test-token", identifiers: ReplayIdentifiers(distinctId: "user_123"), eventService: eventService,
             wifiOnly: true, networkMonitor: networkMonitor, flushInterval: ReplaySettings.flushInterval)
 
         let sentLock = NSLock()
@@ -652,7 +653,8 @@ class MPSessionReplayInstanceTests: BaseTests {
         networkMonitor.isUsingWiFiOverride = false
         instance.eventService = eventService
         instance.flushService = FlushService(
-            token: "test-token", distinctId: "$device:device-1", eventService: eventService,
+            token: "test-token", identifiers: ReplayIdentifiers(distinctId: "$device:device-1"),
+            eventService: eventService,
             wifiOnly: true, networkMonitor: networkMonitor, flushInterval: ReplaySettings.flushInterval)
 
         let sentLock = NSLock()

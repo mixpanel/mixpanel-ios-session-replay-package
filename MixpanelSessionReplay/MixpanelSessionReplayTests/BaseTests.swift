@@ -23,12 +23,12 @@ class BaseTests: XCTestCase {
         mockEventService = MockEventService()
         mockFlushService = MockFlushService(
             token: "test-token",
-            distinctId: "test-distinct-id",
+            identifiers: ReplayIdentifiers(distinctId: "test-distinct-id"),
             eventService: mockEventService,
             wifiOnly: false,
             flushRequest: FlushRequest(
                 token: "test-token",
-                distinctId: "test-distinct-id"
+                identifiers: ReplayIdentifiers(distinctId: "test-distinct-id")
             ),
             flushInterval: ReplaySettings.flushInterval
         )

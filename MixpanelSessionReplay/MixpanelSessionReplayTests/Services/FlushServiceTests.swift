@@ -58,10 +58,10 @@ class FlushServiceTests: XCTestCase {
     func testStartFlushService() {
         let eventService = EventService(queueSizeLimit: 10)
         let mockFlushRequest = MockFlushRequest(
-            token: "testToken", distinctId: "testDistinctId")
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"))
         mockFlushRequest.sendRequestSuccess = true
         let flushService = FlushService(
-            token: "testToken", distinctId: "testDistinctId",
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"),
             eventService: eventService, wifiOnly: false,
             flushRequest: mockFlushRequest, flushInterval: ReplaySettings.flushInterval)
 
@@ -79,13 +79,13 @@ class FlushServiceTests: XCTestCase {
     func testWifiOnlyFlushService() {
         let eventService = EventService(queueSizeLimit: 10)
         let mockFlushRequest = MockFlushRequest(
-            token: "testToken", distinctId: "testDistinctId")
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"))
         mockFlushRequest.sendRequestSuccess = true
 
         // Test wifiOnly = true, isUsingWiFi = True
         let isUsingWifi = MockNetworkMonitor()
         let wifiOnlyTrueUsingWifiTrue = FlushService(
-            token: "testToken", distinctId: "testDistinctId",
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"),
             eventService: eventService, wifiOnly: true,
             flushRequest: mockFlushRequest, networkMonitor: isUsingWifi, flushInterval: ReplaySettings.flushInterval)
         eventService.enqueueEvent(mainScreenshotEvent)
@@ -100,7 +100,7 @@ class FlushServiceTests: XCTestCase {
         let isNotUsingWifi = MockNetworkMonitor()
         isNotUsingWifi.isUsingWiFiOverride = false
         let wifiOnlyTrueUsingWifiFalse = FlushService(
-            token: "testToken", distinctId: "testDistinctId",
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"),
             eventService: eventService, wifiOnly: true,
             flushRequest: mockFlushRequest, networkMonitor: isNotUsingWifi, flushInterval: ReplaySettings.flushInterval)
         eventService.enqueueEvent(mainScreenshotEvent)
@@ -112,7 +112,7 @@ class FlushServiceTests: XCTestCase {
 
         // Test wifiOnly = false, isUsingWiFi = True
         let wifiOnlyFalseUsingWifiTrue = FlushService(
-            token: "testToken", distinctId: "testDistinctId",
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"),
             eventService: eventService, wifiOnly: false,
             flushRequest: mockFlushRequest, networkMonitor: isUsingWifi, flushInterval: ReplaySettings.flushInterval)
         wifiOnlyFalseUsingWifiTrue.flushEvents(forAll: false)
@@ -124,7 +124,7 @@ class FlushServiceTests: XCTestCase {
         // Test wifiOnly = false, isUsingWifi = False
         mockFlushRequest.sendRequestCalled = false
         let wifiOnlyFalseUsingWifiFalse = FlushService(
-            token: "testToken", distinctId: "testDistinctId",
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"),
             eventService: eventService, wifiOnly: false,
             flushRequest: mockFlushRequest, networkMonitor: isNotUsingWifi, flushInterval: ReplaySettings.flushInterval)
         eventService.enqueueEvent(mainScreenshotEvent)
@@ -138,10 +138,10 @@ class FlushServiceTests: XCTestCase {
     func testStopFlushService() {
         let eventService = EventService(queueSizeLimit: 10)
         let mockFlushRequest = MockFlushRequest(
-            token: "testToken", distinctId: "testDistinctId")
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"))
         mockFlushRequest.sendRequestSuccess = true
         let flushService = FlushService(
-            token: "testToken", distinctId: "testDistinctId",
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"),
             eventService: eventService, wifiOnly: false,
             flushRequest: mockFlushRequest, flushInterval: ReplaySettings.flushInterval)
 
@@ -153,10 +153,10 @@ class FlushServiceTests: XCTestCase {
     func testFlushEventsWithoutForcingAll() {
         let eventService = EventService(queueSizeLimit: 10)
         let mockFlushRequest = MockFlushRequest(
-            token: "testToken", distinctId: "testDistinctId")
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"))
         mockFlushRequest.sendRequestSuccess = true
         let flushService = FlushService(
-            token: "testToken", distinctId: "testDistinctId",
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"),
             eventService: eventService, wifiOnly: false,
             flushRequest: mockFlushRequest, flushInterval: ReplaySettings.flushInterval)
 
@@ -176,11 +176,11 @@ class FlushServiceTests: XCTestCase {
         SessionManager.shared.generateNewSession()
         let eventService = EventService(queueSizeLimit: 10)
         let mockFlushRequest = MockFlushRequest(
-            token: "testToken", distinctId: "testDistinctId")
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"))
         mockFlushRequest.sendRequestSuccess = true
 
         let flushService = FlushService(
-            token: "testToken", distinctId: "testDistinctId",
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"),
             eventService: eventService, wifiOnly: false,
             flushRequest: mockFlushRequest, flushInterval: ReplaySettings.flushInterval)
 
@@ -203,14 +203,14 @@ class FlushServiceTests: XCTestCase {
         SessionManager.shared.generateNewSession()
         let eventService = EventService(queueSizeLimit: 10)
         let mockFlushRequest = MockFlushRequest(
-            token: "testToken", distinctId: "testDistinctId")
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"))
 
         eventService.enqueueEvent(screenshotEvent)
         eventService.enqueueEvent(screenshotEvent)
         mockFlushRequest.sendRequestSuccess = false
 
         let flushService = FlushService(
-            token: "testToken", distinctId: "testDistinctId",
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"),
             eventService: eventService, wifiOnly: false,
             flushRequest: mockFlushRequest, flushInterval: ReplaySettings.flushInterval)
 

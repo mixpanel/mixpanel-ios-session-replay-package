@@ -20,7 +20,7 @@ final class FlushRequestTests: XCTestCase {
         super.setUp()
         mockNetwork = MockNetwork()
         flushRequest = FlushRequest(
-            token: "testToken", distinctId: "testDistinctId", network: mockNetwork)
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"), network: mockNetwork)
         responseData = Data()
         httpresponse = HTTPURLResponse(
             url: URL(string: "https://test.com")!, statusCode: 200, httpVersion: nil, headerFields: nil)!
