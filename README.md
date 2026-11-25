@@ -106,26 +106,33 @@ As of SDK version 2.0.0, the minimum supported version is iOS 15, matching the m
 ---
 
 ## Installation
-### Using Swift Package Manager
+### Using Swift Package Manager (recommended)
 Add the Session Replay SDK using Swift Package Manager directly in Xcode:
 
 1. In Xcode, go to **File → Add Package Dependencies...**
 2. Paste the GitHub URL: `https://github.com/mixpanel/mixpanel-ios-session-replay-package`
 3. Follow the prompts to select the latest version and add the package to your project.
 
-### Using Cocoapods
-Open **podfile** and add Mixpanel Session Replay library to your dependencies: 
+### Using CocoaPods (deprecated)
+> [!WARNING]
+> CocoaPods support is deprecated. We recommend migrating to Swift Package Manager.
+>
+> - **December 2, 2026:** CocoaPods trunk becomes read-only. Versions already published there keep installing with `pod 'MixpanelSessionReplay'`, but new versions are not published to trunk.
+> - **Until removal:** install newer versions directly from GitHub. Replace `X.Y.Z` with the [release](https://github.com/mixpanel/mixpanel-ios-session-replay-package/releases) you want:
+>   ```ruby
+>   pod 'MixpanelSessionReplay', :git => 'https://github.com/mixpanel/mixpanel-ios-session-replay-package.git', :tag => 'X.Y.Z'
+>   ```
+>   If `pod install` can't find a version of a Mixpanel dependency, such as `MixpanelSwiftCommon`, add that dependency from GitHub the same way:
+>   ```ruby
+>   pod 'MixpanelSwiftCommon', :git => 'https://github.com/mixpanel/mixpanel-swift-common.git', :tag => 'X.Y.Z'
+>   ```
+> - **After November 2027:** CocoaPods support will be removed in a future major version of the SDK.
 
-```
-target 'MyApp' do
-     pod 'MixpanelSessionReplay'
-end
-```
+If your project already uses CocoaPods:
+1. Add `pod 'MixpanelSessionReplay'` to your Podfile (or the `:git` line above for versions after the trunk freeze).
+2. Run `pod install` in your Xcode project directory.
 
-Install the Mixpanel Session Replay by running the following in the Xcode project directory:
-```
-pod install
-```
+New to CocoaPods? Use [Swift Package Manager](#using-swift-package-manager-recommended) instead.
 
 ---
 
