@@ -11,6 +11,9 @@ class EventService {
     private(set) var events: [SessionEvent] = []
     private let readWriteLock: ReadWriteLock
     private var queueSizeLimit: Int
+    /// The identity Session Replay is identified with, stamped on each event as it's queued. Nil when
+    /// identified with a plain distinct id; those events upload with the flush's distinct id.
+    private var currentIdentifiers: ReplayIdentifiers?
     var eventHandler: EventHandler?
 
     init(queueSizeLimit: Int = ReplaySettings.queueSizeLimit) {
@@ -54,10 +57,29 @@ class EventService {
         }
     }
 
+    /// The current identity, or nil when identified with a plain distinct id. Events queued from now
+    /// on are stamped with it and keep it until they upload, even if the identity changes first.
+    var identifiers: ReplayIdentifiers? {
+        get {
+            var current: ReplayIdentifiers?
+            readWriteLock.read {
+                current = currentIdentifiers
+            }
+            return current
+        }
+        set {
+            readWriteLock.write {
+                currentIdentifiers = newValue
+            }
+        }
+    }
+
     func enqueueEvent(_ event: SessionEvent) {
+        var event = event
         var currentEvents: [SessionEvent] = []
         readWriteLock.read {
             currentEvents = events
+            event.identifiers = currentIdentifiers
         }
         if currentEvents.count >= queueSizeLimit {
             evictEvents()
@@ -91,6 +113,11 @@ class EventService {
         var dequeuedEvents: [SessionEvent] = []
         if !currentEvents.isEmpty {
             dequeuedEvents = Array(currentEvents[0...min(currentEvents.count, numsOfEvents) - 1])
+            // A batch uploads with one identity, so end it where the queued identity changes
+            let identifiers = dequeuedEvents[0].identifiers
+            if let end = dequeuedEvents.firstIndex(where: { $0.identifiers != identifiers }) {
+                dequeuedEvents = Array(dequeuedEvents[..<end])
+            }
         }
         readWriteLock.write {
             events = Array(currentEvents.dropFirst(dequeuedEvents.count))

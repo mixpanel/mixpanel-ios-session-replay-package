@@ -5,6 +5,7 @@
 //  Copyright © 2024 Mixpanel. All rights reserved.
 //
 
+import MixpanelSwiftCommon
 import XCTest
 
 @testable import MixpanelSessionReplay
@@ -19,7 +20,7 @@ final class FlushRequestTests: XCTestCase {
         super.setUp()
         mockNetwork = MockNetwork()
         flushRequest = FlushRequest(
-            token: "testToken", distinctId: "testDistinctId", network: mockNetwork)
+            token: "testToken", identifiers: ReplayIdentifiers(distinctId: "testDistinctId"), network: mockNetwork)
         responseData = Data()
         httpresponse = HTTPURLResponse(
             url: URL(string: "https://test.com")!, statusCode: 200, httpVersion: nil, headerFields: nil)!
@@ -70,5 +71,105 @@ final class FlushRequestTests: XCTestCase {
         let result = flushRequest.sendRequest(payloadInfo: payloadInfo)
         XCTAssertFalse(result)
         XCTAssertEqual(flushRequest.networkConsecutiveFailures, 4)
+    }
+
+    // MARK: - Identity query items
+
+    /// Sends one batch through `request`, queued under `identity` when given, and returns the query
+    /// items it was sent with.
+    private func sentQueryItems(_ request: FlushRequest, identity: MixpanelIdentity? = nil) -> [URLQueryItem] {
+        var sent: [URLQueryItem] = []
+        mockNetwork.sendRawRequestStub = { apiRequest in
+            sent = apiRequest.queryItems ?? []
+            return .success((self.responseData, self.httpresponse))
+        }
+        let payloadInfo = PayloadInfo(
+            sessionEvents: [], batchStartTime: 1, seq: 2, replayId: "replay", replayLengthMs: 3,
+            replayStartTime: 4, identifiers: identity.flatMap { ReplayIdentifiers(identity: $0) })
+        XCTAssertTrue(request.sendRequest(payloadInfo: payloadInfo))
+        return sent
+    }
+
+    private func expectedBaseQueryItems(distinctId: String?) -> [URLQueryItem] {
+        return [
+            URLQueryItem(name: "format", value: "gzip"),
+            distinctId.map { URLQueryItem(name: "distinct_id", value: $0) },
+            URLQueryItem(name: "seq", value: "2"),
+            URLQueryItem(name: "batch_start_time", value: "1.0"),
+            URLQueryItem(name: "replay_id", value: "replay"),
+            URLQueryItem(name: "replay_length_ms", value: "3"),
+            URLQueryItem(name: "replay_start_time", value: "4.0"),
+            URLQueryItem(name: "$lib_version", value: APIConstants.currentLibVersion),
+            URLQueryItem(name: "mp_lib", value: APIConstants.currentMpLib),
+        ].compactMap { $0 }
+    }
+
+    func testQueryItems_DistinctIdOnly_Unchanged() {
+        XCTAssertEqual(sentQueryItems(flushRequest), expectedBaseQueryItems(distinctId: "testDistinctId"))
+    }
+
+    func testQueryItems_HierarchicalGroupsIdentitySendsNoDistinctId() {
+        let identity = MixpanelIdentity(userId: "user_123", companyId: "acme", deviceId: "device-1")
+
+        XCTAssertEqual(
+            sentQueryItems(flushRequest, identity: identity),
+            expectedBaseQueryItems(distinctId: nil) + [
+                URLQueryItem(name: "$user_id", value: "user_123"),
+                URLQueryItem(name: "$company_id", value: "acme"),
+                URLQueryItem(name: "$device_id", value: "device-1"),
+            ])
+    }
+
+    func testQueryItems_UserOnlyIdentity() {
+        let identity = MixpanelIdentity(userId: "user_123", companyId: "", deviceId: nil)
+
+        XCTAssertEqual(
+            sentQueryItems(flushRequest, identity: identity),
+            expectedBaseQueryItems(distinctId: "user_123") + [URLQueryItem(name: "$user_id", value: "user_123")])
+    }
+
+    func testQueryItems_CompanyWithoutUserSendsDistinctId() {
+        let identity = MixpanelIdentity(userId: nil, companyId: "acme", deviceId: "device-1")
+
+        XCTAssertEqual(
+            sentQueryItems(flushRequest, identity: identity),
+            expectedBaseQueryItems(distinctId: "$device:device-1") + [
+                URLQueryItem(name: "$company_id", value: "acme"),
+                URLQueryItem(name: "$device_id", value: "device-1"),
+            ])
+    }
+
+    func testQueryItems_DeviceOnlyIdentity() {
+        let identity = MixpanelIdentity(userId: nil, companyId: nil, deviceId: "device-1")
+
+        XCTAssertEqual(
+            sentQueryItems(flushRequest, identity: identity),
+            expectedBaseQueryItems(distinctId: "$device:device-1") + [
+                URLQueryItem(name: "$device_id", value: "device-1")
+            ])
+    }
+
+    func testReplayIdentifiersDistinctIdIsTheUserElseTheDevice() {
+        XCTAssertEqual(
+            ReplayIdentifiers(identity: MixpanelIdentity(userId: "u", companyId: nil, deviceId: "d"))?.distinctId, "u")
+        XCTAssertEqual(
+            ReplayIdentifiers(identity: MixpanelIdentity(userId: "", companyId: nil, deviceId: "d"))?.distinctId,
+            "$device:d")
+        XCTAssertEqual(
+            ReplayIdentifiers(identity: MixpanelIdentity(userId: nil, companyId: nil, deviceId: "d"))?.distinctId,
+            "$device:d")
+        XCTAssertNil(ReplayIdentifiers(identity: MixpanelIdentity(userId: nil, companyId: "acme"))?.distinctId)
+        XCTAssertNil(
+            ReplayIdentifiers(identity: MixpanelIdentity(userId: "", companyId: "acme", deviceId: ""))?.distinctId)
+    }
+
+    func testReplayIdentifiersDeriveTheDistinctIdFromTheIdentity() {
+        let identity = MixpanelIdentity(userId: "user_123", companyId: "acme", deviceId: "device-1")
+        let identifiers = ReplayIdentifiers(identity: identity)
+
+        XCTAssertEqual(identifiers?.distinctId, "user_123")
+        XCTAssertEqual(identifiers?.identity, identity)
+        XCTAssertNil(ReplayIdentifiers(identity: MixpanelIdentity(userId: nil, companyId: "acme")))
+        XCTAssertNil(ReplayIdentifiers(distinctId: "plain").identity)
     }
 }

@@ -30,6 +30,14 @@ struct SessionEvent: Codable {
     let type: Int
     let data: SessionEventData?
     var timestamp: Int64
+    /// The identifiers current when the event was queued, set only while Session Replay is identified
+    /// with a `MixpanelIdentity`, so the event uploads with that identity even after it changes.
+    /// Never encoded.
+    var identifiers: ReplayIdentifiers? = nil
+
+    enum CodingKeys: String, CodingKey {
+        case type, data, timestamp
+    }
 }
 
 protocol SessionEventDataProtocol: Codable {}

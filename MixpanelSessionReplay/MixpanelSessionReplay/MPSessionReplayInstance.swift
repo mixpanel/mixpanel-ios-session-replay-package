@@ -6,6 +6,7 @@
 //
 
 import Foundation
+public import MixpanelSwiftCommon
 import UIKit
 
 open class MPSessionReplayInstance: MPSessionReplaying {
@@ -34,15 +35,19 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     var taskId = UIBackgroundTaskIdentifier.invalid
     #endif
 
-    init(token: String, distinctId: String, config: MPSessionReplayConfig) {
+    init(token: String, identifiers: ReplayIdentifiers, config: MPSessionReplayConfig) {
         self.config = config
         self.token = token
         self.wifiOnly = config.wifiOnly
         self.loggingEnabled = config.enableLogging
 
         eventService = EventService()
+        // An identity lives in EventService; the flush keeps the distinct id, as without one
+        eventService.identifiers = identifiers.identity == nil ? nil : identifiers
         flushService = FlushService(
-            token: token, distinctId: distinctId, eventService: eventService, wifiOnly: config.wifiOnly,
+            token: token, identifiers: ReplayIdentifiers(distinctId: identifiers.distinctId),
+            eventService: eventService,
+            wifiOnly: config.wifiOnly,
             flushInterval: config.flushInterval, serverURL: config.serverURL)
 
         // Initialize debug mask overlay if enabled (DEBUG builds only)
@@ -295,10 +300,15 @@ open class MPSessionReplayInstance: MPSessionReplaying {
     /// - Parameter distinctId: distinctId of the user.
     /// - Parameter completion: completion handler to be called after updating the distinct id.
     public func identify(distinctId: String, completion: @escaping () -> Void = {}) {
-        guard distinctId != flushService.getDistinctId() && distinctId != "" else {
+        // A plain distinct id also replaces an identity set earlier, so the last call wins
+        guard distinctId != "" && (distinctId != flushService.getDistinctId() || eventService.identifiers != nil)
+        else {
             completion()
             return
         }
+        // Cleared now rather than after the flush, so an identify(identity:) made while this one waits
+        // for the flush isn't undone when it finishes
+        eventService.identifiers = nil
         self.flushService.flushEvents(
             forAll: true,
             completionHandler: { [weak self] in
@@ -310,17 +320,69 @@ open class MPSessionReplayInstance: MPSessionReplaying {
             })
     }
 
+    /// Attributes recordings to the given identity. Pass the identity analytics reports,
+    /// `Mixpanel.mainInstance().identity`, and call this again whenever analytics identifies, so
+    /// recordings resolve to the same user as the app's events, including on a project that uses
+    /// hierarchical groups.
+    ///
+    /// Analytics' `identify(identity:completion:)` finishes in the background, so read its `identity`
+    /// in the completion; read right after the call, it is still the previous one. Call this on the
+    /// instance `MPSessionReplay.initialize` returned (`replay` below):
+    ///
+    /// ```swift
+    /// let mixpanel = Mixpanel.mainInstance()
+    /// mixpanel.identify(identity: MixpanelIdentity(userId: "user_123", companyId: "acme")) {
+    ///     replay.identify(identity: mixpanel.identity)
+    /// }
+    /// ```
+    ///
+    /// Replays then carry `$user_id`, `$company_id` and `$device_id`, plus `distinct_id`: the
+    /// identity's user id, or `$device:` and its device id before the user is known. An identity
+    /// with both a user and a company sends no `distinct_id`, as its events don't.
+    ///
+    /// An identity with neither a user id nor a device id is logged and ignored.
+    /// - Parameter identity: the identity analytics reports, `Mixpanel.mainInstance().identity`.
+    /// - Parameter completion: completion handler to be called after updating the identity.
+    public func identify(identity: MixpanelIdentity, completion: @escaping () -> Void = {}) {
+        guard let identifiers = ReplayIdentifiers(identity: identity) else {
+            Logger.warn(
+                message: "Can't identify Session Replay with \(identity): it needs a user id or a device id")
+            completion()
+            return
+        }
+        // Events already queued keep the identity, or distinct id, they were captured under
+        eventService.identifiers = identifiers
+        // Ensure the completion handler is executed on the main queue.
+        DispatchQueue.main.async {
+            completion()
+        }
+    }
+
+    /// Who new recordings are attributed to: the identity if one is set, otherwise the distinct id.
+    var currentIdentifiers: ReplayIdentifiers {
+        eventService.identifiers ?? ReplayIdentifiers(distinctId: flushService.getDistinctId())
+    }
+
     /// Returns the URL to view the current session replay in the Mixpanel dashboard.
     ///
     /// - Returns: The session replay URL if recording is active, or `nil` if not recording.
     public func getSessionReplayURL() -> String? {
         guard isRecording else { return nil }
+        let identifiers = currentIdentifiers
         var components = URLComponents(string: MPSessionReplayAPI.sessionReplayRedirect)
-        components?.queryItems = [
+        var queryItems = [
             URLQueryItem(name: "replay_id", value: SessionManager.shared.replayId),
-            URLQueryItem(name: "distinct_id", value: flushService.getDistinctId()),
+            identifiers.sendsDistinctId ? URLQueryItem(name: "distinct_id", value: identifiers.distinctId) : nil,
             URLQueryItem(name: "token", value: token),
-        ]
+        ].compactMap { $0 }
+        // On a hierarchical groups project the redirect builds the profile's distinct id from these
+        if let userId = identifiers.identity?.userId.nonEmpty,
+            let companyId = identifiers.identity?.companyId.nonEmpty
+        {
+            queryItems.append(URLQueryItem(name: "$user_id", value: userId))
+            queryItems.append(URLQueryItem(name: "$company_id", value: companyId))
+        }
+        components?.queryItems = queryItems
         if let encodedQuery = components?.percentEncodedQuery {
             components?.percentEncodedQuery = encodedQuery.replacingOccurrences(of: "+", with: "%2B")
         }

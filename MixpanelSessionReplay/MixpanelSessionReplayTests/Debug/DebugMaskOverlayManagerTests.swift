@@ -182,7 +182,7 @@ class DebugMaskOverlayManagerTests: BaseTests {
         let config = MPSessionReplayConfig(debugOptions: DebugOptions(overlayColors: colors))
         let instance = MPSessionReplayInstance(
             token: "test-token",
-            distinctId: "test-user",
+            identifiers: ReplayIdentifiers(distinctId: "test-user"),
             config: config
         )
 

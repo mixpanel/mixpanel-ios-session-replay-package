@@ -9,17 +9,17 @@ class FlushRequest {
     var networkRequestsAllowedAfterTime = 0.0
     var networkConsecutiveFailures = 0
     private let token: String
-    let distinctId: String
+    let identifiers: ReplayIdentifiers
     private var headers: [String: String] = [:]
     private let network: Network
     private let recordApiUrl: String
 
     init(
-        token: String, distinctId: String, network: Network = Network(),
+        token: String, identifiers: ReplayIdentifiers, network: Network = Network(),
         serverURL: String = DataResidency.us
     ) {
         self.token = token
-        self.distinctId = distinctId
+        self.identifiers = identifiers
         self.recordApiUrl = MPSessionReplayAPI.recordEndpoint(for: serverURL)
 
         if let data = "\(token):".data(using: .utf8) {
@@ -70,9 +70,11 @@ class FlushRequest {
     }
 
     private func buildQueryItems(payloadInfo: PayloadInfo) -> [URLQueryItem] {
+        // A batch of events queued under an identity carries it; others use the distinct id
+        let current = payloadInfo.identifiers ?? identifiers
         return [
             URLQueryItem(name: "format", value: "gzip"),
-            URLQueryItem(name: "distinct_id", value: distinctId),
+            current.sendsDistinctId ? URLQueryItem(name: "distinct_id", value: current.distinctId) : nil,
             URLQueryItem(name: "seq", value: String(payloadInfo.seq)),
             URLQueryItem(name: "batch_start_time", value: String(payloadInfo.batchStartTime)),
             URLQueryItem(name: "replay_id", value: payloadInfo.replayId),
@@ -80,7 +82,7 @@ class FlushRequest {
             URLQueryItem(name: "replay_start_time", value: String(payloadInfo.replayStartTime)),
             URLQueryItem(name: "$lib_version", value: APIConstants.currentLibVersion),
             URLQueryItem(name: "mp_lib", value: APIConstants.currentMpLib),
-        ]
+        ].compactMap { $0 } + current.queryItems
     }
 
     private func updateRetryDelay() {

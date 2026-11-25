@@ -20,7 +20,7 @@ class FlushService {
     private var flushInterval: TimeInterval = ReplaySettings.flushInterval
 
     init(
-        token: String, distinctId: String, eventService: EventService, wifiOnly: Bool,
+        token: String, identifiers: ReplayIdentifiers, eventService: EventService, wifiOnly: Bool,
         flushRequest: FlushRequest? = nil, networkMonitor: NetworkMonitoring = NetworkMonitor.shared,
         flushInterval: TimeInterval, serverURL: String = DataResidency.us
     ) {
@@ -28,7 +28,7 @@ class FlushService {
         self.serverURL = serverURL
         self.eventService = eventService
         self.wifiOnly = wifiOnly
-        self.flushRequest = flushRequest ?? FlushRequest(token: token, distinctId: distinctId, serverURL: serverURL)
+        self.flushRequest = flushRequest ?? FlushRequest(token: token, identifiers: identifiers, serverURL: serverURL)
         self.networkMonitor = networkMonitor
         self.flushInterval = flushInterval
         flushSerialQueue = DispatchQueue(
@@ -76,11 +76,12 @@ class FlushService {
     }
 
     func getDistinctId() -> String {
-        return flushRequest.distinctId
+        return flushRequest.identifiers.distinctId
     }
 
     func updateDistinctId(_ distinctId: String) {
-        self.flushRequest = FlushRequest(token: token, distinctId: distinctId, serverURL: serverURL)
+        self.flushRequest = FlushRequest(
+            token: token, identifiers: ReplayIdentifiers(distinctId: distinctId), serverURL: serverURL)
         Logger.info(message: "Updated distinct id successfully.")
     }
 
@@ -116,12 +117,13 @@ class FlushService {
                 seq: SessionManager.shared.seqId,
                 replayId: SessionManager.shared.replayId,
                 replayLengthMs: replayLengthMs,
-                replayStartTime: SessionManager.shared.replayStartTime)
+                replayStartTime: SessionManager.shared.replayStartTime,
+                identifiers: events[0].identifiers)
 
             let success = flushRequest.sendRequest(payloadInfo: payloadInfo)
             Logger.info(
                 message: """
-                    Distinct ID: \(getDistinctId());
+                    Distinct ID: \(payloadInfo.identifiers?.distinctId ?? getDistinctId());
                     Batch Start Time: \(payloadInfo.batchStartTime);
                     Sequence ID: \(payloadInfo.seq);
                     Replay ID: \(payloadInfo.replayId);

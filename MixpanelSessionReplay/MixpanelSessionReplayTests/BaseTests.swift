@@ -23,12 +23,12 @@ class BaseTests: XCTestCase {
         mockEventService = MockEventService()
         mockFlushService = MockFlushService(
             token: "test-token",
-            distinctId: "test-distinct-id",
+            identifiers: ReplayIdentifiers(distinctId: "test-distinct-id"),
             eventService: mockEventService,
             wifiOnly: false,
             flushRequest: FlushRequest(
                 token: "test-token",
-                distinctId: "test-distinct-id"
+                identifiers: ReplayIdentifiers(distinctId: "test-distinct-id")
             ),
             flushInterval: ReplaySettings.flushInterval
         )
@@ -36,7 +36,7 @@ class BaseTests: XCTestCase {
         // Create instance
         let config = MPSessionReplayConfig(wifiOnly: false, autoStartRecording: false, enableLogging: true)
         instance = MPSessionReplayInstance(
-            token: "test-token", distinctId: "test-distinct-id", config: config)
+            token: "test-token", identifiers: ReplayIdentifiers(distinctId: "test-distinct-id"), config: config)
 
         // Unsubscribe the real EventHandler to avoid conflicts
         instance.eventService.eventHandler?.shutdown()

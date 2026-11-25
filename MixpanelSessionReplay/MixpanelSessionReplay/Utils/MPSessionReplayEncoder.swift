@@ -16,6 +16,8 @@ struct PayloadInfo {
     let replayId: String
     let replayLengthMs: Int64
     let replayStartTime: TimeInterval
+    /// The identifiers the batch's events were queued with; nil uploads with the current ones.
+    var identifiers: ReplayIdentifiers? = nil
 }
 
 struct MPSessionReplayEncoder {
